@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-07T15:50:04.254Z",
+  "_savedAt": "2026-05-07T15:51:18.142Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場",
     "list": []
@@ -11,7 +11,7 @@
     "newsEnabled": false,
     "newsSource": "",
     "youtubeId": "CXQ-maBSxa4",
-    "youtubeId2": "KyT4qSK8lJo",
+    "youtubeId2": "meHTKm4XBS8",
     "meetingsUrl": "",
     "meetingsZoom": 1,
     "adminPassword": "admin",
@@ -91,7 +91,7 @@
       {
         "id": "KyT4qSK8lJo",
         "note": "台灣地震監視",
-        "active": true
+        "active": false
       },
       {
         "id": "JxX_CcfxIbU",
@@ -99,9 +99,9 @@
         "active": false
       },
       {
-        "id": "",
-        "note": "",
-        "active": false
+        "id": "meHTKm4XBS8",
+        "note": "華視地震、降雨監視",
+        "active": true
       },
       {
         "id": "",
