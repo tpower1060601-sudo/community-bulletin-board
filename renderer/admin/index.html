@@ -183,10 +183,13 @@ input:checked + .slider:before{transform:translateX(20px);}
       <div class="card">
         <div class="card-title">🖼️ 圖片輪播設定（screen5）</div>
         <div class="form-group" style="margin-bottom:16px">
-          <label>輪播間隔（毫秒，預設 6000）</label>
-          <input type="number" id="sSlideInterval" placeholder="6000" style="width:200px">
+          <label>每張圖片顯示秒數（預設 6 秒）</label>
+          <input type="number" id="sSlideInterval" placeholder="6" min="1" max="300" style="width:120px"> 秒
         </div>
-        <label style="margin-bottom:8px;display:block">圖片網址清單</label>
+        <div style="margin-bottom:16px;padding:10px 14px;background:rgba(255,255,255,.04);border-radius:10px;font-size:13px;color:rgba(255,255,255,.45)">
+          💡 圖片來源優先順序：①&nbsp;GitHub&nbsp;media/images/&nbsp;資料夾　②&nbsp;下方網址清單
+        </div>
+        <label style="margin-bottom:8px;display:block">圖片網址清單（備用）</label>
         <div class="input-group" style="margin-bottom:12px">
           <input type="text" id="newImageUrl" placeholder="https://example.com/photo.jpg">
           <button class="btn btn-primary" onclick="addImageUrl()">新增</button>
@@ -472,7 +475,7 @@ function loadSettingsForm() {
   if($('sCommunityName')) $('sCommunityName').value=settings.communityName||'';
   if($('sWeatherApiKey')) $('sWeatherApiKey').value=settings.weatherApiKey||'';
   if($('sWeatherCity'))   $('sWeatherCity').value=settings.weatherCity||'';
-  if($('sSlideInterval')) $('sSlideInterval').value=settings.slideInterval||6000;
+  if($('sSlideInterval')) $('sSlideInterval').value=settings.slideInterval||6;
   if($('sYoutubeId'))     $('sYoutubeId').value=settings.youtubeId||'';
   if($('sYoutubeId2'))    $('sYoutubeId2').value=settings.youtubeId2||'';
   if($('sMeetingsUrl'))   $('sMeetingsUrl').value=settings.meetingsUrl||'';
@@ -532,7 +535,7 @@ function saveSettings() {
   settings.communityName=($('sCommunityName')||{}).value||settings.communityName;
   settings.weatherApiKey=($('sWeatherApiKey')||{}).value||'';
   settings.weatherCity=($('sWeatherCity')||{}).value||'';
-  settings.slideInterval=parseInt(($('sSlideInterval')||{}).value)||6000;
+  settings.slideInterval=parseInt(($('sSlideInterval')||{}).value)||6;
   settings.youtubeId=($('sYoutubeId')||{}).value||'';
   settings.youtubeId2=($('sYoutubeId2')||{}).value||'';
   settings.adminPort=parseInt(($('sAdminPort')||{}).value)||8080;
