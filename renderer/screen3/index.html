@@ -2,262 +2,429 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>匯率時鐘</title>
+<title>全球市場儀表板</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  background: #050a14;
-  color: #fff;
-  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start; /* 調整為靠上對齊 */
-  padding-top: 30px;
-  user-select: none;
+  background: #020b14; color: #fff;
+  font-family: 'Inter','Microsoft JhengHei','PingFang TC',sans-serif;
+  height: 100vh; overflow: hidden; user-select: none;
 }
 
-/* ── Background ── */
-body::before {
-  content:'';
-  position:fixed; inset:0;
-  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,30,80,.6) 0%, transparent 70%);
-  pointer-events:none;
+/* ── 背景 ── */
+#bg { position:fixed; inset:0; z-index:0; transition:background 90s ease; }
+#bg-overlay { position:fixed; inset:0; z-index:1; background:linear-gradient(to bottom,rgba(0,0,0,.35) 0%,rgba(0,0,0,.5) 100%); pointer-events:none; }
+
+/* ── 佈局 ── */
+.layout { position:relative; z-index:10; height:100vh; display:flex; flex-direction:column; }
+
+/* ── 世界時鐘列 ── */
+.clock-bar {
+  flex-shrink:0; display:flex;
+  background:rgba(0,0,0,.45); border-bottom:1px solid rgba(255,255,255,.07);
+  backdrop-filter:blur(20px);
+}
+.wc {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  padding:10px 6px; border-right:1px solid rgba(255,255,255,.06); position:relative;
+}
+.wc:last-child { border-right:none; }
+.wc-city { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.35); text-transform:uppercase; }
+.wc-time { font-size:28px; font-weight:900; letter-spacing:1px; font-variant-numeric:tabular-nums; line-height:1.1; }
+.wc-date { font-size:10px; color:rgba(255,255,255,.28); margin-top:1px; }
+.wc-open {
+  position:absolute; top:8px; right:8px;
+  width:7px; height:7px; border-radius:50%;
+  background:#22c55e; box-shadow:0 0 8px #22c55e;
+  animation:pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
+
+/* ── 市場時段 Timeline ── */
+.session-bar {
+  flex-shrink:0; display:flex; align-items:center; gap:12px;
+  padding:6px 28px; background:rgba(0,0,0,.3); border-bottom:1px solid rgba(255,255,255,.04);
+}
+.session-lbl { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.25); flex-shrink:0; }
+.session-track { flex:1; height:18px; position:relative; background:rgba(255,255,255,.04); border-radius:4px; overflow:visible; }
+.seg {
+  position:absolute; top:0; bottom:0; border-radius:3px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:9px; font-weight:800; letter-spacing:1px; overflow:hidden; white-space:nowrap;
+  opacity:.75;
+}
+.seg.active { opacity:1; box-shadow:0 0 6px currentColor; }
+.now-line {
+  position:absolute; top:-3px; bottom:-3px; width:2px;
+  background:#fff; border-radius:2px; box-shadow:0 0 8px rgba(255,255,255,.8);
+  z-index:5;
 }
 
-/* ── Clock (置頂縮小版) ── */
-.clock-section { 
-  text-align: center; 
-  margin-bottom: 20px; 
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  z-index: 10;
+/* ── 主內容三欄 ── */
+.main { flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr 1fr; }
+.panel {
+  border-right:1px solid rgba(255,255,255,.06); overflow:hidden;
+  display:flex; flex-direction:column; padding:14px 20px; transition:background 2s ease;
 }
-.big-clock {
-  font-size: 68px; /* 縮小字體 */
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 6px;
-  color: #fff;
-  text-shadow: 0 0 20px rgba(0,180,255,.8), 0 0 40px rgba(0,180,255,.4);
-  line-height: 1;
-}
-.colon { animation: blink 1s step-end infinite; }
-@keyframes blink { 50%{opacity:.2} }
-.date-row { font-size:18px; color:rgba(255,255,255,.6); letter-spacing:4px; margin-top:8px; }
-.weekday  { color:#00d4ff; font-weight:700; }
+.panel:last-child { border-right:none; }
+.panel-title { font-size:11px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.3); text-transform:uppercase; margin-bottom:10px; flex-shrink:0; }
+.panel-scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
+.panel-scroll::-webkit-scrollbar { width:3px; }
+.panel-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
 
-/* ── Title ── */
-.rate-title {
-  font-size: 16px;
-  letter-spacing: 6px;
-  color: rgba(255,255,255,.4);
-  text-align: center;
-  margin-bottom: 16px;
-  z-index: 10;
+/* ── 共用行樣式 ── */
+.row {
+  display:flex; align-items:center; padding:8px 10px; border-radius:10px;
+  margin-bottom:6px; background:rgba(255,255,255,.04); transition:background .4s, box-shadow .4s;
 }
+.row.open { background:rgba(255,255,255,.07); }
+.lbl { font-size:12px; font-weight:700; color:rgba(255,255,255,.5); flex-shrink:0; letter-spacing:.5px; }
+.val { flex:1; font-size:20px; font-weight:900; font-variant-numeric:tabular-nums; padding:0 8px; }
+.chg { font-size:12px; font-weight:700; text-align:right; flex-shrink:0; }
+.up { color:#4ade80; }
+.dn { color:#f87171; }
+.nc { color:rgba(255,255,255,.3); }
 
-/* ── Rate cards (8宮格版) ── */
-.rate-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr); /* 4行2列 */
-  gap: 16px;
-  padding: 0 40px;
-  width: 100%;
-  max-width: 1200px;
-  z-index: 10;
-}
-.rate-card {
-  background: rgba(10,20,50,.8);
-  border: 1px solid rgba(0,212,255,.2);
-  border-radius: 12px;
-  padding: 16px 20px;
-  text-align: center;
-  backdrop-filter: blur(12px);
-  position: relative;
-  overflow: hidden;
-  transition: transform .3s;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-}
+/* ── 外匯專用 ── */
+.fx-lbl { width:72px; }
+.fx-val { font-size:19px; }
+.fx-unit { font-size:11px; opacity:.4; margin-left:3px; font-weight:600; }
 
-/* 各國專屬顏色裝飾 */
-.rate-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:3px;
-  background: linear-gradient(90deg,transparent,var(--c),transparent);
-}
-.rate-card.usd { --c: #4fc3f7; }
-.rate-card.eru { --c: #69f0ae; }
-.rate-card.jpy { --c: #ffb74d; }
-.rate-card.cny { --c: #ff5252; }
-.rate-card.hkd { --c: #e040fb; }
-.rate-card.krw { --c: #536dfe; }
-.rate-card.gold { --c: #ffd54f; }
-.rate-card.oil { --c: #9e9e9e; }
+/* ── 股市專用 ── */
+.stock-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-right:8px; }
+.stock-lbl { width:80px; }
+.stock-name { font-size:10px; color:rgba(255,255,255,.3); letter-spacing:.5px; }
+.closed-tag { font-size:10px; letter-spacing:1px; color:rgba(255,255,255,.2); margin-left:6px; flex-shrink:0; }
 
-.currency-header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px; }
-.currency-flag { font-size:28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
-.currency-code { font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,.4); }
-.currency-name { font-size: 20px; font-weight:700; color:rgba(255,255,255,.8); margin-bottom:8px; }
+/* ── 虛擬貨幣 ── */
+.crypto-icon { font-size:18px; width:28px; flex-shrink:0; }
+.crypto-lbl { width:52px; }
 
-.rate-label { font-size:14px; color:rgba(255,255,255,.35); margin-bottom:4px; }
-.rate-value {
-  font-size: 38px;
-  font-weight: 900;
-  color: #fff;
-  font-variant-numeric: tabular-nums;
-  text-shadow: 0 0 15px rgba(255,255,255,.2);
-}
-.rate-unit { font-size:14px; color:rgba(255,255,255,.4); margin-top:4px; }
-
-.rate-change {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 13px;
-  margin-top: 10px;
-  padding: 4px 10px;
-  border-radius: 16px;
-  font-weight: 700;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
-}
-/* 採用台灣常見邏輯：紅漲、綠跌 (使用者亦可接受紅跌綠漲，這裡採用最鮮明的色彩警示) */
-.rate-change.up   { color:#ff5252; background:rgba(255,82,82,.1); border: 1px solid rgba(255,82,82,.2); }
-.rate-change.down { color:#69f0ae; background:rgba(105,240,174,.1); border: 1px solid rgba(105,240,174,.2); }
-.rate-change.flat { color:rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.1); }
-
-/* ── Footer ── */
-.footer {
-  margin-top: auto;
-  margin-bottom: 20px;
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255,255,255,.25);
-  letter-spacing: 2px;
-  z-index: 10;
-}
-.update-dot {
-  display:inline-block; width:6px; height:6px; background:#69f0ae;
-  border-radius:50%; margin-right:6px; animation: pulse 2s ease-in-out infinite;
-}
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
-
-.loading { color:rgba(255,255,255,.3); font-size:18px; letter-spacing:3px; grid-column: 1 / -1; text-align: center; padding: 40px; }
+.placeholder { color:rgba(255,255,255,.2); font-size:13px; letter-spacing:3px; text-align:center; padding:20px 0; }
 </style>
 </head>
 <body>
+<div id="bg"></div>
+<div id="bg-overlay"></div>
 
-<div class="clock-section">
-  <div class="big-clock">
-    <span id="hh">00</span><span class="colon">:</span><span id="mm">00</span><span class="colon">:</span><span id="ss">00</span>
+<div class="layout">
+  <div class="clock-bar" id="clockBar"></div>
+  <div class="session-bar">
+    <div class="session-lbl">市場時段 UTC</div>
+    <div class="session-track" id="sessionTrack"></div>
   </div>
-  <div class="date-row" id="dateRow"></div>
-</div>
-
-<div class="rate-title">即時匯率與大宗商品行情　LIVE MARKET RATES</div>
-
-<div class="rate-grid" id="rateGrid">
-  <div class="loading">正在向全球市場連線，取得最新報價與漲跌資訊…</div>
-</div>
-
-<div class="footer">
-  <span class="update-dot"></span>
-  <span id="updateTime">-- 最後更新</span>
-  &nbsp;·&nbsp; 資料來源：Yahoo Finance 延遲報價
+  <div class="main">
+    <div class="panel" id="pForex">
+      <div class="panel-title">💱 外匯匯率</div>
+      <div class="panel-scroll" id="forexList"><div class="placeholder">連線中…</div></div>
+    </div>
+    <div class="panel" id="pStocks">
+      <div class="panel-title">📈 全球股市指數</div>
+      <div class="panel-scroll" id="stockList"><div class="placeholder">連線中…</div></div>
+    </div>
+    <div class="panel" id="pCrypto">
+      <div class="panel-title">₿ 虛擬貨幣</div>
+      <div class="panel-scroll" id="cryptoList"><div class="placeholder">連線中…</div></div>
+    </div>
+  </div>
 </div>
 
 <script>
-const DAYS = ['日','一','二','三','四','五','六'];
+'use strict';
 
-// Clock
-function tick() {
-  const n = new Date();
-  document.getElementById('hh').textContent = String(n.getHours()).padStart(2,'0');
-  document.getElementById('mm').textContent = String(n.getMinutes()).padStart(2,'0');
-  document.getElementById('ss').textContent = String(n.getSeconds()).padStart(2,'0');
-  document.getElementById('dateRow').innerHTML =
-    `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日&nbsp;&nbsp;<span class="weekday">星期${DAYS[n.getDay()]}</span>`;
-}
-
-// Data Define
-const ASSETS = [
-  { code:'USD', symbol:'USDTWD=X', name:'美元',   flag:'🇺🇸', label:'1 USD =', class:'usd', unit:'TWD' },
-  { code:'EUR', symbol:'EURTWD=X', name:'歐元',   flag:'🇪🇺', label:'1 EUR =', class:'eru', unit:'TWD' },
-  { code:'JPY', symbol:'JPYTWD=X', name:'日圓',   flag:'🇯🇵', label:'100 JPY =', class:'jpy', unit:'TWD', multiplier: 100 },
-  { code:'CNY', symbol:'CNYTWD=X', name:'人民幣', flag:'🇨🇳', label:'1 CNY =', class:'cny', unit:'TWD' },
-  { code:'HKD', symbol:'HKDTWD=X', name:'港幣',   flag:'🇭🇰', label:'1 HKD =', class:'hkd', unit:'TWD' },
-  { code:'KRW', symbol:'KRWTWD=X', name:'韓元',   flag:'🇰🇷', label:'1 KRW =', class:'krw', unit:'TWD', fix: 4 },
-  { code:'GOLD',symbol:'GC=F',     name:'黃金期貨', flag:'🥇', label:'1 盎司 =', class:'gold', unit:'USD', fix:2 },
-  { code:'OIL', symbol:'CL=F',     name:'原油期貨', flag:'🛢️', label:'1 桶 =',   class:'oil',  unit:'USD', fix:2 }
+/* ══════════════════════════════════════════
+   設定
+══════════════════════════════════════════ */
+const CITIES = [
+  { city:'台北',  tz:'Asia/Taipei',          mkt:'TWSE' },
+  { city:'東京',  tz:'Asia/Tokyo',            mkt:'TSE'  },
+  { city:'香港',  tz:'Asia/Hong_Kong',        mkt:'HKEX' },
+  { city:'上海',  tz:'Asia/Shanghai',         mkt:'SSE'  },
+  { city:'倫敦',  tz:'Europe/London',         mkt:'LSE'  },
+  { city:'法蘭克福', tz:'Europe/Berlin',      mkt:'FSE'  },
+  { city:'紐約',  tz:'America/New_York',      mkt:'NYSE' },
 ];
 
-async function fetchRates() {
-  try {
-    const fetchPromises = ASSETS.map(asset => 
-      fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${asset.symbol}`)
-        .then(r => r.json())
-        .then(j => {
-          if (!j.chart.result) throw new Error('No Data');
-          const meta = j.chart.result[0].meta;
-          // Apply multipliers if necessary (e.g. 100 JPY)
-          const m = asset.multiplier || 1;
-          return {
-            ...asset,
-            current: meta.regularMarketPrice * m,
-            prev: meta.chartPreviousClose * m
-          };
-        })
-    );
+const MARKETS = [
+  { id:'TWSE', tz:'Asia/Taipei',       oh:9,  om:0,  ch:13, cm:30 },
+  { id:'TSE',  tz:'Asia/Tokyo',        oh:9,  om:0,  ch:15, cm:30 },
+  { id:'HKEX', tz:'Asia/Hong_Kong',    oh:9,  om:30, ch:16, cm:0  },
+  { id:'SSE',  tz:'Asia/Shanghai',     oh:9,  om:30, ch:15, cm:0  },
+  { id:'LSE',  tz:'Europe/London',     oh:8,  om:0,  ch:16, cm:30 },
+  { id:'FSE',  tz:'Europe/Berlin',     oh:9,  om:0,  ch:17, cm:30 },
+  { id:'NYSE', tz:'America/New_York',  oh:9,  om:30, ch:16, cm:0  },
+];
 
-    const results = await Promise.all(fetchPromises);
-    const grid  = document.getElementById('rateGrid');
+// UTC 近似時段（視覺化用，固定值）
+const SEG_UTC = [
+  { name:'東京',    start:0,    end:6,    color:'#f59e0b', mkt:'asia'   },
+  { name:'滬港',    start:1.5,  end:8,    color:'#fb923c', mkt:'asia'   },
+  { name:'台灣',    start:1,    end:5.5,  color:'#a78bfa', mkt:'asia'   },
+  { name:'倫敦/歐', start:7,    end:15.5, color:'#38bdf8', mkt:'europe' },
+  { name:'紐約',    start:13.5, end:20,   color:'#4ade80', mkt:'us'     },
+];
 
-    grid.innerHTML = results.map(data => {
-      const diff = data.current - data.prev;
-      const pct  = ((diff / data.prev) * 100).toFixed(2);
-      
-      let changeHTML = '';
-      if (Math.abs(diff) < 0.0001) {
-        changeHTML = `<span class="rate-change flat">— 持平</span>`;
-      } else if (diff > 0) {
-        changeHTML = `<span class="rate-change up">▲ ${pct}%</span>`;
-      } else {
-        changeHTML = `<span class="rate-change down">▼ ${Math.abs(pct)}%</span>`;
-      }
+const STOCKS = [
+  { sym:'^TWII', name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa' },
+  { sym:'^N225', name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b' },
+  { sym:'^HSI',  name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c' },
+  { sym:'^SSEC', name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b' },
+  { sym:'^FTSE', name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8' },
+  { sym:'^GDAXI',name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa' },
+  { sym:'^GSPC', name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80' },
+  { sym:'^DJI',  name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399' },
+  { sym:'^IXIC', name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7' },
+];
 
-      // Display logic
-      const fix = data.fix !== undefined ? data.fix : (data.current < 100 ? 2 : 1);
-      const displayUnit = data.unit === 'TWD' ? '新台幣 TWD' : (`美元 ` + data.unit);
+const FX_PAIRS = [
+  { pair:'USD/TWD', from:'USD', to:'TWD', dec:2 },
+  { pair:'USD/JPY', from:'USD', to:'JPY', dec:2 },
+  { pair:'USD/CNY', from:'USD', to:'CNY', dec:4 },
+  { pair:'USD/KRW', from:'USD', to:'KRW', dec:0 },
+  { pair:'USD/HKD', from:'USD', to:'HKD', dec:4 },
+  { pair:'USD/AUD', from:'USD', to:'AUD', dec:4 },
+  { pair:'EUR/USD', from:'EUR', to:'USD', dec:4 },
+  { pair:'GBP/USD', from:'GBP', to:'USD', dec:4 },
+];
 
-      return `
-      <div class="rate-card ${data.class}">
-        <div class="currency-header">
-          <div class="currency-flag">${data.flag}</div>
-          <div class="currency-name">${data.name}</div>
-        </div>
-        <div class="currency-code">${data.code}</div>
-        <div class="rate-label">${data.label}</div>
-        <div class="rate-value">${data.current.toFixed(fix)}</div>
-        <div class="rate-unit">${displayUnit}</div>
-        ${changeHTML}
-      </div>`;
-    }).join('');
+const CRYPTO = [
+  { id:'bitcoin',      sym:'BTC', icon:'₿' },
+  { id:'ethereum',     sym:'ETH', icon:'Ξ' },
+  { id:'solana',       sym:'SOL', icon:'◎' },
+  { id:'ripple',       sym:'XRP', icon:'✕' },
+  { id:'binancecoin',  sym:'BNB', icon:'◈' },
+  { id:'dogecoin',     sym:'DOGE',icon:'Ð' },
+];
 
-    const now = new Date();
-    document.getElementById('updateTime').textContent =
-      `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 盤中報價`;
-  } catch(e) {
-    document.getElementById('rateGrid').innerHTML =
-      '<div class="loading">⚠ 無法連接 Yahoo Finance 金融伺服器，稍後重試</div>';
-    console.error(e);
-  }
+/* ══════════════════════════════════════════
+   工具
+══════════════════════════════════════════ */
+function localDate(tz) {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
+}
+function isOpen(mkt) {
+  const m = MARKETS.find(x => x.id === mkt); if (!m) return false;
+  const d = localDate(m.tz);
+  const day = d.getDay();
+  if (day === 0 || day === 6) return false;
+  const mins = d.getHours() * 60 + d.getMinutes();
+  return mins >= m.oh * 60 + m.om && mins < m.ch * 60 + m.cm;
+}
+function openSet() {
+  const s = new Set();
+  MARKETS.forEach(m => { if (isOpen(m.id)) s.add(m.id); });
+  return s;
+}
+function fmtNum(n, dec) {
+  if (n == null || isNaN(n)) return '—';
+  if (dec === 0) return Math.round(n).toLocaleString();
+  return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+function chgClass(v) { return v > 0 ? 'up' : v < 0 ? 'dn' : 'nc'; }
+function chgTxt(v) { if (v == null) return '—'; return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+
+/* ══════════════════════════════════════════
+   世界時鐘
+══════════════════════════════════════════ */
+function renderClocks() {
+  const open = openSet();
+  const bar = document.getElementById('clockBar');
+  bar.innerHTML = CITIES.map(c => {
+    const d = localDate(c.tz);
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    const ss = String(d.getSeconds()).padStart(2,'0');
+    const mo = d.getMonth()+1, da = d.getDate();
+    const dayN = ['日','一','二','三','四','五','六'][d.getDay()];
+    const on = open.has(c.mkt);
+    return `<div class="wc">
+      ${on ? '<div class="wc-open"></div>' : ''}
+      <div class="wc-city">${c.city}</div>
+      <div class="wc-time">${hh}:${mm}<span style="opacity:.45;font-size:.65em">:${ss}</span></div>
+      <div class="wc-date">${mo}/${da} 週${dayN}</div>
+    </div>`;
+  }).join('');
 }
 
-setInterval(tick, 1000); tick();
-fetchRates();
-setInterval(fetchRates, 5 * 60 * 1000); // 5分鐘更新一次報價
+/* ══════════════════════════════════════════
+   市場時段 Timeline
+══════════════════════════════════════════ */
+function renderSession() {
+  const now = new Date();
+  const utcH = now.getUTCHours() + now.getUTCMinutes()/60;
+  const pct = h => (h / 24 * 100).toFixed(2) + '%';
+
+  const open = openSet();
+  const asiaOn = ['TWSE','TSE','HKEX','SSE'].some(m => open.has(m));
+  const euOn   = ['LSE','FSE'].some(m => open.has(m));
+  const usOn   = open.has('NYSE');
+
+  // 背景漸層
+  let bg;
+  if (asiaOn && euOn && usOn)      bg = 'linear-gradient(155deg,#0d1a0d,#0d0d2a,#020b14)';
+  else if (asiaOn && euOn)         bg = 'linear-gradient(155deg,#1a1000,#0a0a28,#020b14)';
+  else if (euOn && usOn)           bg = 'linear-gradient(155deg,#001a0a,#0a0a28,#020b14)';
+  else if (asiaOn)                 bg = 'linear-gradient(155deg,#1a0e00,#04101a,#020b14)';
+  else if (euOn)                   bg = 'linear-gradient(155deg,#020b14,#0a0a28,#030616)';
+  else if (usOn)                   bg = 'linear-gradient(155deg,#001a08,#04101a,#020b14)';
+  else                             bg = 'linear-gradient(155deg,#020b14,#030a10,#020b14)';
+  document.getElementById('bg').style.background = bg;
+
+  // 時段條
+  const segs = SEG_UTC.map(s => {
+    let on = false;
+    if (s.mkt === 'asia')   on = asiaOn;
+    if (s.mkt === 'europe') on = euOn;
+    if (s.mkt === 'us')     on = usOn;
+    const left = pct(s.start), width = pct(s.end - s.start);
+    return `<div class="seg${on?' active':''}" style="left:${left};width:${width};background:${s.color}22;color:${s.color};border:1px solid ${s.color}44">${s.name}</div>`;
+  }).join('');
+
+  const cursorLeft = (utcH / 24 * 100).toFixed(2) + '%';
+  document.getElementById('sessionTrack').innerHTML =
+    segs + `<div class="now-line" style="left:${cursorLeft}"></div>`;
+}
+
+/* ══════════════════════════════════════════
+   外匯
+══════════════════════════════════════════ */
+let fxRates = null;
+async function fetchForex() {
+  try {
+    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    fxRates = data.rates;
+    renderForex();
+  } catch(e) {
+    document.getElementById('forexList').innerHTML = '<div class="placeholder">外匯資料無法取得</div>';
+  }
+}
+function renderForex() {
+  if (!fxRates) return;
+  const html = FX_PAIRS.map(fp => {
+    let rate;
+    if (fp.from === 'USD') {
+      rate = fxRates[fp.to];
+    } else {
+      // e.g. EUR/USD: rate = 1/fxRates[EUR]
+      rate = fxRates[fp.to] / fxRates[fp.from];
+    }
+    const disp = rate != null ? fmtNum(rate, fp.dec) : '—';
+    const toLabel = fp.to;
+    return `<div class="row">
+      <div class="lbl fx-lbl">${fp.pair}</div>
+      <div class="val fx-val">${disp}<span class="fx-unit">${toLabel}</span></div>
+    </div>`;
+  }).join('');
+  document.getElementById('forexList').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   股市指數
+══════════════════════════════════════════ */
+let stockData = {};
+async function fetchStocks() {
+  const syms = STOCKS.map(s => s.sym).join(',');
+  const yfUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&lang=en-US&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
+  try {
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(yfUrl);
+    const res = await fetch(proxy);
+    if (!res.ok) throw new Error();
+    const outer = await res.json();
+    const data = JSON.parse(outer.contents);
+    const results = data.quoteResponse?.result || [];
+    results.forEach(q => {
+      stockData[q.symbol] = {
+        price: q.regularMarketPrice,
+        chg:   q.regularMarketChangePercent,
+      };
+    });
+    renderStocks();
+  } catch(e) {
+    document.getElementById('stockList').innerHTML = '<div class="placeholder">股市資料無法取得</div>';
+  }
+}
+function renderStocks() {
+  const open = openSet();
+  const html = STOCKS.map(s => {
+    const on = open.has(s.mkt);
+    const d  = stockData[s.sym];
+    const price = d ? fmtNum(d.price, d.price > 1000 ? 0 : 2) : '—';
+    const pct   = d ? d.chg : null;
+    const cls   = chgClass(pct);
+    const glow  = on && d ? `box-shadow:0 0 10px ${s.color}55;border:1px solid ${s.color}33` : '';
+    return `<div class="row${on?' open':''}" style="${glow}">
+      <div class="stock-dot" style="background:${on?s.color:'rgba(255,255,255,.15)'}${on?';box-shadow:0 0 6px '+s.color:''}"></div>
+      <div class="lbl stock-lbl">
+        <div>${s.name}</div>
+        <div class="stock-name">${s.sub}</div>
+      </div>
+      <div class="val" style="font-size:18px">${price}</div>
+      <div class="chg ${cls}">${chgTxt(pct)}</div>
+      ${!on ? '<div class="closed-tag">休市</div>' : ''}
+    </div>`;
+  }).join('');
+  document.getElementById('stockList').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   虛擬貨幣
+══════════════════════════════════════════ */
+async function fetchCrypto() {
+  const ids = CRYPTO.map(c => c.id).join(',');
+  try {
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    renderCrypto(data);
+  } catch(e) {
+    document.getElementById('cryptoList').innerHTML = '<div class="placeholder">幣價資料無法取得</div>';
+  }
+}
+function renderCrypto(data) {
+  const html = CRYPTO.map(c => {
+    const d   = data[c.id];
+    const usd = d?.usd;
+    const chg = d?.usd_24h_change;
+    const cls = chgClass(chg);
+    let disp;
+    if (usd == null) disp = '—';
+    else if (usd >= 1000) disp = '$' + fmtNum(usd, 0);
+    else if (usd >= 1)    disp = '$' + fmtNum(usd, 2);
+    else                  disp = '$' + usd.toFixed(5);
+    return `<div class="row">
+      <div class="crypto-icon">${c.icon}</div>
+      <div class="lbl crypto-lbl">${c.sym}</div>
+      <div class="val" style="font-size:17px">${disp}</div>
+      <div class="chg ${cls}">${chgTxt(chg)}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('cryptoList').innerHTML = html;
+}
+
+/* ══════════════════════════════════════════
+   初始化與定時刷新
+══════════════════════════════════════════ */
+// 1秒：時鐘
+setInterval(renderClocks, 1000);
+renderClocks();
+
+// 1分鐘：時段條 + 背景 + 股市開盤狀態重繪
+setInterval(() => { renderSession(); renderStocks(); }, 60000);
+renderSession();
+
+// 10分鐘：外匯
+setInterval(fetchForex, 10 * 60 * 1000);
+fetchForex();
+
+// 5分鐘：股市
+setInterval(fetchStocks, 5 * 60 * 1000);
+fetchStocks();
+
+// 3分鐘：虛擬貨幣
+setInterval(fetchCrypto, 3 * 60 * 1000);
+fetchCrypto();
 </script>
 </body>
 </html>
