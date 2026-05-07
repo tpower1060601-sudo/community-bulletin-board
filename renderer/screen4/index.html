@@ -380,7 +380,7 @@ function drawChart(canvas, data) {
 }
 
 /* ── 渲染主畫面 ── */
-function render(cur, forecast) {
+function render(cur, forecast, dayHigh, dayLow) {
   const icon = ICONS[cur.weather[0].icon] || '🌡️';
   const main = cur.weather[0].main;
   const desc = cur.weather[0].description;
@@ -397,7 +397,7 @@ function render(cur, forecast) {
       <div class="temp-block">
         <div class="temp-main">${Math.round(cur.main.temp)}<span class="temp-unit">°C</span></div>
         <div class="desc">${desc}</div>
-        <div class="hl">最高 <span class="hi">${Math.round(cur.main.temp_max)}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${Math.round(cur.main.temp_min)}°C</span></div>
+        <div class="hl">最高 <span class="hi">${dayHigh}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${dayLow}°C</span></div>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${cur.main.humidity}%</div></div>
@@ -454,7 +454,11 @@ async function fetchWeather() {
         const h = new Date(d.dt * 1000);
         return { time: String(h.getHours()).padStart(2,'0')+':00', temp: d.main.temp, pop: d.pop || 0 };
       });
-    render(cur, pts);
+    // 從預報資料計算真正的24小時高低溫（比即時天氣API的temp_max/min更準確）
+    const fcTemps = pts.map(d => d.temp);
+    const dayHigh = fcTemps.length ? Math.round(Math.max(...fcTemps)) : Math.round(cur.main.temp_max);
+    const dayLow  = fcTemps.length ? Math.round(Math.min(...fcTemps)) : Math.round(cur.main.temp_min);
+    render(cur, pts, dayHigh, dayLow);
   } catch(e) {
     document.getElementById('layout').innerHTML =
       `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.45">${e.message}</small></div>`;
