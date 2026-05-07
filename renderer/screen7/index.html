@@ -253,10 +253,10 @@ const FEEDS = [
     'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'
   ],
   [
-    // 台灣財經 — 中央社財經、自由財經、單純新聞
+    // 台灣財經 — Yahoo財經(已驗證可用)、中央社財經、自由財經
+    'https://tw.news.yahoo.com/rss/finance',
     'https://www.cna.com.tw/rss/afe.aspx',
-    'https://ec.ltn.com.tw/rss/news.xml',
-    'https://www.cna.com.tw/rss/aall.aspx'
+    'https://ec.ltn.com.tw/rss/news.xml'
   ],
   [
     // 國際即時 — BBC 中文、BBC World、中央社國際
@@ -276,7 +276,7 @@ const FEEDS = [
    CORS Proxy 清單（依序嘗試）
 ──────────────────────────────────────────── */
 const PROXIES = [
-  url => `https://api.rss2json.com/v1/api.json?count=30&rss_url=${encodeURIComponent(url)}`,
+  url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
 ];
