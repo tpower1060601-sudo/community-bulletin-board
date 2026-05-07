@@ -109,11 +109,32 @@ body {
 <script>
 let files = [], current = 0, timer = null, interval = 6000;
 
+const GH_REPO   = 'tpower1060601-sudo/community-bulletin-board';
+const MEDIA_API  = 'https://api.github.com/repos/' + GH_REPO + '/contents/media/images';
+const IMG_EXTS   = /\.(jpe?g|png|gif|webp|bmp|svg)$/i;
+
 async function loadFiles() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
   const settings = await window.api.get('settings');
   interval = settings.slideInterval || 6000;
-  files = settings.imageUrls || [];
+  files = [];
+
+  /* 優先：掃描 GitHub media/images/ 資料夾 */
+  try {
+    const token = localStorage.getItem('bbs_gh_token') || '';
+    const headers = token ? { 'Authorization': 'token ' + token } : {};
+    const res = await fetch(MEDIA_API + '?t=' + Date.now(), { headers });
+    if (res.ok) {
+      const items = await res.json();
+      files = items
+        .filter(item => item.type === 'file' && IMG_EXTS.test(item.name))
+        .map(item => item.download_url);
+    }
+  } catch (e) { /* 網路錯誤 → 走 fallback */ }
+
+  /* Fallback：管理後台手動輸入的 URL 清單 */
+  if (!files.length) files = settings.imageUrls || [];
+
   render();
 }
 
@@ -130,7 +151,7 @@ function render() {
       <div class="empty">
         <div class="empty-icon">🖼</div>
         <div class="empty-text">尚無圖片</div>
-        <div class="empty-sub">請至管理後台「圖片輪播設定」新增圖片網址</div>
+        <div class="empty-sub">將圖片上傳至 GitHub 的 media/images/ 資料夾，或至管理後台新增網址</div>
       </div>`;
     return;
   }
