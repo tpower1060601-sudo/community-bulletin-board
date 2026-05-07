@@ -81,6 +81,7 @@ let files = [], current = 0;
 const player = document.getElementById('player');
 
 async function load() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
   const s = await window.api.get('settings');
   files = s.videoUrls || [];
   if (!files.length) {

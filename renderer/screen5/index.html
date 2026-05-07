@@ -110,6 +110,7 @@ body {
 let files = [], current = 0, timer = null, interval = 6000;
 
 async function loadFiles() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
   const settings = await window.api.get('settings');
   interval = settings.slideInterval || 6000;
   files = settings.imageUrls || [];

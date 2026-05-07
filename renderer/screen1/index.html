@@ -235,8 +235,9 @@ function renderNews(news) {
 }
 
 async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
   const [ann, sett, news] = await Promise.all([
-    window.api.get('announcements'), 
+    window.api.get('announcements'),
     window.api.get('settings'),
     window.api.get('news')
   ]);
