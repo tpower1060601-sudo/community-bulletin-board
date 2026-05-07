@@ -1,8 +1,9 @@
-﻿/* shared/api.js — localStorage-based window.api for GitHub Pages deployment */
+/* shared/api.js — localStorage-based window.api for GitHub Pages deployment */
 (function () {
   'use strict';
 
   const PREFIX = 'bbs_';
+  const DATA_KEYS = ['announcements', 'settings', 'meetings', 'news'];
 
   const DEFAULTS = {
     announcements: { marquee: '歡迎光臨！', list: [] },
@@ -36,16 +37,14 @@
       const raw = localStorage.getItem(PREFIX + key);
       if (raw) {
         const stored = JSON.parse(raw);
-        // 當 key 為 settings，自動補上 DEFAULTS 裡有但 localStorage 沒有的視窗，
-        // 同時更新已有視窗的標題（避免舊快取顯示過時名稱）
         if (key === 'settings' && DEFAULTS.settings.windows) {
           const wins = stored.windows || [];
           DEFAULTS.settings.windows.forEach(function(dw) {
             const idx = wins.findIndex(function(w) { return w.id === dw.id; });
             if (idx === -1) {
-              wins.push(JSON.parse(JSON.stringify(dw))); // 補上缺少的視窗
+              wins.push(JSON.parse(JSON.stringify(dw)));
             } else {
-              wins[idx].title = dw.title; // 更新標題
+              wins[idx].title = dw.title;
             }
           });
           stored.windows = wins;
@@ -67,10 +66,8 @@
   }
 
   /* ── Event bus ────────────────────────────────────────────────────────── */
-  // channel → [callback, ...]
   const listeners = Object.create(null);
 
-  // Cross-tab: another tab called localStorage.setItem → fires 'storage' event here
   window.addEventListener('storage', function (e) {
     if (!e.key || !e.key.startsWith(PREFIX)) return;
     const dataKey = e.key.slice(PREFIX.length);
@@ -83,36 +80,126 @@
     }
   });
 
+  /* ── GitHub 備份模組 ──────────────────────────────────────────────────── */
+  const GH_REPO = 'tpower1060601-sudo/community-bulletin-board';
+  const GH_FILE = 'data/backup.json';
+  const GH_TOKEN_KEY = 'bbs_gh_token';
+  const GH_LAST_KEY  = 'bbs_gh_lastBackup';
+
+  window.ghBackup = {
+    _api: 'https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE,
+    _raw: 'https://raw.githubusercontent.com/' + GH_REPO + '/main/' + GH_FILE,
+
+    token: function () { return localStorage.getItem(GH_TOKEN_KEY) || ''; },
+    setToken: function (t) { localStorage.setItem(GH_TOKEN_KEY, t); },
+    lastBackup: function () { return localStorage.getItem(GH_LAST_KEY) || ''; },
+
+    /** 從 GitHub 讀取備份（公開 raw URL，不需 token） */
+    load: function () {
+      return fetch(this._raw + '?t=' + Date.now())
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; });
+    },
+
+    /** 把所有 bbs_ 資料寫入 GitHub data/backup.json */
+    save: function () {
+      var self = this;
+      var token = this.token();
+      if (!token) return Promise.resolve({ ok: false, reason: 'no-token' });
+
+      var allData = { _savedAt: new Date().toISOString() };
+      DATA_KEYS.forEach(function (k) {
+        var v = localStorage.getItem(PREFIX + k);
+        if (v) { try { allData[k] = JSON.parse(v); } catch (e) {} }
+      });
+
+      var content = btoa(unescape(encodeURIComponent(JSON.stringify(allData, null, 2))));
+
+      // 先取得現有檔案 SHA（更新檔案用）
+      return fetch(self._api, {
+        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
+      })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .catch(function () { return null; })
+      .then(function (existing) {
+        var body = {
+          message: 'backup: ' + new Date().toISOString(),
+          content: content
+        };
+        if (existing && existing.sha) body.sha = existing.sha;
+
+        return fetch(self._api, {
+          method: 'PUT',
+          headers: {
+            'Authorization': 'token ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+          },
+          body: JSON.stringify(body)
+        });
+      })
+      .then(function (r) {
+        if (r && r.ok) {
+          localStorage.setItem(GH_LAST_KEY, new Date().toISOString());
+          return { ok: true };
+        }
+        return { ok: false, status: r ? r.status : 0 };
+      })
+      .catch(function (e) { return { ok: false, reason: e.message }; });
+    },
+
+    /** 如果 localStorage 完全沒有資料，從 GitHub 自動還原 */
+    autoRestore: function () {
+      var hasData = DATA_KEYS.some(function (k) {
+        return !!localStorage.getItem(PREFIX + k);
+      });
+      if (hasData) return Promise.resolve({ restored: false });
+
+      return this.load().then(function (backup) {
+        if (!backup) return { restored: false };
+        DATA_KEYS.forEach(function (k) {
+          if (backup[k]) localStorage.setItem(PREFIX + k, JSON.stringify(backup[k]));
+        });
+        return { restored: true, savedAt: backup._savedAt || '' };
+      });
+    },
+
+    /** 強制從 GitHub 覆蓋本地資料（手動還原） */
+    forceRestore: function () {
+      return this.load().then(function (backup) {
+        if (!backup) return { restored: false };
+        DATA_KEYS.forEach(function (k) {
+          if (backup[k]) localStorage.setItem(PREFIX + k, JSON.stringify(backup[k]));
+        });
+        return { restored: true, savedAt: backup._savedAt || '' };
+      });
+    },
+  };
+
   /* ── Public API ───────────────────────────────────────────────────────── */
   window.api = {
 
-    /** Read a data key. Returns a Promise resolving to the stored value. */
     get: function (key) {
       return Promise.resolve(lsGet(key));
     },
 
-    /** Write a data key and broadcast to all listeners (same + other tabs). */
     save: function (key, data) {
       const ok = lsSet(key, data);
       if (ok) {
-        // Notify same-tab listeners immediately
         const cbs = listeners[key + ':updated'];
         if (cbs) cbs.forEach(function (cb) { cb(data); });
 
-        // Notify other tabs via StorageEvent (only fires in other tabs normally,
-        // so we dispatch manually for the same tab above)
         try {
           window.dispatchEvent(new StorageEvent('storage', {
             key: PREFIX + key,
             newValue: JSON.stringify(data),
             storageArea: localStorage,
           }));
-        } catch (e) { /* old browsers: already notified same-tab above */ }
+        } catch (e) { /* ignore */ }
       }
       return Promise.resolve({ ok: ok });
     },
 
-    /** Subscribe to data-change events pushed from save() or other tabs. */
     on: function (channel, cb) {
       if (!listeners[channel]) listeners[channel] = [];
       listeners[channel].push(cb);
