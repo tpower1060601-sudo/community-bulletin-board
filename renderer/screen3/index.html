@@ -338,30 +338,42 @@ function nextTdKey() {
 
 async function fetchTD() {
   if (!tdKeys.length) await loadTdKeys();
-  const key = nextTdKey();
-  if (!key) {
+  if (!tdKeys.length) {
     const msg = '<div class="placeholder" style="font-size:12px;line-height:2">請至管理後台<br>「系統設定」填入<br>Twelve Data API Key</div>';
     document.getElementById('stockCol0').innerHTML = msg;
     document.getElementById('stockCol1').innerHTML = '';
     return;
   }
 
-  const symList = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)];
-  const url = `https://api.twelvedata.com/quote?symbol=${symList.join(',')}&apikey=${key}`;
+  // 把所有 symbol 依 key 數量均分，每批同時送出
+  const allSyms = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)];
+  const n = tdKeys.length;
+  const batches = tdKeys.map((key, i) => ({
+    key,
+    syms: allSyms.slice(
+      Math.floor(i * allSyms.length / n),
+      Math.floor((i + 1) * allSyms.length / n)
+    ),
+  })).filter(b => b.syms.length);
 
   try {
-    const r = await fetch(url);
-    const data = await r.json();
-    if (data.code) throw new Error(`TD ${data.code}: ${(data.message||'').slice(0,60)}`);
+    const results = await Promise.all(batches.map(({ key, syms }) =>
+      fetch(`https://api.twelvedata.com/quote?symbol=${syms.join(',')}&apikey=${key}`)
+        .then(r => r.json())
+        .then(data => ({ data, syms }))
+    ));
 
     stockData = {}; commodityData = {};
-    const isMulti = !data.symbol;
-    symList.forEach(sym => {
-      const q = isMulti ? data[sym] : (data.symbol === sym ? data : null);
-      if (!q || q.code || q.close == null) return;
-      const entry = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
-      if (STOCKS.find(s => s.sym === sym))      stockData[sym]      = entry;
-      if (COMMODITIES.find(c => c.sym === sym)) commodityData[sym]  = entry;
+    results.forEach(({ data, syms }) => {
+      if (data.code) return;
+      const isMulti = !data.symbol;
+      syms.forEach(sym => {
+        const q = isMulti ? data[sym] : (data.symbol === sym ? data : null);
+        if (!q || q.code || q.close == null) return;
+        const entry = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
+        if (STOCKS.find(s => s.sym === sym))      stockData[sym]     = entry;
+        if (COMMODITIES.find(c => c.sym === sym)) commodityData[sym] = entry;
+      });
     });
     renderStocks(); renderAssets();
   } catch(e) {
