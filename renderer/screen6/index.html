@@ -81,13 +81,14 @@ let files = [], current = 0;
 const player = document.getElementById('player');
 
 async function load() {
-  files = await window.api.media('videos');
+  const s = await window.api.get('settings');
+  files = s.videoUrls || [];
   if (!files.length) {
     document.getElementById('videoWrap').innerHTML = `
       <div class="empty">
         <div class="empty-icon">🎬</div>
         <div class="empty-text">尚無影片</div>
-        <div class="empty-sub">請至管理後台設定影片資料夾</div>
+        <div class="empty-sub">請至管理後台「影片播放設定」新增影片網址</div>
       </div>`;
     document.querySelector('.hud').style.display = 'none';
     document.querySelector('.vid-progress').style.display = 'none';

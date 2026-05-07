@@ -179,11 +179,28 @@ input:checked + .slider:before{transform:translateX(20px);}
 
     <!-- News & Windows -->
     <div id="tab-news" style="display:none">
-      <div class="page-header"><div class="page-title">視窗與<span>新聞</span></div><button class="btn btn-success" onclick="saveSettings()">儲存視窗配置</button></div>
+      <div class="page-header"><div class="page-title">視窗與<span>媒體</span></div><button class="btn btn-success" onclick="saveSettings()">儲存配置</button></div>
       <div class="card">
-        <div class="card-title">📡 新聞設定</div>
-        <div class="switch-group"><span>啟用即時新聞</span><label class="switch"><input type="checkbox" id="sNewsEnabled"><span class="slider"></span></label></div>
-        <div class="form-group" style="margin-top:16px"><label>新聞來源 RSS</label><input type="text" id="sNewsSource"></div>
+        <div class="card-title">🖼️ 圖片輪播設定（screen5）</div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label>輪播間隔（毫秒，預設 6000）</label>
+          <input type="number" id="sSlideInterval" placeholder="6000" style="width:200px">
+        </div>
+        <label style="margin-bottom:8px;display:block">圖片網址清單</label>
+        <div class="input-group" style="margin-bottom:12px">
+          <input type="text" id="newImageUrl" placeholder="https://example.com/photo.jpg">
+          <button class="btn btn-primary" onclick="addImageUrl()">新增</button>
+        </div>
+        <div id="imageUrlList"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">🎬 影片播放設定（screen6）</div>
+        <label style="margin-bottom:8px;display:block">影片網址清單（mp4 直連或可嵌入的網址）</label>
+        <div class="input-group" style="margin-bottom:12px">
+          <input type="text" id="newVideoUrl" placeholder="https://example.com/video.mp4">
+          <button class="btn btn-primary" onclick="addVideoUrl()">新增</button>
+        </div>
+        <div id="videoUrlList"></div>
       </div>
       <div class="card">
         <div class="card-title">📺 YouTube 設定</div>
@@ -384,17 +401,65 @@ function renderStatus() {
   grid.innerHTML=html||'尚無資料';
 }
 
+function renderImageUrls() {
+  var list=$('imageUrlList'); if(!list) return;
+  var urls=settings.imageUrls||[];
+  if(!urls.length){list.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">尚無圖片網址</div>';return;}
+  list.innerHTML=urls.map(function(url,i){
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
+      '<div style="flex:1;font-size:13px;color:var(--text2);word-break:break-all;background:rgba(0,0,0,0.3);padding:8px 12px;border-radius:6px">'+esc(url)+'</div>'+
+      '<button class="btn btn-danger btn-sm" onclick="removeImageUrl('+i+')">✕</button>'+
+      '</div>';
+  }).join('');
+}
+function addImageUrl() {
+  var url=($('newImageUrl')||{}).value.trim(); if(!url) return;
+  if(!settings.imageUrls) settings.imageUrls=[];
+  settings.imageUrls.push(url);
+  $('newImageUrl').value='';
+  renderImageUrls();
+}
+function removeImageUrl(i) {
+  if(!settings.imageUrls) return;
+  settings.imageUrls.splice(i,1);
+  renderImageUrls();
+}
+function renderVideoUrls() {
+  var list=$('videoUrlList'); if(!list) return;
+  var urls=settings.videoUrls||[];
+  if(!urls.length){list.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">尚無影片網址</div>';return;}
+  list.innerHTML=urls.map(function(url,i){
+    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
+      '<div style="flex:1;font-size:13px;color:var(--text2);word-break:break-all;background:rgba(0,0,0,0.3);padding:8px 12px;border-radius:6px">'+esc(url)+'</div>'+
+      '<button class="btn btn-danger btn-sm" onclick="removeVideoUrl('+i+')">✕</button>'+
+      '</div>';
+  }).join('');
+}
+function addVideoUrl() {
+  var url=($('newVideoUrl')||{}).value.trim(); if(!url) return;
+  if(!settings.videoUrls) settings.videoUrls=[];
+  settings.videoUrls.push(url);
+  $('newVideoUrl').value='';
+  renderVideoUrls();
+}
+function removeVideoUrl(i) {
+  if(!settings.videoUrls) return;
+  settings.videoUrls.splice(i,1);
+  renderVideoUrls();
+}
+
 function loadSettingsForm() {
   if($('sCommunityName')) $('sCommunityName').value=settings.communityName||'';
   if($('sWeatherApiKey')) $('sWeatherApiKey').value=settings.weatherApiKey||'';
   if($('sWeatherCity'))   $('sWeatherCity').value=settings.weatherCity||'';
-  if($('sNewsEnabled'))   $('sNewsEnabled').checked=settings.newsEnabled!==false;
-  if($('sNewsSource'))    $('sNewsSource').value=settings.newsSource||'';
+  if($('sSlideInterval')) $('sSlideInterval').value=settings.slideInterval||6000;
   if($('sYoutubeId'))     $('sYoutubeId').value=settings.youtubeId||'';
   if($('sYoutubeId2'))    $('sYoutubeId2').value=settings.youtubeId2||'';
   if($('sMeetingsUrl'))   $('sMeetingsUrl').value=settings.meetingsUrl||'';
   if($('sMeetingsZoom'))  $('sMeetingsZoom').value=settings.meetingsZoom||1.0;
   if($('sAdminPort'))     $('sAdminPort').value=settings.adminPort||8080;
+  renderImageUrls();
+  renderVideoUrls();
   var ctrl=$('windowControls'), wHtml='', wins=settings.windows||[];
   // 計算 base URL：從 admin 頁面路徑推導出各 screen 的完整網址
   var adminHref = window.location.href.split('?')[0].split('#')[0];
@@ -439,8 +504,7 @@ function saveSettings() {
   settings.communityName=($('sCommunityName')||{}).value||settings.communityName;
   settings.weatherApiKey=($('sWeatherApiKey')||{}).value||'';
   settings.weatherCity=($('sWeatherCity')||{}).value||'';
-  settings.newsEnabled=($('sNewsEnabled')||{}).checked;
-  settings.newsSource=($('sNewsSource')||{}).value||'';
+  settings.slideInterval=parseInt(($('sSlideInterval')||{}).value)||6000;
   settings.youtubeId=($('sYoutubeId')||{}).value||'';
   settings.youtubeId2=($('sYoutubeId2')||{}).value||'';
   settings.adminPort=parseInt(($('sAdminPort')||{}).value)||8080;
@@ -472,10 +536,8 @@ function doLogin() {
   }
 }
 
-// Show login overlay in web (non-Electron) mode if not authenticated
 (function(){
-  var isElectron=navigator.userAgent.indexOf('Electron')!==-1;
-  if(!isElectron && !sessionStorage.getItem('adm_auth')){
+  if(!sessionStorage.getItem('adm_auth')){
     $('loginOverlay').classList.add('open');
   } else {
     loadAll().catch(function(){});

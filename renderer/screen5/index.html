@@ -112,7 +112,7 @@ let files = [], current = 0, timer = null, interval = 6000;
 async function loadFiles() {
   const settings = await window.api.get('settings');
   interval = settings.slideInterval || 6000;
-  files = await window.api.media('images');
+  files = settings.imageUrls || [];
   render();
 }
 
@@ -129,7 +129,7 @@ function render() {
       <div class="empty">
         <div class="empty-icon">🖼</div>
         <div class="empty-text">尚無圖片</div>
-        <div class="empty-sub">請至管理後台設定圖片資料夾</div>
+        <div class="empty-sub">請至管理後台「圖片輪播設定」新增圖片網址</div>
       </div>`;
     return;
   }

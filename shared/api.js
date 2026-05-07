@@ -11,6 +11,7 @@
       weatherApiKey: '', weatherCity: 'Taipei',
       newsEnabled: false, newsSource: '',
       youtubeId: '', youtubeId2: '',
+      imageUrls: [], videoUrls: [],
       meetingsUrl: '', meetingsZoom: 1.0,
       adminPassword: 'admin', adminPort: 8080,
       windows: [
@@ -117,10 +118,6 @@
       listeners[channel].push(cb);
     },
 
-    /**
-     * Electron-only: returns local media file list.
-     * On web, always resolves to [] so screens show their empty-state UI.
-     */
     media: function (_type) {
       return Promise.resolve([]);
     },
