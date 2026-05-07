@@ -5,283 +5,376 @@
 <title>即時新聞看板</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root {
-  --accent: #38bdf8;
-  --bg: #020617;
-  --card: rgba(30,41,59,0.7);
-  --text: #f1f5f9;
-}
+
 body {
-  background: var(--bg);
-  background-image: radial-gradient(circle at 50% 10%, rgba(30,58,138,0.4) 0%, transparent 80%);
-  color: var(--text);
-  font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
+  background: #04080f;
+  color: #fff;
+  font-family: 'Microsoft JhengHei', 'PingFang TC', 'Noto Sans TC', sans-serif;
   height: 100vh;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
   user-select: none;
 }
 
-/* Header */
-.header {
-  padding: 40px 60px 20px;
+/* ── 4列佈局 ── */
+.news-rows {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-shrink: 0;
-}
-.title-group h1 {
-  font-size: 48px;
-  font-weight: 900;
-  letter-spacing: 4px;
-  background: linear-gradient(to right, #fff, var(--accent));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.title-group p {
-  font-size: 16px;
-  color: var(--accent);
-  letter-spacing: 6px;
-  text-transform: uppercase;
-  margin-top: 4px;
-  opacity: 0.8;
-}
-.header-clock {
-  text-align: right;
-}
-.header-clock .time {
-  font-size: 48px;
-  font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  color: #fff;
-  line-height: 1;
-}
-.header-clock .date {
-  font-size: 16px;
-  color: rgba(255,255,255,.4);
-  margin-top: 6px;
-  letter-spacing: 2px;
+  flex-direction: column;
+  height: 100vh;
 }
 
-/* News container */
-.news-container {
+.news-row {
   flex: 1;
-  padding: 20px 60px 60px;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  padding: 0 48px;
+  gap: 36px;
   position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
 }
-.news-card {
-  background: var(--card);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-left: 12px solid var(--accent);
-  border-radius: 24px;
-  padding: 60px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
-  animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  min-height: 400px;
+
+/* ── 左側標籤 ── */
+.row-label {
+  flex-shrink: 0;
+  width: 210px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 8px;
 }
-@keyframes slideIn {
-  from { opacity:0; transform:translateY(30px) scale(0.98); }
-  to   { opacity:1; transform:translateY(0) scale(1); }
-}
-.news-card.switching {
-  animation: slideOut 0.5s forwards;
-}
-@keyframes slideOut { to { opacity:0; transform:translateY(-30px); } }
 
-.news-meta {
-  color: var(--accent);
-  font-weight: 800;
-  font-size: 18px;
-  letter-spacing: 2px;
-  margin-bottom: 24px;
-  display: flex;
+.label-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-}
-.news-meta::before { content:''; width:40px; height:2px; background:currentColor; }
-
-.news-title {
-  font-size: 56px;
+  gap: 10px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 22px;
   font-weight: 900;
-  line-height: 1.2;
-  margin-bottom: 30px;
-  color: #fff;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-.news-desc {
-  font-size: 24px;
-  color: rgba(255,255,255,0.6);
-  line-height: 1.6;
+  letter-spacing: 2px;
+  border: 1px solid;
+  white-space: nowrap;
 }
 
-/* Progress Bar */
-.progress-container {
-  position: absolute;
-  bottom: 0; left: 60px; right: 60px;
-  height: 4px;
-  background: rgba(255,255,255,0.05);
-  border-radius: 2px;
-  overflow: hidden;
-}
-.progress-bar {
-  height: 100%;
-  background: var(--accent);
-  width: 0%;
-  box-shadow: 0 0 10px var(--accent);
+.label-sub {
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 3px;
+  padding-left: 4px;
+  text-transform: uppercase;
 }
 
-/* Counter */
-.counter-row {
-  padding: 16px 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ── 分隔線 ── */
+.divider {
+  width: 1px;
+  height: 55%;
+  background: rgba(255,255,255,0.12);
   flex-shrink: 0;
 }
-.counter-dots { display:flex; gap:8px; }
-.counter-dot {
-  width:8px; height:8px; border-radius:50%;
-  background:rgba(255,255,255,.2);
-  transition:all .3s;
-}
-.counter-dot.active { background:var(--accent); transform:scale(1.4); box-shadow:0 0 6px var(--accent); }
-.counter-text { font-size:14px; color:rgba(255,255,255,.3); letter-spacing:2px; }
 
-/* Empty */
-.no-news {
-  text-align:center; color:rgba(255,255,255,.2);
-  padding:60px; font-size:20px; letter-spacing:3px;
+/* ── 新聞顯示區 ── */
+.news-display {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+  display: flex;
+  align-items: center;
 }
+
+/* 進出動畫 slot */
+.slot {
+  position: absolute;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  will-change: transform, opacity;
+}
+
+.slot.state-current {
+  transform: translateY(0%);
+  opacity: 1;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity   0.55s ease;
+}
+.slot.state-enter {
+  transform: translateY(105%);
+  opacity: 0;
+}
+.slot.state-exit {
+  transform: translateY(-105%);
+  opacity: 0;
+  transition: transform 0.45s cubic-bezier(0.55, 0, 0.78, 0),
+              opacity   0.45s ease;
+}
+
+/* 新聞文字 */
+.news-text {
+  font-size: 46px;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+  letter-spacing: 1px;
+}
+
+/* 長文字滾動 */
+.news-text.is-long {
+  animation: ticker linear 1 forwards;
+  animation-play-state: running;
+}
+
+@keyframes ticker {
+  0%   { transform: translateX(0); }
+  12%  { transform: translateX(0); }   /* 初始停留 */
+  88%  { transform: translateX(var(--tx)); }
+  100% { transform: translateX(var(--tx)); } /* 末端停留 */
+}
+
+/* 載入/錯誤 */
+.news-loading {
+  font-size: 28px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 4px;
+}
+
+/* 即時指示燈 */
+.live-dot {
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  animation: blink 2s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.4)} }
+
+/* 右下角計數器 */
+.row-counter {
+  position: absolute;
+  right: 0;
+  bottom: 10px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 1px;
+  padding-right: 4px;
+}
+
+/* ── 各列色彩主題 ── */
+/* Row 1: 公視 — 紅 */
+.row-1 {
+  background: linear-gradient(90deg, rgba(239,68,68,0.07) 0%, transparent 35%);
+  border-left: 5px solid #ef4444;
+}
+.row-1 .label-badge { color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.1); }
+.row-1 .live-dot { background:#ef4444; box-shadow:0 0 8px #ef4444; }
+
+/* Row 2: 財經 — 綠 */
+.row-2 {
+  background: linear-gradient(90deg, rgba(16,185,129,0.07) 0%, transparent 35%);
+  border-left: 5px solid #10b981;
+}
+.row-2 .label-badge { color:#10b981; border-color:rgba(16,185,129,0.35); background:rgba(16,185,129,0.1); }
+.row-2 .live-dot { background:#10b981; box-shadow:0 0 8px #10b981; }
+
+/* Row 3: 國際 — 青 */
+.row-3 {
+  background: linear-gradient(90deg, rgba(56,189,248,0.07) 0%, transparent 35%);
+  border-left: 5px solid #38bdf8;
+}
+.row-3 .label-badge { color:#38bdf8; border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.1); }
+.row-3 .live-dot { background:#38bdf8; box-shadow:0 0 8px #38bdf8; }
+
+/* Row 4: 國際財經 — 金 */
+.row-4 {
+  background: linear-gradient(90deg, rgba(251,191,36,0.07) 0%, transparent 35%);
+  border-left: 5px solid #fbbf24;
+  border-bottom: none;
+}
+.row-4 .label-badge { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.1); }
+.row-4 .live-dot { background:#fbbf24; box-shadow:0 0 8px #fbbf24; }
 </style>
 </head>
 <body>
 
-<div class="header">
-  <div class="title-group">
-    <h1>即時新聞</h1>
-    <p>LIVE NEWS BULLETIN</p>
+<div class="news-rows">
+  <div class="news-row row-1">
+    <div class="row-label">
+      <div class="label-badge"><span class="live-dot"></span>公視即時新聞</div>
+      <div class="label-sub">PTS LIVE NEWS</div>
+    </div>
+    <div class="divider"></div>
+    <div class="news-display" id="d0">
+      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    </div>
+    <div class="row-counter" id="c0"></div>
   </div>
-  <div class="header-clock">
-    <div class="time" id="clockTime">00:00:00</div>
-    <div class="date" id="clockDate"></div>
+
+  <div class="news-row row-2">
+    <div class="row-label">
+      <div class="label-badge"><span class="live-dot"></span>台灣財經新聞</div>
+      <div class="label-sub">TW FINANCE</div>
+    </div>
+    <div class="divider"></div>
+    <div class="news-display" id="d1">
+      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    </div>
+    <div class="row-counter" id="c1"></div>
+  </div>
+
+  <div class="news-row row-3">
+    <div class="row-label">
+      <div class="label-badge"><span class="live-dot"></span>國際即時新聞</div>
+      <div class="label-sub">WORLD NEWS</div>
+    </div>
+    <div class="divider"></div>
+    <div class="news-display" id="d2">
+      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    </div>
+    <div class="row-counter" id="c2"></div>
+  </div>
+
+  <div class="news-row row-4">
+    <div class="row-label">
+      <div class="label-badge"><span class="live-dot"></span>國際財經新聞</div>
+      <div class="label-sub">GLOBAL FINANCE</div>
+    </div>
+    <div class="divider"></div>
+    <div class="news-display" id="d3">
+      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    </div>
+    <div class="row-counter" id="c3"></div>
   </div>
 </div>
 
-<div class="news-container">
-  <div id="newsCard" class="news-card">
-    <div class="news-meta" id="newsMeta">LOADING</div>
-    <div class="news-title" id="newsTitle">載入中…</div>
-    <div class="news-desc"  id="newsDesc"></div>
-  </div>
-  <div class="progress-container">
-    <div class="progress-bar" id="progressBar"></div>
-  </div>
-</div>
-
-<div class="counter-row">
-  <div class="counter-dots" id="counterDots"></div>
-  <div class="counter-text" id="counterText"></div>
-</div>
-
-<script src="../../shared/api.js"></script>
 <script>
-const DAYS = ['日','一','二','三','四','五','六'];
-const SWITCH_TIME = 10000;
+'use strict';
 
-let newsItems = [], currentIndex = 0, timer = null, progTimer = null;
+/* ── RSS 來源設定 ── */
+const FEEDS = [
+  {
+    // 公視即時新聞
+    url: 'https://about.pts.org.tw/rss/XML/newsfeed.xml',
+    backup: 'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'
+  },
+  {
+    // 台灣財經：聯合報財經
+    url: 'https://udn.com/rssfeed/news/2/6641?ch=news',
+    backup: 'https://ec.ltn.com.tw/rss/news.xml'
+  },
+  {
+    // 國際即時：BBC World
+    url: 'https://feeds.bbci.co.uk/news/world/rss.xml',
+    backup: 'https://feeds.bbci.co.uk/news/rss.xml'
+  },
+  {
+    // 國際財經：BBC Business
+    url: 'https://feeds.bbci.co.uk/news/business/rss.xml',
+    backup: 'https://feeds.bbci.co.uk/news/technology/rss.xml'
+  }
+];
 
-// Clock
-function tick() {
-  const n = new Date();
-  document.getElementById('clockTime').textContent =
-    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
-  document.getElementById('clockDate').textContent =
-    `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日 星期${DAYS[n.getDay()]}`;
+const RSS2JSON  = 'https://api.rss2json.com/v1/api.json?count=30&rss_url=';
+const INTERVAL  = 5000;   // 5 秒換一則
+const REFETCH   = 5 * 60 * 1000;  // 5 分鐘重抓
+
+/* ── 狀態 ── */
+const rows = FEEDS.map(() => ({ items: [], idx: 0, timer: null }));
+
+/* ── RSS 抓取（透過 rss2json CORS proxy） ── */
+async function fetchFeed(ri, useBackup) {
+  const src = useBackup ? FEEDS[ri].backup : FEEDS[ri].url;
+  try {
+    const res  = await fetch(RSS2JSON + encodeURIComponent(src), { cache: 'no-cache' });
+    const data = await res.json();
+    if (data.status === 'ok' && data.items && data.items.length > 0) {
+      rows[ri].items = data.items
+        .map(i => i.title || '')
+        .filter(t => t.length > 0);
+      rows[ri].idx = 0;
+      if (!rows[ri].timer) startTicker(ri);
+      else showNext(ri, false);
+    } else {
+      if (!useBackup) fetchFeed(ri, true);
+      else showError(ri, '暫無資料');
+    }
+  } catch(e) {
+    if (!useBackup) {
+      fetchFeed(ri, true);
+    } else {
+      showError(ri, '資料載入失敗');
+      setTimeout(() => fetchFeed(ri, false), 30000);
+    }
+  }
 }
 
-function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
-
-function formatDate(str) {
-  if (!str) return '';
-  try { return new Date(str).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
-  catch(e) { return str; }
+function showError(ri, msg) {
+  const el = document.getElementById('d' + ri);
+  el.innerHTML = '<div class="slot state-current"><span class="news-text news-loading">' + msg + '</span></div>';
 }
 
-function startProgress() {
-  const bar = document.getElementById('progressBar');
-  bar.style.transition = 'none'; bar.style.width = '0%';
+/* ── 換頁動畫（上下滑動） ── */
+function showNext(ri, animate) {
+  const row   = rows[ri];
+  const el    = document.getElementById('d' + ri);
+  const cntEl = document.getElementById('c' + ri);
+  if (!row.items.length) return;
+
+  const title       = row.items[row.idx];
+  const displayW    = el.offsetWidth;
+
+  // 計數
+  cntEl.textContent = (row.idx + 1) + ' / ' + row.items.length;
+
+  // 建新 slot
+  const newSlot = document.createElement('div');
+  newSlot.className = 'slot state-enter';
+
+  const span = document.createElement('span');
+  span.className = 'news-text';
+  span.textContent = title;
+  newSlot.appendChild(span);
+  el.appendChild(newSlot);
+
+  // 等 DOM 更新後測量
   requestAnimationFrame(() => {
-    bar.style.transition = `width ${SWITCH_TIME}ms linear`;
-    bar.style.width = '100%';
+    const tw = span.scrollWidth;
+    if (tw > displayW - 20) {
+      const tx = -(tw - displayW + 40);
+      const dur = (Math.abs(tx) / 70 + 2).toFixed(1);   // 70px/s + 2s 停留
+      span.style.setProperty('--tx', tx + 'px');
+      span.style.animationDuration = dur + 's';
+      span.style.animationDelay = '0.6s';
+      span.classList.add('is-long');
+    }
+
+    // 退出舊 slot
+    const old = el.querySelector('.slot.state-current');
+    if (old) old.className = 'slot state-exit';
+
+    // 進入新 slot
+    requestAnimationFrame(() => {
+      newSlot.className = 'slot state-current';
+    });
+
+    // 清理舊 slot
+    setTimeout(() => {
+      if (old && old.parentNode) old.parentNode.removeChild(old);
+    }, 600);
   });
 }
 
-function updateDots() {
-  const el = document.getElementById('counterDots');
-  el.innerHTML = newsItems.map((_,i) =>
-    `<div class="counter-dot${i===currentIndex?' active':''}"></div>`
-  ).join('');
-  document.getElementById('counterText').textContent =
-    newsItems.length ? `${currentIndex+1} / ${newsItems.length}` : '';
+function startTicker(ri) {
+  showNext(ri, false);
+  rows[ri].timer = setInterval(() => {
+    const row = rows[ri];
+    if (!row.items.length) return;
+    row.idx = (row.idx + 1) % row.items.length;
+    showNext(ri, true);
+  }, INTERVAL);
 }
 
-function updateView() {
-  if (!newsItems.length) {
-    document.getElementById('newsMeta').textContent  = 'NEWS';
-    document.getElementById('newsTitle').textContent = '暫無新聞資料';
-    document.getElementById('newsDesc').textContent  = '請於管理後台設定 RSS 新聞來源';
-    updateDots();
-    return;
-  }
-  const item = newsItems[currentIndex];
-  document.getElementById('newsMeta').textContent  = formatDate(item.pubDate) || 'NEWS';
-  document.getElementById('newsTitle').textContent = item.title || '';
-  document.getElementById('newsDesc').textContent  = '';
-  updateDots();
-  startProgress();
-}
+/* ── 初始化 ── */
+FEEDS.forEach((_, i) => fetchFeed(i, false));
 
-function nextNews() {
-  const card = document.getElementById('newsCard');
-  card.classList.add('switching');
-  setTimeout(() => {
-    currentIndex = (currentIndex + 1) % (newsItems.length || 1);
-    card.classList.remove('switching');
-    void card.offsetWidth; // reflow to restart animation
-    card.style.animation = 'none';
-    requestAnimationFrame(() => { card.style.animation = ''; });
-    updateView();
-  }, 500);
-}
-
-function startTimer() {
-  if (timer) clearInterval(timer);
-  if (newsItems.length > 1) timer = setInterval(nextNews, SWITCH_TIME);
-}
-
-async function init() {
-  newsItems = await window.api.get('news');
-  updateView();
-  startTimer();
-}
-
-window.api.on('news:updated', n => {
-  newsItems = n;
-  currentIndex = 0;
-  updateView();
-  startTimer();
-});
-
-setInterval(tick, 1000); tick();
-init();
+// 定期重新抓取
+setInterval(() => FEEDS.forEach((_, i) => fetchFeed(i, false)), REFETCH);
 </script>
 </body>
 </html>
