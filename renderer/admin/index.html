@@ -224,7 +224,14 @@ input:checked + .slider:before{transform:translateX(20px);}
           <div class="form-group"><label>城市（英文）</label><input type="text" id="sWeatherCity"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>股市 API Key（<a href="https://twelvedata.com" target="_blank" style="color:var(--accent)">Twelve Data</a> 免費申請）</label><input type="text" id="sTwelveDataKey" placeholder="貼上 API Key 後儲存即可顯示股市報價"></div>
+          <div class="form-group"><label>FMP Key 1（<a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="color:var(--accent)">Financial Modeling Prep</a>）</label><input type="text" id="sFmpKey1" placeholder="第 1 組 FMP API Key"></div>
+          <div class="form-group"><label>FMP Key 2</label><input type="text" id="sFmpKey2" placeholder="第 2 組 FMP API Key"></div>
+          <div class="form-group"><label>FMP Key 3</label><input type="text" id="sFmpKey3" placeholder="第 3 組 FMP API Key"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Twelve Data Key 1（<a href="https://twelvedata.com" target="_blank" style="color:var(--accent)">Twelve Data</a>）</label><input type="text" id="sTdKey1" placeholder="第 1 組 API Key"></div>
+          <div class="form-group"><label>Twelve Data Key 2</label><input type="text" id="sTdKey2" placeholder="第 2 組 API Key"></div>
+          <div class="form-group"><label>Twelve Data Key 3</label><input type="text" id="sTdKey3" placeholder="第 3 組 API Key"></div>
         </div>
         <div class="card">
           <div class="card-title">🏢 會議室網址設定</div>
@@ -480,7 +487,12 @@ function renderYtSlots(ch) {
 function loadSettingsForm() {
   if($('sCommunityName')) $('sCommunityName').value=settings.communityName||'';
   if($('sWeatherApiKey'))    $('sWeatherApiKey').value=settings.weatherApiKey||'';
-  if($('sTwelveDataKey'))   $('sTwelveDataKey').value=settings.twelveDataKey||'';
+  if($('sFmpKey1'))  $('sFmpKey1').value=settings.fmpKey1||'';
+  if($('sFmpKey2'))  $('sFmpKey2').value=settings.fmpKey2||'';
+  if($('sFmpKey3'))  $('sFmpKey3').value=settings.fmpKey3||'';
+  if($('sTdKey1'))   $('sTdKey1').value=settings.tdKey1||'';
+  if($('sTdKey2'))   $('sTdKey2').value=settings.tdKey2||'';
+  if($('sTdKey3'))   $('sTdKey3').value=settings.tdKey3||'';
   if($('sWeatherCity'))   $('sWeatherCity').value=settings.weatherCity||'';
   if($('sSlideInterval')) $('sSlideInterval').value=settings.slideInterval||6;
   if($('sMeetingsUrl'))   $('sMeetingsUrl').value=settings.meetingsUrl||'';
@@ -541,7 +553,12 @@ function loadAll() {
 function saveSettings() {
   settings.communityName=($('sCommunityName')||{}).value||settings.communityName;
   settings.weatherApiKey=($('sWeatherApiKey')||{}).value||'';
-  settings.twelveDataKey=($('sTwelveDataKey')||{}).value||'';
+  settings.fmpKey1=($('sFmpKey1')||{}).value||'';
+  settings.fmpKey2=($('sFmpKey2')||{}).value||'';
+  settings.fmpKey3=($('sFmpKey3')||{}).value||'';
+  settings.tdKey1=($('sTdKey1')||{}).value||'';
+  settings.tdKey2=($('sTdKey2')||{}).value||'';
+  settings.tdKey3=($('sTdKey3')||{}).value||'';
   settings.weatherCity=($('sWeatherCity')||{}).value||'';
   settings.slideInterval=parseInt(($('sSlideInterval')||{}).value)||6;
   settings.adminPort=parseInt(($('sAdminPort')||{}).value)||8080;
