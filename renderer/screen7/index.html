@@ -1,0 +1,287 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>即時新聞看板</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --accent: #38bdf8;
+  --bg: #020617;
+  --card: rgba(30,41,59,0.7);
+  --text: #f1f5f9;
+}
+body {
+  background: var(--bg);
+  background-image: radial-gradient(circle at 50% 10%, rgba(30,58,138,0.4) 0%, transparent 80%);
+  color: var(--text);
+  font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+/* Header */
+.header {
+  padding: 40px 60px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+.title-group h1 {
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  background: linear-gradient(to right, #fff, var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.title-group p {
+  font-size: 16px;
+  color: var(--accent);
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  margin-top: 4px;
+  opacity: 0.8;
+}
+.header-clock {
+  text-align: right;
+}
+.header-clock .time {
+  font-size: 48px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  line-height: 1;
+}
+.header-clock .date {
+  font-size: 16px;
+  color: rgba(255,255,255,.4);
+  margin-top: 6px;
+  letter-spacing: 2px;
+}
+
+/* News container */
+.news-container {
+  flex: 1;
+  padding: 20px 60px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+.news-card {
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: 12px solid var(--accent);
+  border-radius: 24px;
+  padding: 60px;
+  backdrop-filter: blur(20px);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  animation: slideIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+@keyframes slideIn {
+  from { opacity:0; transform:translateY(30px) scale(0.98); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.news-card.switching {
+  animation: slideOut 0.5s forwards;
+}
+@keyframes slideOut { to { opacity:0; transform:translateY(-30px); } }
+
+.news-meta {
+  color: var(--accent);
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.news-meta::before { content:''; width:40px; height:2px; background:currentColor; }
+
+.news-title {
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1.2;
+  margin-bottom: 30px;
+  color: #fff;
+  text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.news-desc {
+  font-size: 24px;
+  color: rgba(255,255,255,0.6);
+  line-height: 1.6;
+}
+
+/* Progress Bar */
+.progress-container {
+  position: absolute;
+  bottom: 0; left: 60px; right: 60px;
+  height: 4px;
+  background: rgba(255,255,255,0.05);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+/* Counter */
+.counter-row {
+  padding: 16px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+.counter-dots { display:flex; gap:8px; }
+.counter-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,.2);
+  transition:all .3s;
+}
+.counter-dot.active { background:var(--accent); transform:scale(1.4); box-shadow:0 0 6px var(--accent); }
+.counter-text { font-size:14px; color:rgba(255,255,255,.3); letter-spacing:2px; }
+
+/* Empty */
+.no-news {
+  text-align:center; color:rgba(255,255,255,.2);
+  padding:60px; font-size:20px; letter-spacing:3px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title-group">
+    <h1>即時新聞</h1>
+    <p>LIVE NEWS BULLETIN</p>
+  </div>
+  <div class="header-clock">
+    <div class="time" id="clockTime">00:00:00</div>
+    <div class="date" id="clockDate"></div>
+  </div>
+</div>
+
+<div class="news-container">
+  <div id="newsCard" class="news-card">
+    <div class="news-meta" id="newsMeta">LOADING</div>
+    <div class="news-title" id="newsTitle">載入中…</div>
+    <div class="news-desc"  id="newsDesc"></div>
+  </div>
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+</div>
+
+<div class="counter-row">
+  <div class="counter-dots" id="counterDots"></div>
+  <div class="counter-text" id="counterText"></div>
+</div>
+
+<script src="../../shared/api.js"></script>
+<script>
+const DAYS = ['日','一','二','三','四','五','六'];
+const SWITCH_TIME = 10000;
+
+let newsItems = [], currentIndex = 0, timer = null, progTimer = null;
+
+// Clock
+function tick() {
+  const n = new Date();
+  document.getElementById('clockTime').textContent =
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+  document.getElementById('clockDate').textContent =
+    `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日 星期${DAYS[n.getDay()]}`;
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function formatDate(str) {
+  if (!str) return '';
+  try { return new Date(str).toLocaleString('zh-TW', {month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}); }
+  catch(e) { return str; }
+}
+
+function startProgress() {
+  const bar = document.getElementById('progressBar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${SWITCH_TIME}ms linear`;
+    bar.style.width = '100%';
+  });
+}
+
+function updateDots() {
+  const el = document.getElementById('counterDots');
+  el.innerHTML = newsItems.map((_,i) =>
+    `<div class="counter-dot${i===currentIndex?' active':''}"></div>`
+  ).join('');
+  document.getElementById('counterText').textContent =
+    newsItems.length ? `${currentIndex+1} / ${newsItems.length}` : '';
+}
+
+function updateView() {
+  if (!newsItems.length) {
+    document.getElementById('newsMeta').textContent  = 'NEWS';
+    document.getElementById('newsTitle').textContent = '暫無新聞資料';
+    document.getElementById('newsDesc').textContent  = '請於管理後台設定 RSS 新聞來源';
+    updateDots();
+    return;
+  }
+  const item = newsItems[currentIndex];
+  document.getElementById('newsMeta').textContent  = formatDate(item.pubDate) || 'NEWS';
+  document.getElementById('newsTitle').textContent = item.title || '';
+  document.getElementById('newsDesc').textContent  = '';
+  updateDots();
+  startProgress();
+}
+
+function nextNews() {
+  const card = document.getElementById('newsCard');
+  card.classList.add('switching');
+  setTimeout(() => {
+    currentIndex = (currentIndex + 1) % (newsItems.length || 1);
+    card.classList.remove('switching');
+    void card.offsetWidth; // reflow to restart animation
+    card.style.animation = 'none';
+    requestAnimationFrame(() => { card.style.animation = ''; });
+    updateView();
+  }, 500);
+}
+
+function startTimer() {
+  if (timer) clearInterval(timer);
+  if (newsItems.length > 1) timer = setInterval(nextNews, SWITCH_TIME);
+}
+
+async function init() {
+  newsItems = await window.api.get('news');
+  updateView();
+  startTimer();
+}
+
+window.api.on('news:updated', n => {
+  newsItems = n;
+  currentIndex = 0;
+  updateView();
+  startTimer();
+});
+
+setInterval(tick, 1000); tick();
+init();
+</script>
+</body>
+</html>

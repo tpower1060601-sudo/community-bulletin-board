@@ -1,0 +1,239 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>公告欄 B</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root { --accent:#00d4ff; --bg:#06080f; }
+body {
+  background: var(--bg);
+  color: #fff;
+  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+/* Header */
+.header {
+  background: linear-gradient(135deg,#04111f 0%,#072340 100%);
+  border-bottom: 3px solid var(--accent);
+  padding: 18px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.logo { font-size:40px; font-weight:900; letter-spacing:8px; color:#fff; }
+.logo span { color:var(--accent); }
+
+/* Slide area */
+.slides { flex:1; position:relative; overflow:hidden; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 60px;
+  opacity: 0;
+  transition: opacity .8s ease;
+  background: radial-gradient(ellipse at center, rgba(0,40,80,.5) 0%, transparent 70%);
+}
+.slide.active { opacity:1; }
+
+.slide-inner { max-width: 1200px; text-align: center; }
+.slide-badge {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 40px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin-bottom: 32px;
+  border: 1px solid;
+}
+.badge-general{ color:#f0a500; border-color:rgba(240,165,0,.4); background:rgba(240,165,0,.1); }
+.badge-urgent { color:#ff4d4d; border-color:rgba(255,77,77,.4); background:rgba(255,77,77,.1); }
+.badge-event  { color:#2ecc71; border-color:rgba(46,204,113,.4); background:rgba(46,204,113,.1); }
+.badge-notice { color:var(--accent); border-color:rgba(0,212,255,.4); background:rgba(0,212,255,.1); }
+
+.slide-title {
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1.4;
+  margin-bottom: 36px;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(0,212,255,.3);
+}
+.slide-body {
+  font-size: 40px;
+  line-height: 2.2;
+  color: rgba(255,255,255,.8);
+}
+.slide-date { margin-top: 40px; font-size:24px; color:rgba(255,255,255,.35); }
+
+/* Dots */
+.dots {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 0;
+  background: rgba(0,0,0,.3);
+}
+.dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  transition: all .3s;
+  cursor: pointer;
+}
+.dot.active { background: var(--accent); transform:scale(1.4); box-shadow:0 0 8px var(--accent); }
+
+/* Progress bar */
+.progress {
+  height: 3px;
+  background: rgba(255,255,255,.1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #00ff88);
+  width: 0%;
+  transition: none;
+}
+
+/* Marquee */
+.marquee-bar {
+  background: linear-gradient(90deg,#04111f,#072340,#04111f);
+  border-top: 2px solid var(--accent);
+  padding: 12px 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.marquee-track { display:flex; white-space:nowrap; animation:mq linear infinite; }
+@keyframes mq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.mq-seg { color:var(--accent); font-size:32px; font-weight:800; letter-spacing:4px; padding:0 60px; }
+.mq-sep { color:rgba(0,212,255,.5); font-size:30px; line-height: 32px; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo" id="communityName"><span>幸福</span>社區公告</div>
+</header>
+
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div class="slides" id="slides"></div>
+<div class="dots"   id="dots"></div>
+
+<div class="marquee-bar">
+  <div class="marquee-track" id="mTrack" style="animation-duration:30s">
+    <span class="mq-seg" id="ms1"></span><span class="mq-sep">◈</span>
+    <span class="mq-seg" id="ms2"></span><span class="mq-sep">◈</span>
+  </div>
+</div>
+
+<script src="../../shared/api.js"></script>
+<script>
+const TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活動公告', notice:'重要通知' };
+const INTERVAL = 7000;
+
+let data = { marquee:'', list:[] };
+let current = 0, timer = null;
+
+function startProgress() {
+  const bar = document.getElementById('progressBar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${INTERVAL}ms linear`;
+    bar.style.width = '100%';
+  });
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function isAnnActive(a) {
+  if (a.alwaysValid !== false && !a.startDate) return true;
+  if (a.alwaysValid) return true;
+  const now = new Date().getTime();
+  const start = a.startDate ? new Date(a.startDate + 'T' + (a.startTime || '00:00')).getTime() : 0;
+  const end = a.endDate ? new Date(a.endDate + 'T' + (a.endTime || '23:59:59')).getTime() : Infinity;
+  return now >= start && now <= end;
+}
+
+function render() {
+  const active = (data.list||[]).filter(isAnnActive);
+  const slidesEl = document.getElementById('slides');
+  const dotsEl   = document.getElementById('dots');
+
+  if (!active.length) {
+    slidesEl.innerHTML = '<div style="color:rgba(255,255,255,.2);font-size:24px;text-align:center;margin-top:40%">暫無公告</div>';
+    dotsEl.innerHTML = '';
+    return;
+  }
+
+  slidesEl.innerHTML = active.map((a,i) => {
+    const type = a.type||'general';
+    return `<div class="slide${i===0?' active':''}" data-i="${i}">
+      <div class="slide-inner">
+        <div class="slide-badge badge-${type}">${TYPE_LABEL[type]||'公告'}</div>
+        <div class="slide-title">${esc(a.title)}</div>
+        <div class="slide-body">${esc(a.content)}</div>
+        <div class="slide-date">${a.date||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  dotsEl.innerHTML = active.map((_,i) =>
+    `<div class="dot${i===0?' active':''}" onclick="goTo(${i})"></div>`
+  ).join('');
+
+  current = 0;
+  startSlider(active.length);
+}
+
+function goTo(idx) {
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.dot');
+  if (!slides.length) return;
+  slides[current].classList.remove('active');
+  dots[current].classList.remove('active');
+  current = idx % slides.length;
+  slides[current].classList.add('active');
+  dots[current].classList.add('active');
+  startProgress();
+}
+
+function startSlider(count) {
+  if (timer) clearInterval(timer);
+  startProgress();
+  if (count > 1) timer = setInterval(() => goTo(current + 1), INTERVAL);
+}
+
+function renderMarquee() {
+  const t = data.marquee || '歡迎光臨！';
+  document.getElementById('ms1').textContent = t;
+  document.getElementById('ms2').textContent = t;
+  document.getElementById('mTrack').style.animationDuration = Math.max(20, t.length*0.35)+'s';
+}
+
+async function init() {
+  const [ann, sett] = await Promise.all([window.api.get('announcements'), window.api.get('settings')]);
+  data = ann;
+  if (sett.communityName) document.getElementById('communityName').innerHTML = `<span>${sett.communityName.slice(0,2)}</span>${sett.communityName.slice(2)}公告`;
+  render(); renderMarquee();
+}
+
+window.api.on('announcements:updated', d=>{ data=d; render(); renderMarquee(); });
+window.api.on('settings:updated', s=>{ if(s.communityName) document.getElementById('communityName').innerHTML=`<span>${s.communityName.slice(0,2)}</span>${s.communityName.slice(2)}公告`; });
+
+init();
+</script>
+</body>
+</html>

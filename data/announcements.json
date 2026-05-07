@@ -1,0 +1,44 @@
+{
+  "marquee": "歡迎來到親家市政廣場！請保持整潔，互相禮讓，祝您生活愉快！Welcome to our community!",
+  "list": [
+    {
+      "id": 1776327882135,
+      "title": "測試1",
+      "type": "general",
+      "content": "TEST",
+      "alwaysValid": false,
+      "startDate": "2026-04-16",
+      "startTime": "16:24",
+      "endDate": "2026-04-17",
+      "endTime": "",
+      "date": "2026-04-16"
+    },
+    {
+      "id": 1,
+      "title": "電梯維護保養公告",
+      "content": "本月25日（星期四）上午10:00至12:00，將進行電梯年度維護保養作業，屆時電梯暫停使用，請各位住戶提早規劃行程，造成不便敬請見諒。",
+      "type": "notice",
+      "priority": 2,
+      "date": "2026-04-16",
+      "active": true
+    },
+    {
+      "id": 2,
+      "title": "社區春季清潔日活動",
+      "content": "管理委員會訂於4月20日（星期日）上午9:00舉辦社區清潔活動，歡迎全體住戶踴躍參與，共同維護我們美麗的家園！參加者將獲贈清潔禮包一份。",
+      "type": "event",
+      "priority": 1,
+      "date": "2026-04-14",
+      "active": true
+    },
+    {
+      "id": 3,
+      "title": "停車場管理規定提醒",
+      "content": "請勿將車輛停放於消防通道及殘障車位（非殘障住戶），違規車輛將予以拍照記錄並通知。感謝大家的配合與理解。",
+      "type": "general",
+      "priority": 1,
+      "date": "2026-04-10",
+      "active": true
+    }
+  ]
+}

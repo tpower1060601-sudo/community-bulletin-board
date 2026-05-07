@@ -1,0 +1,123 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>影片播放</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #000;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
+}
+.video-wrap {
+  position: fixed; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+video {
+  width:100%; height:100%;
+  object-fit: contain;
+}
+
+/* HUD */
+.hud {
+  position: fixed; bottom:0; left:0; right:0;
+  background: linear-gradient(transparent, rgba(0,0,0,.6));
+  padding: 20px 30px 12px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  opacity: 0;
+  transition: opacity .4s;
+  z-index:10;
+}
+body:hover .hud { opacity:1; }
+.vid-name { font-size:14px; color:rgba(255,255,255,.6); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.vid-counter { font-size:13px; color:rgba(255,255,255,.4); white-space:nowrap; }
+
+/* Progress */
+.vid-progress {
+  position:fixed; bottom:0; left:0; right:0;
+  height:3px; z-index:20;
+  background:rgba(255,255,255,.15);
+}
+.vid-progress-bar {
+  height:100%;
+  background:rgba(255,255,255,.5);
+  width:0%;
+  transition: width .5s linear;
+}
+
+/* Empty */
+.empty {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:#0a0e1a;
+  color:rgba(255,255,255,.3);
+  gap:20px;
+}
+.empty-icon { font-size:80px; }
+.empty-text { font-size:22px; letter-spacing:3px; }
+.empty-sub  { font-size:14px; color:rgba(255,255,255,.15); }
+</style>
+</head>
+<body>
+
+<div class="video-wrap" id="videoWrap">
+  <video id="player" muted playsinline></video>
+</div>
+
+<div class="hud">
+  <div class="vid-name" id="vidName">—</div>
+  <div class="vid-counter" id="vidCounter"></div>
+</div>
+<div class="vid-progress"><div class="vid-progress-bar" id="vidPbar"></div></div>
+
+<script src="../../shared/api.js"></script>
+<script>
+let files = [], current = 0;
+const player = document.getElementById('player');
+
+async function load() {
+  files = await window.api.media('videos');
+  if (!files.length) {
+    document.getElementById('videoWrap').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🎬</div>
+        <div class="empty-text">尚無影片</div>
+        <div class="empty-sub">請至管理後台設定影片資料夾</div>
+      </div>`;
+    document.querySelector('.hud').style.display = 'none';
+    document.querySelector('.vid-progress').style.display = 'none';
+    return;
+  }
+  current = 0;
+  playFile(current);
+}
+
+function playFile(idx) {
+  current = ((idx % files.length) + files.length) % files.length;
+  const src = files[current];
+  const name = src.split('/').pop();
+  player.src = src;
+  player.load();
+  player.play().catch(() => {});
+  document.getElementById('vidName').textContent = decodeURIComponent(name);
+  document.getElementById('vidCounter').textContent = `${current+1} / ${files.length}`;
+}
+
+player.addEventListener('ended', () => { playFile(current + 1); });
+player.addEventListener('error', () => { setTimeout(() => playFile(current + 1), 1000); });
+player.addEventListener('timeupdate', () => {
+  if (!player.duration) return;
+  const pct = (player.currentTime / player.duration) * 100;
+  document.getElementById('vidPbar').style.width = pct + '%';
+});
+
+window.api.on('settings:updated', () => load());
+load();
+</script>
+</body>
+</html>

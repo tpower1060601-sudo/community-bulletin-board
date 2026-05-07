@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "大廳佈告欄系統",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "port": 9222
+    }
+  ]
+}

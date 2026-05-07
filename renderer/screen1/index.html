@@ -1,0 +1,265 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>公告欄 A</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --gold: #f59e0b;
+  --gold-glow: rgba(245,158,11,0.4);
+  --bg: #020617;
+  --card: rgba(30,41,59,0.7);
+  --text: #f1f5f9;
+  --accent: #38bdf8;
+}
+body {
+  background: var(--bg);
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(30,58,138,0.3) 0%, transparent 70%),
+    radial-gradient(circle at 0% 100%, rgba(15,23,42,0.5) 0%, transparent 50%);
+  color: var(--text);
+  font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  user-select: none;
+}
+
+/* Header */
+.header {
+  background: rgba(15,23,42,0.8);
+  backdrop-filter: blur(20px);
+  border-bottom: 2px solid var(--gold);
+  padding: 24px 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+}
+.brand { display:flex; align-items:center; gap:20px; }
+.brand-icon {
+  width: 64px; height: 64px;
+  background: linear-gradient(135deg, var(--gold), #d97706);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px;
+  box-shadow: 0 0 20px var(--gold-glow);
+}
+.brand-name {
+  font-size: 36px;
+  font-weight: 900;
+  letter-spacing: 4px;
+  color: #fff;
+  text-shadow: 0 0 15px var(--gold-glow);
+}
+.brand-sub { font-size:12px; color: var(--text2); letter-spacing:4px; margin-top:4px; opacity:0.6; }
+.clock-area { text-align:right; }
+.clock {
+  font-size: 60px;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  color: var(--gold);
+  text-shadow: 0 0 25px var(--gold-glow);
+  line-height: 1;
+}
+.date-str { font-size: 18px; color: rgba(255,255,255,0.5); margin-top: 6px; letter-spacing:2px; }
+
+/* News Ticker */
+.news-ticker-bar {
+  background: rgba(15, 23, 42, 0.9);
+  border-top: 1px solid var(--gold);
+  border-bottom: 1px solid var(--gold);
+  height: 52px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+.news-label {
+  background: linear-gradient(135deg, #f43f5e, #be123c);
+  color: #fff;
+  padding: 0 30px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  font-weight: 900;
+  font-size: 18px;
+  letter-spacing: 4px;
+  clip-path: polygon(0 0, 85% 0, 100% 100%, 0% 100%);
+  z-index: 10;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.news-content-wrap {
+  flex: 1;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+}
+.news-item {
+  position: absolute;
+  left: 30px;
+  top: 0;
+  width: calc(100% - 60px);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.news-item.active { opacity: 1; transform: translateY(0); }
+.news-item.exit   { opacity: 0; transform: translateY(-20px); }
+.news-item::before { 
+  content: '●'; 
+  color: var(--accent); 
+  font-size: 14px; 
+  margin-right: 15px; 
+  text-shadow: 0 0 10px var(--accent); 
+}
+
+/* Inline Marquee */
+.marquee-inline {
+  width: 600px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-left: 20px;
+  mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+}
+.marquee-track {
+  display: flex;
+  white-space: nowrap;
+  animation: marqueeRun linear infinite;
+}
+@keyframes marqueeRun {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-segment { color:#ffd700; font-size:24px; font-weight:800; letter-spacing:2px; padding:0 40px; }
+.marquee-dot { color:var(--gold); font-size:16px; align-self:center; }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="brand">
+    <div class="brand-icon">🏠</div>
+    <div>
+      <div style="display:flex;align-items:center;">
+        <div class="brand-name" id="communityName">幸福社區</div>
+        <div class="marquee-inline">
+          <div class="marquee-track" id="marqueeTrack" style="animation-duration:15s">
+            <span class="marquee-segment" id="m1"></span><span class="marquee-dot">◆</span>
+            <span class="marquee-segment" id="m2"></span><span class="marquee-dot">◆</span>
+          </div>
+        </div>
+      </div>
+      <div class="brand-sub">COMMUNITY BULLETIN BOARD</div>
+    </div>
+  </div>
+  <div class="clock-area">
+    <div class="clock" id="clock">00:00:00</div>
+    <div class="date-str" id="dateStr"></div>
+  </div>
+</header>
+
+<div class="news-ticker-bar">
+  <div class="news-label">快訊</div>
+    <div class="news-content-wrap" id="newsContainer">
+    </div>
+</div>
+
+<div style="flex:1; padding:20px 48px; padding-bottom:20px; overflow:hidden;">
+  <iframe id="meetingsFrame" src="" style="width:100%; height:100%; border:none; border-radius:16px; background:transparent;"></iframe>
+</div>
+
+<script src="../../shared/api.js"></script>
+<script>
+const DAYS = ['日','一','二','三','四','五','六'];
+
+let data = { marquee:'', list:[] };
+
+function tick() {
+  const n = new Date();
+  document.getElementById('clock').textContent =
+    [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
+  document.getElementById('dateStr').textContent =
+    `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日　星期${DAYS[n.getDay()]}`;
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function renderMarquee() {
+  const t = data.marquee || '歡迎光臨！';
+  document.getElementById('m1').textContent = t;
+  document.getElementById('m2').textContent = t;
+  const dur = Math.max(20, t.length * 0.4);
+  document.getElementById('marqueeTrack').style.animationDuration = dur + 's';
+}
+
+let newsTimer = null;
+let currentNewsIdx = 0;
+function renderNews(news) {
+  const container = document.getElementById('newsContainer');
+  if (!news || !news.length) {
+    container.innerHTML = '<span class="news-item active">暫無即時新聞內容</span>';
+    return;
+  }
+  container.innerHTML = news.map((n, i) => `<span class="news-item" id="ni-${i}">${esc(n.title)}</span>`).join('');
+  if (newsTimer) clearInterval(newsTimer);
+  currentNewsIdx = 0;
+  function next() {
+    const prev = document.getElementById(`ni-${currentNewsIdx}`);
+    if (prev) { prev.classList.remove('active'); prev.classList.add('exit'); }
+    currentNewsIdx = (currentNewsIdx + 1) % news.length;
+    setTimeout(() => {
+      if (prev) prev.classList.remove('exit');
+      const nextEl = document.getElementById(`ni-${currentNewsIdx}`);
+      if (nextEl) nextEl.classList.add('active');
+    }, 600);
+  }
+  const first = document.getElementById('ni-0');
+  if (first) first.classList.add('active');
+  newsTimer = setInterval(next, 8000);
+}
+
+async function init() {
+  const [ann, sett, news] = await Promise.all([
+    window.api.get('announcements'), 
+    window.api.get('settings'),
+    window.api.get('news')
+  ]);
+  data = ann;
+  if (sett.communityName) document.getElementById('communityName').textContent = sett.communityName;
+  if (sett.meetingsUrl) document.getElementById('meetingsFrame').src = sett.meetingsUrl;
+  if (sett.meetingsZoom) document.getElementById('meetingsFrame').style.zoom = sett.meetingsZoom;
+  renderMarquee();
+  renderNews(news);
+}
+
+window.api.on('announcements:updated', d => { data = d; renderMarquee(); });
+window.api.on('settings:updated', s => { 
+  if(s.communityName) document.getElementById('communityName').textContent = s.communityName; 
+  if(s.meetingsUrl && document.getElementById('meetingsFrame').src !== s.meetingsUrl) {
+    document.getElementById('meetingsFrame').src = s.meetingsUrl;
+  }
+  if(s.meetingsZoom) document.getElementById('meetingsFrame').style.zoom = s.meetingsZoom;
+});
+window.api.on('news:updated', n => { renderNews(n); });
+
+setInterval(tick, 1000); tick();
+init();
+</script>
+</body>
+</html>

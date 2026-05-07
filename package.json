@@ -1,0 +1,12 @@
+{
+  "name": "community-bulletin-board",
+  "version": "1.0.0",
+  "description": "社區大廳佈告欄系統",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^22.3.27"
+  }
+}

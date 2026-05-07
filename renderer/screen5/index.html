@@ -1,0 +1,195 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>圖片輪播</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #000;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
+}
+
+/* Slides */
+.slide {
+  position: absolute; inset:0;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  overflow: hidden;
+}
+.slide.active { opacity:1; }
+.slide img {
+  width:100%; height:100%;
+  object-fit: cover;
+  animation: kenburns 10s ease-in-out forwards;
+}
+@keyframes kenburns {
+  0%   { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.12) translate(-2%, -1%); }
+}
+.slide.alt img {
+  animation: kenburns2 10s ease-in-out forwards;
+}
+@keyframes kenburns2 {
+  0%   { transform: scale(1.05) translate(0, 0); }
+  100% { transform: scale(1.12) translate(2%, 1%); }
+}
+
+/* Overlay */
+.overlay {
+  position:fixed; inset:0;
+  background: linear-gradient(to top, rgba(0,0,0,.5) 0%, transparent 30%);
+  z-index:10;
+  pointer-events:none;
+}
+
+/* Bottom bar */
+.bottom-bar {
+  position:fixed; bottom:0; left:0; right:0;
+  z-index:20;
+  padding: 16px 40px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+}
+
+/* dots */
+.dots { display:flex; gap:8px; align-items:center; }
+.dot {
+  width:8px; height:8px;
+  border-radius:50%;
+  background:rgba(255,255,255,.3);
+  transition:all .4s;
+}
+.dot.active { width:24px; border-radius:4px; background:#fff; }
+
+/* counter */
+.counter { font-size:14px; color:rgba(255,255,255,.5); letter-spacing:2px; }
+
+/* Progress bar */
+.progress {
+  position:fixed; bottom:0; left:0; right:0;
+  height:3px; z-index:30;
+  background:rgba(255,255,255,.1);
+}
+.progress-bar {
+  height:100%;
+  background:linear-gradient(90deg,rgba(255,255,255,.6),rgba(255,255,255,.9));
+  width:0%;
+}
+
+/* Empty state */
+.empty {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:rgba(255,255,255,.3);
+  background: #0a0e1a;
+  gap:20px;
+}
+.empty-icon { font-size:80px; }
+.empty-text { font-size:22px; letter-spacing:3px; }
+.empty-sub  { font-size:14px; color:rgba(255,255,255,.15); }
+</style>
+</head>
+<body>
+
+<div class="overlay"></div>
+<div id="slideContainer"></div>
+
+<div class="bottom-bar">
+  <div class="dots" id="dots"></div>
+  <div class="counter" id="counter"></div>
+</div>
+<div class="progress"><div class="progress-bar" id="pbar"></div></div>
+
+<script src="../../shared/api.js"></script>
+<script>
+let files = [], current = 0, timer = null, interval = 6000;
+
+async function loadFiles() {
+  const settings = await window.api.get('settings');
+  interval = settings.slideInterval || 6000;
+  files = await window.api.media('images');
+  render();
+}
+
+function render() {
+  const container = document.getElementById('slideContainer');
+  const dotsEl    = document.getElementById('dots');
+
+  if (!files.length) {
+    container.innerHTML = '';
+    document.querySelector('.overlay').style.display = 'none';
+    document.querySelector('.bottom-bar').style.display = 'none';
+    document.querySelector('.progress').style.display = 'none';
+    container.innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">🖼</div>
+        <div class="empty-text">尚無圖片</div>
+        <div class="empty-sub">請至管理後台設定圖片資料夾</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = files.map((src, i) => `
+    <div class="slide${i===0?' active':''}${i%2?' alt':''}" data-i="${i}">
+      <img src="${src}" alt="slide ${i+1}" draggable="false">
+    </div>`
+  ).join('');
+
+  dotsEl.innerHTML = files.map((_,i) =>
+    `<div class="dot${i===0?' active':''}"></div>`
+  ).join('');
+
+  current = 0;
+  updateCounter();
+  startProgress();
+  if (timer) clearInterval(timer);
+  if (files.length > 1) timer = setInterval(next, interval);
+}
+
+function goTo(idx) {
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.dot');
+  if (!slides.length) return;
+  slides[current].classList.remove('active');
+  if (dots[current]) dots[current].classList.remove('active');
+  current = ((idx % files.length) + files.length) % files.length;
+  slides[current].classList.add('active');
+  const img = slides[current].querySelector('img');
+  img.style.animation = 'none';
+  requestAnimationFrame(() => { img.style.animation = ''; });
+  if (dots[current]) dots[current].classList.add('active');
+  updateCounter();
+  startProgress();
+}
+
+function next() { goTo(current + 1); }
+
+function updateCounter() {
+  document.getElementById('counter').textContent =
+    files.length ? `${current+1} / ${files.length}` : '';
+}
+
+function startProgress() {
+  const bar = document.getElementById('pbar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${interval}ms linear`;
+    bar.style.width = '100%';
+  });
+}
+
+window.api.on('settings:updated', s => {
+  interval = s.slideInterval || 6000;
+  if (timer) clearInterval(timer);
+  loadFiles();
+});
+
+loadFiles();
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{
+  "communityName": "親家市政廣場",
+  "weatherApiKey": "7d2bbd052dd51a9863421092dd7b1206",
+  "weatherCity": "Taichung",
+  "weatherCityName": "台中市",
+  "imagesFolder": "",
+  "videosFolder": "",
+  "slideInterval": 6000,
+  "newsSource": "https://news.pts.org.tw/xml/newsfeed.xml",
+  "newsEnabled": true,
+  "windows": [
+    {
+      "id": "screen1",
+      "title": "螢幕1 — 公告欄 A",
+      "enabled": true
+    },
+    {
+      "id": "screen2",
+      "title": "螢幕2 — 公告欄 B",
+      "enabled": true
+    },
+    {
+      "id": "screen3",
+      "title": "螢幕3 — 匯率時鐘",
+      "enabled": true
+    },
+    {
+      "id": "screen4",
+      "title": "螢幕4 — 即時天氣",
+      "enabled": true
+    },
+    {
+      "id": "screen5",
+      "title": "螢幕5 — 圖片輪播",
+      "enabled": true
+    },
+    {
+      "id": "screen6",
+      "title": "螢幕6 — 影片播放",
+      "enabled": true
+    },
+    {
+      "id": "screen7",
+      "title": "螢幕7 — 即時新聞",
+      "enabled": true
+    }
+  ],
+  "adminPort": 8080,
+  "youtubeId": "KyT4qSK8lJo",
+  "youtubeId2": "eA6Aczd3FZM",
+  "meetingsUrl": "http://192.168.1.209:3000/overview",
+  "meetingsZoom": 4
+}

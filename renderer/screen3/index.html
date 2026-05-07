@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>匯率時鐘</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #050a14;
+  color: #fff;
+  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* 調整為靠上對齊 */
+  padding-top: 30px;
+  user-select: none;
+}
+
+/* ── Background ── */
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background: radial-gradient(ellipse 80% 60% at 50% 40%, rgba(0,30,80,.6) 0%, transparent 70%);
+  pointer-events:none;
+}
+
+/* ── Clock (置頂縮小版) ── */
+.clock-section { 
+  text-align: center; 
+  margin-bottom: 20px; 
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+}
+.big-clock {
+  font-size: 68px; /* 縮小字體 */
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 6px;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(0,180,255,.8), 0 0 40px rgba(0,180,255,.4);
+  line-height: 1;
+}
+.colon { animation: blink 1s step-end infinite; }
+@keyframes blink { 50%{opacity:.2} }
+.date-row { font-size:18px; color:rgba(255,255,255,.6); letter-spacing:4px; margin-top:8px; }
+.weekday  { color:#00d4ff; font-weight:700; }
+
+/* ── Title ── */
+.rate-title {
+  font-size: 16px;
+  letter-spacing: 6px;
+  color: rgba(255,255,255,.4);
+  text-align: center;
+  margin-bottom: 16px;
+  z-index: 10;
+}
+
+/* ── Rate cards (8宮格版) ── */
+.rate-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 4行2列 */
+  gap: 16px;
+  padding: 0 40px;
+  width: 100%;
+  max-width: 1200px;
+  z-index: 10;
+}
+.rate-card {
+  background: rgba(10,20,50,.8);
+  border: 1px solid rgba(0,212,255,.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  position: relative;
+  overflow: hidden;
+  transition: transform .3s;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+}
+
+/* 各國專屬顏色裝飾 */
+.rate-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg,transparent,var(--c),transparent);
+}
+.rate-card.usd { --c: #4fc3f7; }
+.rate-card.eru { --c: #69f0ae; }
+.rate-card.jpy { --c: #ffb74d; }
+.rate-card.cny { --c: #ff5252; }
+.rate-card.hkd { --c: #e040fb; }
+.rate-card.krw { --c: #536dfe; }
+.rate-card.gold { --c: #ffd54f; }
+.rate-card.oil { --c: #9e9e9e; }
+
+.currency-header { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 4px; }
+.currency-flag { font-size:28px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+.currency-code { font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,.4); }
+.currency-name { font-size: 20px; font-weight:700; color:rgba(255,255,255,.8); margin-bottom:8px; }
+
+.rate-label { font-size:14px; color:rgba(255,255,255,.35); margin-bottom:4px; }
+.rate-value {
+  font-size: 38px;
+  font-weight: 900;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 15px rgba(255,255,255,.2);
+}
+.rate-unit { font-size:14px; color:rgba(255,255,255,.4); margin-top:4px; }
+
+.rate-change {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  margin-top: 10px;
+  padding: 4px 10px;
+  border-radius: 16px;
+  font-weight: 700;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
+}
+/* 採用台灣常見邏輯：紅漲、綠跌 (使用者亦可接受紅跌綠漲，這裡採用最鮮明的色彩警示) */
+.rate-change.up   { color:#ff5252; background:rgba(255,82,82,.1); border: 1px solid rgba(255,82,82,.2); }
+.rate-change.down { color:#69f0ae; background:rgba(105,240,174,.1); border: 1px solid rgba(105,240,174,.2); }
+.rate-change.flat { color:rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.1); }
+
+/* ── Footer ── */
+.footer {
+  margin-top: auto;
+  margin-bottom: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: rgba(255,255,255,.25);
+  letter-spacing: 2px;
+  z-index: 10;
+}
+.update-dot {
+  display:inline-block; width:6px; height:6px; background:#69f0ae;
+  border-radius:50%; margin-right:6px; animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+.loading { color:rgba(255,255,255,.3); font-size:18px; letter-spacing:3px; grid-column: 1 / -1; text-align: center; padding: 40px; }
+</style>
+</head>
+<body>
+
+<div class="clock-section">
+  <div class="big-clock">
+    <span id="hh">00</span><span class="colon">:</span><span id="mm">00</span><span class="colon">:</span><span id="ss">00</span>
+  </div>
+  <div class="date-row" id="dateRow"></div>
+</div>
+
+<div class="rate-title">即時匯率與大宗商品行情　LIVE MARKET RATES</div>
+
+<div class="rate-grid" id="rateGrid">
+  <div class="loading">正在向全球市場連線，取得最新報價與漲跌資訊…</div>
+</div>
+
+<div class="footer">
+  <span class="update-dot"></span>
+  <span id="updateTime">-- 最後更新</span>
+  &nbsp;·&nbsp; 資料來源：Yahoo Finance 延遲報價
+</div>
+
+<script>
+const DAYS = ['日','一','二','三','四','五','六'];
+
+// Clock
+function tick() {
+  const n = new Date();
+  document.getElementById('hh').textContent = String(n.getHours()).padStart(2,'0');
+  document.getElementById('mm').textContent = String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('ss').textContent = String(n.getSeconds()).padStart(2,'0');
+  document.getElementById('dateRow').innerHTML =
+    `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日&nbsp;&nbsp;<span class="weekday">星期${DAYS[n.getDay()]}</span>`;
+}
+
+// Data Define
+const ASSETS = [
+  { code:'USD', symbol:'USDTWD=X', name:'美元',   flag:'🇺🇸', label:'1 USD =', class:'usd', unit:'TWD' },
+  { code:'EUR', symbol:'EURTWD=X', name:'歐元',   flag:'🇪🇺', label:'1 EUR =', class:'eru', unit:'TWD' },
+  { code:'JPY', symbol:'JPYTWD=X', name:'日圓',   flag:'🇯🇵', label:'100 JPY =', class:'jpy', unit:'TWD', multiplier: 100 },
+  { code:'CNY', symbol:'CNYTWD=X', name:'人民幣', flag:'🇨🇳', label:'1 CNY =', class:'cny', unit:'TWD' },
+  { code:'HKD', symbol:'HKDTWD=X', name:'港幣',   flag:'🇭🇰', label:'1 HKD =', class:'hkd', unit:'TWD' },
+  { code:'KRW', symbol:'KRWTWD=X', name:'韓元',   flag:'🇰🇷', label:'1 KRW =', class:'krw', unit:'TWD', fix: 4 },
+  { code:'GOLD',symbol:'GC=F',     name:'黃金期貨', flag:'🥇', label:'1 盎司 =', class:'gold', unit:'USD', fix:2 },
+  { code:'OIL', symbol:'CL=F',     name:'原油期貨', flag:'🛢️', label:'1 桶 =',   class:'oil',  unit:'USD', fix:2 }
+];
+
+async function fetchRates() {
+  try {
+    const fetchPromises = ASSETS.map(asset => 
+      fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${asset.symbol}`)
+        .then(r => r.json())
+        .then(j => {
+          if (!j.chart.result) throw new Error('No Data');
+          const meta = j.chart.result[0].meta;
+          // Apply multipliers if necessary (e.g. 100 JPY)
+          const m = asset.multiplier || 1;
+          return {
+            ...asset,
+            current: meta.regularMarketPrice * m,
+            prev: meta.chartPreviousClose * m
+          };
+        })
+    );
+
+    const results = await Promise.all(fetchPromises);
+    const grid  = document.getElementById('rateGrid');
+
+    grid.innerHTML = results.map(data => {
+      const diff = data.current - data.prev;
+      const pct  = ((diff / data.prev) * 100).toFixed(2);
+      
+      let changeHTML = '';
+      if (Math.abs(diff) < 0.0001) {
+        changeHTML = `<span class="rate-change flat">— 持平</span>`;
+      } else if (diff > 0) {
+        changeHTML = `<span class="rate-change up">▲ ${pct}%</span>`;
+      } else {
+        changeHTML = `<span class="rate-change down">▼ ${Math.abs(pct)}%</span>`;
+      }
+
+      // Display logic
+      const fix = data.fix !== undefined ? data.fix : (data.current < 100 ? 2 : 1);
+      const displayUnit = data.unit === 'TWD' ? '新台幣 TWD' : (`美元 ` + data.unit);
+
+      return `
+      <div class="rate-card ${data.class}">
+        <div class="currency-header">
+          <div class="currency-flag">${data.flag}</div>
+          <div class="currency-name">${data.name}</div>
+        </div>
+        <div class="currency-code">${data.code}</div>
+        <div class="rate-label">${data.label}</div>
+        <div class="rate-value">${data.current.toFixed(fix)}</div>
+        <div class="rate-unit">${displayUnit}</div>
+        ${changeHTML}
+      </div>`;
+    }).join('');
+
+    const now = new Date();
+    document.getElementById('updateTime').textContent =
+      `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')} 盤中報價`;
+  } catch(e) {
+    document.getElementById('rateGrid').innerHTML =
+      '<div class="loading">⚠ 無法連接 Yahoo Finance 金融伺服器，稍後重試</div>';
+    console.error(e);
+  }
+}
+
+setInterval(tick, 1000); tick();
+fetchRates();
+setInterval(fetchRates, 5 * 60 * 1000); // 5分鐘更新一次報價
+</script>
+</body>
+</html>

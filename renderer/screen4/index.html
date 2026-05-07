@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>即時天氣與新聞</title>
+<style>
+/* Reset & Core */
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #020617;
+  color: #fff;
+  font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
+  height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Split Layout */
+.container { display: flex; height: 100vh; width: 100vw; }
+.news-side { width: 50%; height: 100%; background: #000; border-right: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; }
+.weather-side { width: 50%; height: 100%; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+
+/* YouTube Responsive */
+.video-wrap { position: relative; width: 100%; height: 50%; overflow: hidden; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.video-wrap:last-child { border-bottom: none; }
+.video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0; }
+
+/* Weather UI */
+.bg-grad { position: absolute; inset:0; transition: background 3s ease; z-index:0; }
+.weather-content { position:relative; z-index:1; text-align:center; padding:0 30px; width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+.city-name { font-size:42px; font-weight:900; color:#fff; letter-spacing:6px; margin-bottom:8px; text-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+
+.live-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,0.4); padding: 6px 16px;
+  border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
+  font-size: 13px; color: rgba(255,255,255,0.8); letter-spacing: 2px;
+  box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+}
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: #22c55e;
+  box-shadow: 0 0 12px #22c55e; animation: pulse 2s infinite;
+}
+@keyframes pulse { 0% { opacity: 1; transform: scale(1); } 50% { opacity: 0.3; transform: scale(1.4); } 100% { opacity: 1; transform: scale(1); } }
+
+.weather-icon { 
+  font-size: 140px; margin: 10px 0; 
+  filter: drop-shadow(0 10px 30px rgba(255,255,255,0.2));
+  animation: floatIcon 6s ease-in-out infinite; 
+}
+@keyframes floatIcon {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); filter: drop-shadow(0 20px 40px rgba(255,255,255,0.4)); }
+}
+
+.temp-main { 
+  font-size:90px; font-weight:900; line-height:1; 
+  background: linear-gradient(180deg, #ffffff 0%, #a5b4fc 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+}
+.temp-unit { font-size:36px; vertical-align:super; color:rgba(255,255,255,.5); -webkit-text-fill-color: rgba(255,255,255,0.6); }
+.desc { font-size:26px; color:rgba(255,255,255,.8); letter-spacing:4px; margin:5px 0 30px; font-weight: 700; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+
+.stats-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
+  width: 100%; max-width: 420px;
+}
+.stat-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px; padding: 20px 24px;
+  text-align: left; position: relative; overflow: hidden;
+  backdrop-filter: blur(25px);
+  animation: floatCard 8s ease-in-out infinite;
+}
+.stat-card:nth-child(1) { animation-delay: 0.0s; }
+.stat-card:nth-child(2) { animation-delay: 2.0s; }
+.stat-card:nth-child(3) { animation-delay: 4.0s; }
+.stat-card:nth-child(4) { animation-delay: 6.0s; }
+@keyframes floatCard { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+.stat-label { font-size:15px; color:rgba(255,255,255,0.7); letter-spacing:2px; display:flex; align-items:center; gap:6px; font-weight:700; }
+.stat-label::before { content: attr(data-icon); font-size:18px; }
+.stat-value { font-size:28px; font-weight:900; margin-top:8px; color:#fff; }
+
+.hl-row { margin-top:30px; font-size:18px; color:rgba(255,255,255,.5); font-weight:700; letter-spacing:2px; background: rgba(0,0,0,0.2); padding: 8px 24px; border-radius: 20px; }
+.hl-row .hi { color:#fbbf24; } .hl-row .lo { color:#60a5fa; }
+
+.no-key { padding:40px; text-align:center; color:rgba(255,255,255,.4); background: rgba(255,255,255,0.05); border-radius:20px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="news-side">
+    <div class="video-wrap" id="videoContainer1"></div>
+    <div class="video-wrap" id="videoContainer2"></div>
+  </div>
+  <div class="weather-side">
+    <div class="bg-grad" id="bgGrad"></div>
+    <div class="weather-content" id="weatherContent">
+      <div style="color:rgba(255,255,255,.2);font-size:18px">載入中…</div>
+    </div>
+  </div>
+</div>
+
+<script src="../../shared/api.js"></script>
+<script>
+'use strict';
+function $(id) { return document.getElementById(id); }
+let settings = {};
+
+function updateVideo(id1, id2) {
+  const c1 = $('videoContainer1');
+  const c2 = $('videoContainer2');
+  if (!id1) {
+    c1.innerHTML = '<div style="color:#555;padding:40px;text-align:center">未設定 YouTube ID 1</div>';
+  } else {
+    c1.innerHTML = `<iframe src="https://www.youtube.com/embed/${id1}?autoplay=1&mute=1&rel=0&showinfo=0" allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  }
+  if (!id2) {
+    c2.innerHTML = '<div style="color:#555;padding:40px;text-align:center">未設定 YouTube ID 2</div>';
+  } else {
+    c2.innerHTML = `<iframe src="https://www.youtube.com/embed/${id2}?autoplay=1&mute=1&rel=0&showinfo=0" allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+  }
+}
+
+const WEATHER_ICONS = {
+  '01d':'☀️','01n':'🌙','02d':'⛅','02n':'⛅','03d':'☁️','03n':'☁️',
+  '04d':'☁️','04n':'☁️','09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌧️',
+  '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'
+};
+const BG_GRADS = {
+  clear:   'linear-gradient(160deg,#1a3a5c,#0f2035)',
+  clouds:  'linear-gradient(160deg,#2c3e50,#1a252f)',
+  rain:    'linear-gradient(160deg,#1c2c3e,#0d1b2a)',
+  drizzle: 'linear-gradient(160deg,#1c2c3e,#0d1b2a)',
+  snow:    'linear-gradient(160deg,#2c3a4a,#1a2a3a)',
+  thunderstorm: 'linear-gradient(160deg,#1a1a2e,#0d0d1a)',
+  default: 'linear-gradient(160deg,#0f2035,#020617)',
+};
+
+async function fetchWeather() {
+  const apiKey = settings.weatherApiKey;
+  const city   = settings.weatherCity || 'Taipei';
+  const el     = $('weatherContent');
+
+  if (!apiKey) {
+    el.innerHTML = `<div class="no-key">💡 請至管理後台設定天氣 API Key<br><small style="font-size:14px;opacity:.5;margin-top:8px;display:block">openweathermap.org</small></div>`;
+    return;
+  }
+
+  try {
+    const res  = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=zh_tw`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'API error');
+
+    const icon  = WEATHER_ICONS[data.weather[0].icon] || '🌡️';
+    const main  = data.weather[0].main.toLowerCase();
+    const bg    = BG_GRADS[main] || BG_GRADS.default;
+    $('bgGrad').style.background = bg;
+
+    el.innerHTML = `
+      <div class="city-name">${data.name}</div>
+      <div class="live-badge"><span class="live-dot"></span> LIVE WEATHER</div>
+      <div class="weather-icon">${icon}</div>
+      <div class="temp-main">${Math.round(data.main.temp)}<span class="temp-unit">°C</span></div>
+      <div class="desc">${data.weather[0].description}</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-label" data-icon="💧">濕度</div><div class="stat-value">${data.main.humidity}%</div></div>
+        <div class="stat-card"><div class="stat-label" data-icon="💨">風速</div><div class="stat-value">${data.wind.speed} m/s</div></div>
+        <div class="stat-card"><div class="stat-label" data-icon="🌡️">體感</div><div class="stat-value">${Math.round(data.main.feels_like)}°C</div></div>
+        <div class="stat-card"><div class="stat-label" data-icon="👁️">能見度</div><div class="stat-value">${((data.visibility||0)/1000).toFixed(1)} km</div></div>
+      </div>
+      <div class="hl-row">最高 <span class="hi">${Math.round(data.main.temp_max)}°C</span> &nbsp;／&nbsp; 最低 <span class="lo">${Math.round(data.main.temp_min)}°C</span></div>`;
+  } catch(e) {
+    el.innerHTML = `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.5">${e.message}</small></div>`;
+  }
+}
+
+async function init() {
+  try {
+    settings = await window.api.get('settings');
+    updateVideo(settings.youtubeId, settings.youtubeId2);
+    fetchWeather();
+    setInterval(fetchWeather, 10 * 60 * 1000);
+  } catch(e) { console.error('Init fail', e); }
+}
+
+window.api.on('settings:updated', s => {
+  const oldId1 = settings.youtubeId;
+  const oldId2 = settings.youtubeId2;
+  settings = s;
+  if (s.youtubeId !== oldId1 || s.youtubeId2 !== oldId2) {
+    updateVideo(s.youtubeId, s.youtubeId2);
+  }
+  fetchWeather();
+});
+
+init();
+</script>
+</body>
+</html>
