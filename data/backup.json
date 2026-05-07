@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-07T17:23:56.139Z",
+  "_savedAt": "2026-05-07T18:23:02.513Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場",
     "list": []
@@ -169,7 +169,13 @@
         "active": false
       }
     ],
-    "twelveDataKey": "df6c942b65d046fdbfbb05315aae7277"
+    "twelveDataKey": "df6c942b65d046fdbfbb05315aae7277",
+    "fmpKey1": "2qdVJ052MQr3CmpI1jdOMGyGi9NFWcd6",
+    "fmpKey2": "RIWsVBTkjpIXOkgXL4tOTygwHMLfcSyD",
+    "fmpKey3": "X2NXmfOL4HavGiduvQT5roJprIfsvlRi",
+    "tdKey1": "df6c942b65d046fdbfbb05315aae7277",
+    "tdKey2": "cd837e6cde0249fd975dadb46f6b5057",
+    "tdKey3": "430ea40903944d0fba816e70624de7f2"
   },
   "meetings": {
     "rooms": [
