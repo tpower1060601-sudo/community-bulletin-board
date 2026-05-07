@@ -316,12 +316,40 @@ function renderForex() {
 
 /* ══════════════════════════════════════════
    股市指數 + 大宗商品（Twelve Data API）
-   申請免費 Key：https://twelvedata.com
-   免費額度 800 次/天，每 5 分鐘抓一次綽綽有餘
+   免費方案：8 credits/分鐘，800 credits/天
+   拆成兩批（≤8 each），間隔 65 秒，每 25 分鐘刷新
+   → 13×(1440÷25)=749 credits/天，安全範圍
 ══════════════════════════════════════════ */
 let stockData = {};
 let commodityData = {};
 let tdKey = '';
+
+// 批次 1：前 8 檔（亞洲 5 + 歐美 3）
+const TD_BATCH1 = STOCKS.slice(0, 8).map(s => s.sym);
+// 批次 2：剩餘 3 檔 + 2 大宗商品
+const TD_BATCH2 = [
+  ...STOCKS.slice(8).map(s => s.sym),
+  ...COMMODITIES.map(c => c.sym),
+];
+
+function parseTdResponse(data, symList) {
+  const isMulti = !data.symbol;
+  symList.forEach(sym => {
+    const q = isMulti ? data[sym] : (data.symbol === sym ? data : null);
+    if (!q || q.code || q.close == null) return;
+    const entry = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
+    if (STOCKS.find(s => s.sym === sym))     stockData[sym]     = entry;
+    if (COMMODITIES.find(c => c.sym === sym)) commodityData[sym] = entry;
+  });
+}
+
+async function tdFetch(syms) {
+  const url = `https://api.twelvedata.com/quote?symbol=${syms.join(',')}&apikey=${tdKey}`;
+  const r = await fetch(url);
+  const data = await r.json();
+  if (data.code) throw new Error(`TD ${data.code}: ${(data.message||'').slice(0,80)}`);
+  parseTdResponse(data, syms);
+}
 
 async function fetchTwelveData() {
   if (!tdKey) {
@@ -335,47 +363,24 @@ async function fetchTwelveData() {
     return;
   }
 
-  const allSyms = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)].join(',');
-  const url = `https://api.twelvedata.com/quote?symbol=${allSyms}&apikey=${tdKey}`;
-
-  let data;
+  // 批次 1（≤8 credits）
   try {
-    const r = await fetch(url);
-    data = await r.json();
-    console.log('[TD] status:', r.status, 'response:', JSON.stringify(data).slice(0, 500));
-    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    await tdFetch(TD_BATCH1);
+    renderStocks(); renderAssets();
   } catch(e) {
-    const msg = e.message || 'fetch 失敗';
-    document.getElementById('stockCol0').innerHTML = `<div class="placeholder" style="font-size:11px">網路錯誤<br>${msg}</div>`;
+    document.getElementById('stockCol0').innerHTML =
+      `<div class="placeholder" style="font-size:11px">${e.message}</div>`;
     document.getElementById('stockCol1').innerHTML = '';
     return;
   }
 
-  // 頂層錯誤（如 key 無效）
-  if (data.code) {
-    const msg = (data.message || '').slice(0, 100);
-    document.getElementById('stockCol0').innerHTML = `<div class="placeholder" style="font-size:11px">TD Error ${data.code}<br>${msg}</div>`;
-    document.getElementById('stockCol1').innerHTML = '';
-    return;
-  }
-
-  // 多 symbol 時 response 是 { SYM: {...} }，單 symbol 時是 flat object
-  const isMulti = !data.symbol;
-  STOCKS.forEach(s => {
-    const q = isMulti ? data[s.sym] : (data.symbol === s.sym ? data : null);
-    if (q && !q.code && q.close != null) {
-      stockData[s.sym] = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
-    }
-  });
-  COMMODITIES.forEach(c => {
-    const q = isMulti ? data[c.sym] : null;
-    if (q && !q.code && q.close != null) {
-      commodityData[c.sym] = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
-    }
-  });
-
-  renderStocks();
-  renderAssets();
+  // 批次 2（≤5 credits）等 65 秒後送出，不阻塞 UI
+  setTimeout(async () => {
+    try {
+      await tdFetch(TD_BATCH2);
+      renderStocks(); renderAssets();
+    } catch(e) { /* 商品資料失敗不影響股市顯示 */ }
+  }, 65000);
 }
 
 function renderStocks() {
@@ -460,7 +465,7 @@ function renderAssets() {
 setInterval(renderClocks, 1000); renderClocks();
 setInterval(() => { renderSession(); renderStocks(); }, 60000); renderSession();
 setInterval(fetchForex,  10*60*1000); fetchForex();
-setInterval(fetchTwelveData, 5*60*1000); fetchTwelveData();
+setInterval(fetchTwelveData, 25*60*1000); fetchTwelveData();
 setInterval(fetchCrypto,  3*60*1000); fetchCrypto();
 
 // 管理後台儲存 settings 後立即套用新 key
