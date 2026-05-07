@@ -59,7 +59,7 @@ body {
 }
 
 /* ── 主三欄 ── */
-.main { flex:1; min-height:0; display:grid; grid-template-columns:260px 1fr 300px; }
+.main { flex:1; min-height:0; display:grid; grid-template-columns:220px 1fr 300px; }
 .panel {
   border-right:1px solid rgba(255,255,255,.06); overflow:hidden;
   display:flex; flex-direction:column; padding:14px 16px; transition:background 2s ease;
@@ -176,24 +176,24 @@ const SEG_UTC = [
   { name:'紐約',    start:13.5, end:20,   color:'#4ade80', mkt:'us'     },
 ];
 
-// col 0 = 亞洲欄, col 1 = 歐美欄  sym = Twelve Data symbol
+// col 0 = 亞洲欄, col 1 = 歐美欄  sym = FMP symbol
 const STOCKS = [
-  { sym:'TWII',  name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa', col:0 },
-  { sym:'NI225', name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b', col:0 },
-  { sym:'HSI',   name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c', col:0 },
-  { sym:'SSEC',  name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b', col:0 },
-  { sym:'KOSPI', name:'KOSPI',    sub:'KSE',  mkt:'KSE',  color:'#e879f9', col:0 },
-  { sym:'FTSE',  name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8', col:1 },
-  { sym:'DAX',   name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa', col:1 },
-  { sym:'SPX',   name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80', col:1 },
-  { sym:'DJI',   name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399', col:1 },
-  { sym:'IXIC',  name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7', col:1 },
-  { sym:'SOX',   name:'費半SOX',  sub:'PHLX', mkt:'NYSE', color:'#fbbf24', col:1 },
+  { sym:'^TWII',  name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa', col:0 },
+  { sym:'^N225',  name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b', col:0 },
+  { sym:'^HSI',   name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c', col:0 },
+  { sym:'^SSEC',  name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b', col:0 },
+  { sym:'^KS11',  name:'KOSPI',    sub:'KSE',  mkt:'KSE',  color:'#e879f9', col:0 },
+  { sym:'^FTSE',  name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8', col:1 },
+  { sym:'^GDAXI', name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa', col:1 },
+  { sym:'^GSPC',  name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80', col:1 },
+  { sym:'^DJI',   name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399', col:1 },
+  { sym:'^IXIC',  name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7', col:1 },
+  { sym:'^SOX',   name:'費半SOX',  sub:'PHLX', mkt:'NYSE', color:'#fbbf24', col:1 },
 ];
 
 const COMMODITIES = [
-  { sym:'XAU/USD', name:'黃金',    icon:'🥇', dec:0 },
-  { sym:'WTI',     name:'WTI原油', icon:'🛢', dec:2 },
+  { sym:'GCUSD',  name:'黃金',    icon:'🥇', dec:0 },
+  { sym:'WTIUSD', name:'WTI原油', icon:'🛢', dec:2 },
 ];
 
 const FX_PAIRS = [
@@ -315,72 +315,62 @@ function renderForex() {
 }
 
 /* ══════════════════════════════════════════
-   股市指數 + 大宗商品（Twelve Data API）
-   免費方案：8 credits/分鐘，800 credits/天
-   拆成兩批（≤8 each），間隔 65 秒，每 25 分鐘刷新
-   → 13×(1440÷25)=749 credits/天，安全範圍
+   股市指數 + 大宗商品（Financial Modeling Prep）
+   免費方案：250 req/day / key，3 組輪流 = 750 req/day
+   每 2 分鐘刷新，輪流用 key → 每 key 240 req/day ✅
 ══════════════════════════════════════════ */
 let stockData = {};
 let commodityData = {};
-let tdKey = '';
+let fmpKeys = [];
+let fmpKeyIdx = 0;
 
-// 批次 1：前 8 檔（亞洲 5 + 歐美 3）
-const TD_BATCH1 = STOCKS.slice(0, 8).map(s => s.sym);
-// 批次 2：剩餘 3 檔 + 2 大宗商品
-const TD_BATCH2 = [
-  ...STOCKS.slice(8).map(s => s.sym),
-  ...COMMODITIES.map(c => c.sym),
-];
-
-function parseTdResponse(data, symList) {
-  const isMulti = !data.symbol;
-  symList.forEach(sym => {
-    const q = isMulti ? data[sym] : (data.symbol === sym ? data : null);
-    if (!q || q.code || q.close == null) return;
-    const entry = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
-    if (STOCKS.find(s => s.sym === sym))     stockData[sym]     = entry;
-    if (COMMODITIES.find(c => c.sym === sym)) commodityData[sym] = entry;
-  });
+async function loadFmpKeys() {
+  const s = await window.api.get('settings');
+  fmpKeys = [s.fmpKey1, s.fmpKey2, s.fmpKey3].filter(Boolean);
 }
 
-async function tdFetch(syms) {
-  const url = `https://api.twelvedata.com/quote?symbol=${syms.join(',')}&apikey=${tdKey}`;
-  const r = await fetch(url);
-  const data = await r.json();
-  if (data.code) throw new Error(`TD ${data.code}: ${(data.message||'').slice(0,80)}`);
-  parseTdResponse(data, syms);
+function nextFmpKey() {
+  if (!fmpKeys.length) return '';
+  const key = fmpKeys[fmpKeyIdx % fmpKeys.length];
+  fmpKeyIdx++;
+  return key;
 }
 
-async function fetchTwelveData() {
-  if (!tdKey) {
-    const s = await window.api.get('settings');
-    tdKey = s.twelveDataKey || '';
-  }
-  if (!tdKey) {
-    const msg = '<div class="placeholder" style="font-size:12px;line-height:2">請至管理後台<br>「系統設定」填入<br>Twelve Data API Key</div>';
+async function fetchFMP() {
+  if (!fmpKeys.length) await loadFmpKeys();
+  const key = nextFmpKey();
+  if (!key) {
+    const msg = '<div class="placeholder" style="font-size:12px;line-height:2">請至管理後台<br>「系統設定」填入<br>FMP API Key</div>';
     document.getElementById('stockCol0').innerHTML = msg;
     document.getElementById('stockCol1').innerHTML = '';
     return;
   }
 
-  // 批次 1（≤8 credits）
+  const allSyms = [
+    ...STOCKS.map(s => s.sym),
+    ...COMMODITIES.map(c => c.sym),
+  ].join(',');
+
   try {
-    await tdFetch(TD_BATCH1);
+    const url = `https://financialmodelingprep.com/api/v3/quote/${encodeURIComponent(allSyms)}?apikey=${key}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const arr = await r.json();
+    if (!Array.isArray(arr)) throw new Error(arr.error || JSON.stringify(arr).slice(0, 80));
+
+    stockData = {}; commodityData = {};
+    arr.forEach(q => {
+      if (q.price == null) return;
+      const entry = { price: q.price, chg: q.changesPercentage };
+      if (STOCKS.find(s => s.sym === q.symbol))     stockData[q.symbol]     = entry;
+      if (COMMODITIES.find(c => c.sym === q.symbol)) commodityData[q.symbol] = entry;
+    });
     renderStocks(); renderAssets();
   } catch(e) {
     document.getElementById('stockCol0').innerHTML =
-      `<div class="placeholder" style="font-size:11px">${e.message}</div>`;
+      `<div class="placeholder" style="font-size:11px">FMP Error: ${e.message}</div>`;
     document.getElementById('stockCol1').innerHTML = '';
-    return;
   }
-
-  // 批次 2（≤5 credits）等 65 秒後送出，不阻塞 UI
-  setTimeout(async () => {
-    try {
-      await tdFetch(TD_BATCH2);
-      renderStocks(); renderAssets();
-    } catch(e) { /* 商品資料失敗不影響股市顯示 */ }
-  }, 65000);
 }
 
 function renderStocks() {
@@ -465,13 +455,13 @@ function renderAssets() {
 setInterval(renderClocks, 1000); renderClocks();
 setInterval(() => { renderSession(); renderStocks(); }, 60000); renderSession();
 setInterval(fetchForex,  10*60*1000); fetchForex();
-setInterval(fetchTwelveData, 25*60*1000); fetchTwelveData();
+setInterval(fetchFMP, 2*60*1000); fetchFMP();
 setInterval(fetchCrypto,  3*60*1000); fetchCrypto();
 
-// 管理後台儲存 settings 後立即套用新 key
+// 管理後台儲存 settings 後立即重載 key 並更新
 if (window.api) {
-  window.api.on('settings:updated', s => {
-    if (s.twelveDataKey !== undefined) { tdKey = s.twelveDataKey; fetchTwelveData(); }
+  window.api.on('settings:updated', async () => {
+    await loadFmpKeys(); fmpKeyIdx = 0; fetchFMP();
   });
 }
 </script>
