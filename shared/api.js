@@ -18,7 +18,7 @@
       windows: [
         { id: 'screen1', title: '公告欄 A',      enabled: true  },
         { id: 'screen2', title: '公告欄 B',       enabled: true  },
-        { id: 'screen3', title: '匯率時鐘',       enabled: true  },
+        { id: 'screen3', title: '全球市場儀表板',   enabled: true  },
         { id: 'screen4', title: '即時天氣',       enabled: true  },
         { id: 'screen5', title: '圖片輪播',       enabled: true  },
         { id: 'screen6', title: '影片播放',       enabled: true  },
