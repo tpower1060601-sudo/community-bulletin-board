@@ -61,7 +61,7 @@ body {
 }
 
 /* ── 主內容三欄 ── */
-.main { flex:1; min-height:0; display:grid; grid-template-columns:1fr 1fr 1fr; }
+.main { flex:1; min-height:0; display:grid; grid-template-columns:260px 1fr 300px; }
 .panel {
   border-right:1px solid rgba(255,255,255,.06); overflow:hidden;
   display:flex; flex-direction:column; padding:14px 20px; transition:background 2s ease;
@@ -86,9 +86,10 @@ body {
 .nc { color:rgba(255,255,255,.3); }
 
 /* ── 外匯專用 ── */
-.fx-lbl { width:80px; }
-.fx-val { font-size:26px; }
-.fx-unit { font-size:13px; opacity:.4; margin-left:4px; font-weight:600; }
+.fx-lbl { width:70px; font-size:13px; }
+.fx-val { font-size:24px; }
+.fx-unit { font-size:12px; opacity:.4; margin-left:3px; font-weight:600; }
+#forexList .row { padding:8px 10px; margin-bottom:5px; }
 
 /* ── 股市專用 ── */
 .stock-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-right:10px; }
@@ -324,45 +325,72 @@ function renderForex() {
    股市指數
 ══════════════════════════════════════════ */
 let stockData = {};
-async function fetchStocks() {
-  const syms = STOCKS.map(s => s.sym).join(',');
-  const yfUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&lang=en-US&region=US&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
 
-  const PROXIES = [
-    // corsproxy.io — returns raw JSON directly
-    async url => {
-      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
-      if (!r.ok) throw new Error('corsproxy ' + r.status);
-      return await r.json();
-    },
-    // allorigins — wraps in {contents:"..."}
-    async url => {
-      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
-      if (!r.ok) throw new Error('allorigins ' + r.status);
-      const outer = await r.json();
+async function _pget(url, timeout = 8000) {
+  const ctrl = new AbortController();
+  const tid = setTimeout(() => ctrl.abort(), timeout);
+  try {
+    const r = await fetch(url, { signal: ctrl.signal });
+    clearTimeout(tid);
+    if (!r.ok) throw new Error(r.status);
+    return await r.json();
+  } catch(e) { clearTimeout(tid); throw e; }
+}
+
+/* 嘗試用 v8 chart API 抓單支股票（傳回 {price, chg} 或 null） */
+async function fetchOneStock(sym) {
+  const raw = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=1d`;
+  const attempts = [
+    () => _pget('https://corsproxy.io/?' + encodeURIComponent(raw)),
+    async () => {
+      const outer = await _pget('https://api.allorigins.win/get?url=' + encodeURIComponent(raw));
       return JSON.parse(outer.contents);
     },
-    // thingproxy — returns raw JSON
-    async url => {
-      const r = await fetch('https://thingproxy.freeboard.io/fetch/' + url);
-      if (!r.ok) throw new Error('thingproxy ' + r.status);
-      return await r.json();
-    },
+    () => _pget('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(raw)),
   ];
-
-  for (const proxy of PROXIES) {
+  for (const fn of attempts) {
     try {
-      const data = await proxy(yfUrl);
-      const results = data.quoteResponse?.result || [];
-      if (!results.length) throw new Error('empty');
-      results.forEach(q => {
-        stockData[q.symbol] = { price: q.regularMarketPrice, chg: q.regularMarketChangePercent };
-      });
-      renderStocks();
-      return;
-    } catch(e) { /* try next */ }
+      const data = await fn();
+      const meta = data.chart?.result?.[0]?.meta;
+      if (!meta?.regularMarketPrice) continue;
+      return {
+        price: meta.regularMarketPrice,
+        chg:   meta.regularMarketChangePercent ?? null,
+      };
+    } catch(e) { /* next */ }
   }
-  document.getElementById('stockList').innerHTML = '<div class="placeholder">股市資料無法取得</div>';
+  return null;
+}
+
+async function fetchStocks() {
+  /* 先試 v7 bulk（速度快，但常被擋） */
+  const syms = STOCKS.map(s => s.sym).join(',');
+  const v7 = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&fields=regularMarketPrice,regularMarketChangePercent`;
+  let bulkOk = false;
+  for (const fn of [
+    () => _pget('https://corsproxy.io/?' + encodeURIComponent(v7)),
+    async () => { const o = await _pget('https://api.allorigins.win/get?url=' + encodeURIComponent(v7)); return JSON.parse(o.contents); },
+  ]) {
+    try {
+      const data = await fn();
+      const results = data.quoteResponse?.result || [];
+      if (results.length) {
+        results.forEach(q => { stockData[q.symbol] = { price: q.regularMarketPrice, chg: q.regularMarketChangePercent }; });
+        bulkOk = true; break;
+      }
+    } catch(e) {}
+  }
+
+  if (!bulkOk) {
+    /* fallback：逐支用 v8 chart 並行抓 */
+    const rows = await Promise.all(STOCKS.map(s => fetchOneStock(s.sym).then(d => ({ sym: s.sym, d }))));
+    rows.forEach(({ sym, d }) => { if (d) stockData[sym] = d; });
+  }
+
+  renderStocks();
+  if (!Object.keys(stockData).length) {
+    document.getElementById('stockList').innerHTML = '<div class="placeholder">股市資料無法取得</div>';
+  }
 }
 function renderStocks() {
   const open = openSet();
