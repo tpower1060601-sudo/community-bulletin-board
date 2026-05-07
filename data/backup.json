@@ -1,0 +1,76 @@
+{
+  "_savedAt": "2026-05-07T14:24:31.871Z",
+  "announcements": {
+    "marquee": "歡迎光臨親家市政廣場",
+    "list": []
+  },
+  "settings": {
+    "communityName": "親家市政廣場",
+    "weatherApiKey": "607d88654e58cfcf43fd1727e364342e",
+    "weatherCity": "Taichung",
+    "newsEnabled": false,
+    "newsSource": "",
+    "youtubeId": "",
+    "youtubeId2": "",
+    "meetingsUrl": "",
+    "meetingsZoom": 1,
+    "adminPassword": "admin",
+    "adminPort": 8080,
+    "windows": [
+      {
+        "id": "screen1",
+        "title": "公告欄 A",
+        "enabled": true
+      },
+      {
+        "id": "screen2",
+        "title": "公告欄 B",
+        "enabled": true
+      },
+      {
+        "id": "screen3",
+        "title": "匯率時鐘",
+        "enabled": true
+      },
+      {
+        "id": "screen4",
+        "title": "即時天氣",
+        "enabled": true
+      },
+      {
+        "id": "screen5",
+        "title": "圖片輪播",
+        "enabled": true
+      },
+      {
+        "id": "screen6",
+        "title": "影片播放",
+        "enabled": true
+      },
+      {
+        "id": "screen7",
+        "title": "即時新聞看板",
+        "enabled": true
+      },
+      {
+        "id": "screen8",
+        "title": "YouTube 頻道 1",
+        "enabled": true
+      },
+      {
+        "id": "screen9",
+        "title": "YouTube 頻道 2",
+        "enabled": true
+      }
+    ],
+    "slideInterval": 6000
+  },
+  "meetings": {
+    "rooms": [
+      "會議室A",
+      "會議室B",
+      "會議室C"
+    ],
+    "bookings": []
+  }
+}
