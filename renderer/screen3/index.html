@@ -349,10 +349,10 @@ async function fetchFMP() {
   const allSyms = [
     ...STOCKS.map(s => s.sym),
     ...COMMODITIES.map(c => c.sym),
-  ].join(',');
+  ].map(s => s.replace(/\^/g, '%5E')).join(',');
 
   try {
-    const url = `https://financialmodelingprep.com/api/v3/quote/${encodeURIComponent(allSyms)}?apikey=${key}`;
+    const url = `https://financialmodelingprep.com/api/v3/quote/${allSyms}?apikey=${key}`;
     const r = await fetch(url);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     const arr = await r.json();
