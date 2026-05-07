@@ -116,7 +116,7 @@ const IMG_EXTS   = /\.(jpe?g|png|gif|webp|bmp|svg)$/i;
 async function loadFiles() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
   const settings = await window.api.get('settings');
-  interval = settings.slideInterval || 6000;
+  interval = (settings.slideInterval || 6) * 1000;
   files = [];
 
   /* 優先：掃描 GitHub media/images/ 資料夾 */
@@ -206,7 +206,7 @@ function startProgress() {
 }
 
 window.api.on('settings:updated', s => {
-  interval = s.slideInterval || 6000;
+  interval = (s.slideInterval || 6) * 1000;
   if (timer) clearInterval(timer);
   loadFiles();
 });
