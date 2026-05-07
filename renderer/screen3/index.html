@@ -11,11 +11,9 @@ body {
   height: 100vh; overflow: hidden; user-select: none;
 }
 
-/* ── 背景 ── */
 #bg { position:fixed; inset:0; z-index:0; transition:background 90s ease; }
 #bg-overlay { position:fixed; inset:0; z-index:1; background:linear-gradient(to bottom,rgba(0,0,0,.35) 0%,rgba(0,0,0,.5) 100%); pointer-events:none; }
 
-/* ── 佈局 ── */
 .layout { position:relative; z-index:10; height:100vh; display:flex; flex-direction:column; }
 
 /* ── 世界時鐘列 ── */
@@ -40,7 +38,7 @@ body {
 }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
 
-/* ── 市場時段 Timeline ── */
+/* ── 市場時段 ── */
 .session-bar {
   flex-shrink:0; display:flex; align-items:center; gap:12px;
   padding:6px 28px; background:rgba(0,0,0,.3); border-bottom:1px solid rgba(255,255,255,.04);
@@ -60,22 +58,25 @@ body {
   z-index:5;
 }
 
-/* ── 主內容三欄 ── */
+/* ── 主三欄 ── */
 .main { flex:1; min-height:0; display:grid; grid-template-columns:260px 1fr 300px; }
 .panel {
   border-right:1px solid rgba(255,255,255,.06); overflow:hidden;
-  display:flex; flex-direction:column; padding:14px 20px; transition:background 2s ease;
+  display:flex; flex-direction:column; padding:14px 16px; transition:background 2s ease;
 }
 .panel:last-child { border-right:none; }
 .panel-title { font-size:13px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.35); text-transform:uppercase; margin-bottom:12px; flex-shrink:0; }
+
+/* 股市兩欄 */
+.stock-cols { flex:1; display:flex; gap:8px; min-height:0; overflow:hidden; }
 .panel-scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
 .panel-scroll::-webkit-scrollbar { width:3px; }
 .panel-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
 
-/* ── 共用行樣式 ── */
+/* ── 共用行 ── */
 .row {
-  display:flex; align-items:center; padding:12px 12px; border-radius:10px;
-  margin-bottom:8px; background:rgba(255,255,255,.04); transition:background .4s, box-shadow .4s;
+  display:flex; align-items:center; padding:11px 12px; border-radius:10px;
+  margin-bottom:7px; background:rgba(255,255,255,.04); transition:background .4s, box-shadow .4s;
 }
 .row.open { background:rgba(255,255,255,.07); }
 .lbl { font-size:14px; font-weight:700; color:rgba(255,255,255,.55); flex-shrink:0; letter-spacing:.5px; }
@@ -85,21 +86,27 @@ body {
 .dn { color:#f87171; }
 .nc { color:rgba(255,255,255,.3); }
 
-/* ── 外匯專用 ── */
+/* ── 外匯 ── */
 .fx-lbl { width:70px; font-size:13px; }
 .fx-val { font-size:24px; }
 .fx-unit { font-size:12px; opacity:.4; margin-left:3px; font-weight:600; }
 #forexList .row { padding:8px 10px; margin-bottom:5px; }
 
-/* ── 股市專用 ── */
-.stock-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-right:10px; }
-.stock-lbl { width:90px; }
-.stock-name { font-size:12px; color:rgba(255,255,255,.35); letter-spacing:.5px; }
-.closed-tag { font-size:12px; letter-spacing:1px; color:rgba(255,255,255,.25); margin-left:6px; flex-shrink:0; }
+/* ── 股市 ── */
+.stock-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-right:8px; }
+.stock-lbl { width:68px; }
+.stock-name { font-size:11px; color:rgba(255,255,255,.35); letter-spacing:.5px; }
+.closed-tag { font-size:11px; letter-spacing:1px; color:rgba(255,255,255,.25); margin-left:4px; flex-shrink:0; }
+.stock-cols .row { padding:9px 10px; margin-bottom:6px; }
+.stock-cols .val { font-size:19px; padding:0 5px; }
+.stock-cols .chg { font-size:12px; }
 
-/* ── 虛擬貨幣 ── */
-.crypto-icon { font-size:22px; width:32px; flex-shrink:0; }
-.crypto-lbl { width:58px; }
+/* ── 商品/加密 ── */
+.asset-sep { font-size:10px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.22); margin:10px 0 7px 2px; text-transform:uppercase; }
+.crypto-icon { font-size:20px; width:30px; flex-shrink:0; }
+.crypto-lbl { width:52px; }
+#cryptoList .row { padding:9px 12px; margin-bottom:6px; }
+#cryptoList .val { font-size:21px; }
 
 .placeholder { color:rgba(255,255,255,.2); font-size:13px; letter-spacing:3px; text-align:center; padding:20px 0; }
 </style>
@@ -121,10 +128,13 @@ body {
     </div>
     <div class="panel" id="pStocks">
       <div class="panel-title">📈 全球股市指數</div>
-      <div class="panel-scroll" id="stockList"><div class="placeholder">連線中…</div></div>
+      <div class="stock-cols">
+        <div class="panel-scroll" id="stockCol0"><div class="placeholder">連線中…</div></div>
+        <div class="panel-scroll" id="stockCol1"><div class="placeholder">連線中…</div></div>
+      </div>
     </div>
     <div class="panel" id="pCrypto">
-      <div class="panel-title">₿ 虛擬貨幣</div>
+      <div class="panel-title">₿ 貨幣 · 商品</div>
       <div class="panel-scroll" id="cryptoList"><div class="placeholder">連線中…</div></div>
     </div>
   </div>
@@ -137,26 +147,26 @@ body {
    設定
 ══════════════════════════════════════════ */
 const CITIES = [
-  { city:'台北',  tz:'Asia/Taipei',          mkt:'TWSE' },
-  { city:'東京',  tz:'Asia/Tokyo',            mkt:'TSE'  },
-  { city:'香港',  tz:'Asia/Hong_Kong',        mkt:'HKEX' },
-  { city:'上海',  tz:'Asia/Shanghai',         mkt:'SSE'  },
-  { city:'倫敦',  tz:'Europe/London',         mkt:'LSE'  },
+  { city:'台北',     tz:'Asia/Taipei',       mkt:'TWSE' },
+  { city:'東京',     tz:'Asia/Tokyo',         mkt:'TSE'  },
+  { city:'香港',     tz:'Asia/Hong_Kong',     mkt:'HKEX' },
+  { city:'上海',     tz:'Asia/Shanghai',      mkt:'SSE'  },
+  { city:'倫敦',     tz:'Europe/London',      mkt:'LSE'  },
   { city:'法蘭克福', tz:'Europe/Berlin',      mkt:'FSE'  },
-  { city:'紐約',  tz:'America/New_York',      mkt:'NYSE' },
+  { city:'紐約',     tz:'America/New_York',   mkt:'NYSE' },
 ];
 
 const MARKETS = [
-  { id:'TWSE', tz:'Asia/Taipei',       oh:9,  om:0,  ch:13, cm:30 },
-  { id:'TSE',  tz:'Asia/Tokyo',        oh:9,  om:0,  ch:15, cm:30 },
-  { id:'HKEX', tz:'Asia/Hong_Kong',    oh:9,  om:30, ch:16, cm:0  },
-  { id:'SSE',  tz:'Asia/Shanghai',     oh:9,  om:30, ch:15, cm:0  },
-  { id:'LSE',  tz:'Europe/London',     oh:8,  om:0,  ch:16, cm:30 },
-  { id:'FSE',  tz:'Europe/Berlin',     oh:9,  om:0,  ch:17, cm:30 },
-  { id:'NYSE', tz:'America/New_York',  oh:9,  om:30, ch:16, cm:0  },
+  { id:'TWSE', tz:'Asia/Taipei',      oh:9,  om:0,  ch:13, cm:30 },
+  { id:'TSE',  tz:'Asia/Tokyo',       oh:9,  om:0,  ch:15, cm:30 },
+  { id:'HKEX', tz:'Asia/Hong_Kong',   oh:9,  om:30, ch:16, cm:0  },
+  { id:'SSE',  tz:'Asia/Shanghai',    oh:9,  om:30, ch:15, cm:0  },
+  { id:'KSE',  tz:'Asia/Seoul',       oh:9,  om:0,  ch:15, cm:30 },
+  { id:'LSE',  tz:'Europe/London',    oh:8,  om:0,  ch:16, cm:30 },
+  { id:'FSE',  tz:'Europe/Berlin',    oh:9,  om:0,  ch:17, cm:30 },
+  { id:'NYSE', tz:'America/New_York', oh:9,  om:30, ch:16, cm:0  },
 ];
 
-// UTC 近似時段（視覺化用，固定值）
 const SEG_UTC = [
   { name:'東京',    start:0,    end:6,    color:'#f59e0b', mkt:'asia'   },
   { name:'滬港',    start:1.5,  end:8,    color:'#fb923c', mkt:'asia'   },
@@ -165,16 +175,24 @@ const SEG_UTC = [
   { name:'紐約',    start:13.5, end:20,   color:'#4ade80', mkt:'us'     },
 ];
 
+// col 0 = 亞洲欄, col 1 = 歐美欄
 const STOCKS = [
-  { sym:'^TWII', name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa' },
-  { sym:'^N225', name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b' },
-  { sym:'^HSI',  name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c' },
-  { sym:'^SSEC', name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b' },
-  { sym:'^FTSE', name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8' },
-  { sym:'^GDAXI',name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa' },
-  { sym:'^GSPC', name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80' },
-  { sym:'^DJI',  name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399' },
-  { sym:'^IXIC', name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7' },
+  { sym:'^twii',  name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa', col:0 },
+  { sym:'^nky',   name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b', col:0 },
+  { sym:'^hsi',   name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c', col:0 },
+  { sym:'^sse',   name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b', col:0 },
+  { sym:'^kospi', name:'KOSPI',    sub:'KSE',  mkt:'KSE',  color:'#e879f9', col:0 },
+  { sym:'^ftse',  name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8', col:1 },
+  { sym:'^dax',   name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa', col:1 },
+  { sym:'^spx',   name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80', col:1 },
+  { sym:'^dji',   name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399', col:1 },
+  { sym:'^ndq',   name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7', col:1 },
+  { sym:'^sox',   name:'費半SOX',  sub:'PHLX', mkt:'NYSE', color:'#fbbf24', col:1 },
+];
+
+const COMMODITIES = [
+  { sym:'gc.f', name:'黃金',   unit:'oz',  icon:'🥇', dec:0 },
+  { sym:'cl.f', name:'WTI原油', unit:'桶', icon:'🛢', dec:2 },
 ];
 
 const FX_PAIRS = [
@@ -189,12 +207,12 @@ const FX_PAIRS = [
 ];
 
 const CRYPTO = [
-  { id:'bitcoin',      sym:'BTC', icon:'₿' },
-  { id:'ethereum',     sym:'ETH', icon:'Ξ' },
-  { id:'solana',       sym:'SOL', icon:'◎' },
-  { id:'ripple',       sym:'XRP', icon:'✕' },
-  { id:'binancecoin',  sym:'BNB', icon:'◈' },
-  { id:'dogecoin',     sym:'DOGE',icon:'Ð' },
+  { id:'bitcoin',     sym:'BTC',  icon:'₿' },
+  { id:'ethereum',    sym:'ETH',  icon:'Ξ' },
+  { id:'solana',      sym:'SOL',  icon:'◎' },
+  { id:'ripple',      sym:'XRP',  icon:'✕' },
+  { id:'binancecoin', sym:'BNB',  icon:'◈' },
+  { id:'dogecoin',    sym:'DOGE', icon:'Ð' },
 ];
 
 /* ══════════════════════════════════════════
@@ -206,15 +224,12 @@ function localDate(tz) {
 function isOpen(mkt) {
   const m = MARKETS.find(x => x.id === mkt); if (!m) return false;
   const d = localDate(m.tz);
-  const day = d.getDay();
-  if (day === 0 || day === 6) return false;
+  if (d.getDay() === 0 || d.getDay() === 6) return false;
   const mins = d.getHours() * 60 + d.getMinutes();
   return mins >= m.oh * 60 + m.om && mins < m.ch * 60 + m.cm;
 }
 function openSet() {
-  const s = new Set();
-  MARKETS.forEach(m => { if (isOpen(m.id)) s.add(m.id); });
-  return s;
+  const s = new Set(); MARKETS.forEach(m => { if (isOpen(m.id)) s.add(m.id); }); return s;
 }
 function fmtNum(n, dec) {
   if (n == null || isNaN(n)) return '—';
@@ -222,27 +237,25 @@ function fmtNum(n, dec) {
   return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
 }
 function chgClass(v) { return v > 0 ? 'up' : v < 0 ? 'dn' : 'nc'; }
-function chgTxt(v) { if (v == null) return '—'; return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
+function chgTxt(v)   { if (v == null) return '—'; return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }
 
 /* ══════════════════════════════════════════
    世界時鐘
 ══════════════════════════════════════════ */
 function renderClocks() {
   const open = openSet();
-  const bar = document.getElementById('clockBar');
-  bar.innerHTML = CITIES.map(c => {
+  document.getElementById('clockBar').innerHTML = CITIES.map(c => {
     const d = localDate(c.tz);
     const hh = String(d.getHours()).padStart(2,'0');
     const mm = String(d.getMinutes()).padStart(2,'0');
     const ss = String(d.getSeconds()).padStart(2,'0');
-    const mo = d.getMonth()+1, da = d.getDate();
     const dayN = ['日','一','二','三','四','五','六'][d.getDay()];
     const on = open.has(c.mkt);
     return `<div class="wc">
       ${on ? '<div class="wc-open"></div>' : ''}
       <div class="wc-city">${c.city}</div>
       <div class="wc-time">${hh}:${mm}<span style="opacity:.45;font-size:.65em">:${ss}</span></div>
-      <div class="wc-date">${mo}/${da} 週${dayN}</div>
+      <div class="wc-date">${d.getMonth()+1}/${d.getDate()} 週${dayN}</div>
     </div>`;
   }).join('');
 }
@@ -254,48 +267,36 @@ function renderSession() {
   const now = new Date();
   const utcH = now.getUTCHours() + now.getUTCMinutes()/60;
   const pct = h => (h / 24 * 100).toFixed(2) + '%';
-
   const open = openSet();
-  const asiaOn = ['TWSE','TSE','HKEX','SSE'].some(m => open.has(m));
+  const asiaOn = ['TWSE','TSE','HKEX','SSE','KSE'].some(m => open.has(m));
   const euOn   = ['LSE','FSE'].some(m => open.has(m));
   const usOn   = open.has('NYSE');
-
-  // 背景漸層
   let bg;
-  if (asiaOn && euOn && usOn)      bg = 'linear-gradient(155deg,#0d1a0d,#0d0d2a,#020b14)';
-  else if (asiaOn && euOn)         bg = 'linear-gradient(155deg,#1a1000,#0a0a28,#020b14)';
-  else if (euOn && usOn)           bg = 'linear-gradient(155deg,#001a0a,#0a0a28,#020b14)';
-  else if (asiaOn)                 bg = 'linear-gradient(155deg,#1a0e00,#04101a,#020b14)';
-  else if (euOn)                   bg = 'linear-gradient(155deg,#020b14,#0a0a28,#030616)';
-  else if (usOn)                   bg = 'linear-gradient(155deg,#001a08,#04101a,#020b14)';
-  else                             bg = 'linear-gradient(155deg,#020b14,#030a10,#020b14)';
+  if (asiaOn && euOn && usOn)  bg = 'linear-gradient(155deg,#0d1a0d,#0d0d2a,#020b14)';
+  else if (asiaOn && euOn)     bg = 'linear-gradient(155deg,#1a1000,#0a0a28,#020b14)';
+  else if (euOn && usOn)       bg = 'linear-gradient(155deg,#001a0a,#0a0a28,#020b14)';
+  else if (asiaOn)             bg = 'linear-gradient(155deg,#1a0e00,#04101a,#020b14)';
+  else if (euOn)               bg = 'linear-gradient(155deg,#020b14,#0a0a28,#030616)';
+  else if (usOn)               bg = 'linear-gradient(155deg,#001a08,#04101a,#020b14)';
+  else                         bg = 'linear-gradient(155deg,#020b14,#030a10,#020b14)';
   document.getElementById('bg').style.background = bg;
-
-  // 時段條
   const segs = SEG_UTC.map(s => {
-    let on = false;
-    if (s.mkt === 'asia')   on = asiaOn;
-    if (s.mkt === 'europe') on = euOn;
-    if (s.mkt === 'us')     on = usOn;
-    const left = pct(s.start), width = pct(s.end - s.start);
-    return `<div class="seg${on?' active':''}" style="left:${left};width:${width};background:${s.color}22;color:${s.color};border:1px solid ${s.color}44">${s.name}</div>`;
+    const on = s.mkt==='asia'?asiaOn:s.mkt==='europe'?euOn:usOn;
+    return `<div class="seg${on?' active':''}" style="left:${pct(s.start)};width:${pct(s.end-s.start)};background:${s.color}22;color:${s.color};border:1px solid ${s.color}44">${s.name}</div>`;
   }).join('');
-
-  const cursorLeft = (utcH / 24 * 100).toFixed(2) + '%';
   document.getElementById('sessionTrack').innerHTML =
-    segs + `<div class="now-line" style="left:${cursorLeft}"></div>`;
+    segs + `<div class="now-line" style="left:${(utcH/24*100).toFixed(2)}%"></div>`;
 }
 
 /* ══════════════════════════════════════════
-   外匯
+   外匯（ExchangeRate-API）
 ══════════════════════════════════════════ */
 let fxRates = null;
 async function fetchForex() {
   try {
-    const res = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    fxRates = data.rates;
+    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+    if (!r.ok) throw new Error();
+    fxRates = (await r.json()).rates;
     renderForex();
   } catch(e) {
     document.getElementById('forexList').innerHTML = '<div class="placeholder">外匯資料無法取得</div>';
@@ -303,175 +304,158 @@ async function fetchForex() {
 }
 function renderForex() {
   if (!fxRates) return;
-  const html = FX_PAIRS.map(fp => {
-    let rate;
-    if (fp.from === 'USD') {
-      rate = fxRates[fp.to];
-    } else {
-      // e.g. EUR/USD: rate = 1/fxRates[EUR]
-      rate = fxRates[fp.to] / fxRates[fp.from];
-    }
-    const disp = rate != null ? fmtNum(rate, fp.dec) : '—';
-    const toLabel = fp.to;
+  document.getElementById('forexList').innerHTML = FX_PAIRS.map(fp => {
+    const rate = fp.from === 'USD' ? fxRates[fp.to] : fxRates[fp.to] / fxRates[fp.from];
     return `<div class="row">
       <div class="lbl fx-lbl">${fp.pair}</div>
-      <div class="val fx-val">${disp}<span class="fx-unit">${toLabel}</span></div>
+      <div class="val fx-val">${fmtNum(rate, fp.dec)}<span class="fx-unit">${fp.to}</span></div>
     </div>`;
   }).join('');
-  document.getElementById('forexList').innerHTML = html;
 }
 
 /* ══════════════════════════════════════════
-   股市指數
+   股市指數 + 大宗商品（Stooq.com）
+   Stooq 是免費指數行情來源，不需要 API key，
+   透過 CORS proxy 抓取 CSV 後解析
 ══════════════════════════════════════════ */
 let stockData = {};
+let commodityData = {};
 
-async function _pget(url, timeout = 8000) {
-  const ctrl = new AbortController();
-  const tid = setTimeout(() => ctrl.abort(), timeout);
-  try {
-    const r = await fetch(url, { signal: ctrl.signal });
-    clearTimeout(tid);
-    if (!r.ok) throw new Error(r.status);
-    return await r.json();
-  } catch(e) { clearTimeout(tid); throw e; }
-}
-
-/* 嘗試用 v8 chart API 抓單支股票（傳回 {price, chg} 或 null） */
-async function fetchOneStock(sym) {
-  const raw = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?range=1d&interval=1d`;
-  const attempts = [
-    () => _pget('https://corsproxy.io/?' + encodeURIComponent(raw)),
-    async () => {
-      const outer = await _pget('https://api.allorigins.win/get?url=' + encodeURIComponent(raw));
-      return JSON.parse(outer.contents);
-    },
-    () => _pget('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(raw)),
-  ];
-  for (const fn of attempts) {
-    try {
-      const data = await fn();
-      const meta = data.chart?.result?.[0]?.meta;
-      if (!meta?.regularMarketPrice) continue;
-      return {
-        price: meta.regularMarketPrice,
-        chg:   meta.regularMarketChangePercent ?? null,
-      };
-    } catch(e) { /* next */ }
+function parseStooqCSV(text) {
+  const result = {};
+  const lines = text.trim().split('\n');
+  // skip header if present
+  const start = /^(symbol|ticker|date)/i.test(lines[0]) ? 1 : 0;
+  for (let i = start; i < lines.length; i++) {
+    const p = lines[i].split(',');
+    if (p.length < 4) continue;
+    const sym   = p[0].trim().toLowerCase();
+    const open  = parseFloat(p[2]);
+    const close = parseFloat(p[3]);
+    if (!isNaN(open) && !isNaN(close) && open > 0 && close > 0) {
+      result[sym] = { price: close, chg: (close - open) / open * 100 };
+    }
   }
-  return null;
+  return result;
 }
 
-async function fetchStocks() {
-  /* 先試 v7 bulk（速度快，但常被擋） */
-  const syms = STOCKS.map(s => s.sym).join(',');
-  const v7 = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&fields=regularMarketPrice,regularMarketChangePercent`;
-  let bulkOk = false;
-  for (const fn of [
-    () => _pget('https://corsproxy.io/?' + encodeURIComponent(v7)),
-    async () => { const o = await _pget('https://api.allorigins.win/get?url=' + encodeURIComponent(v7)); return JSON.parse(o.contents); },
-  ]) {
+async function fetchStooq() {
+  const allSyms = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)].join(',');
+  // f=sd2oc → Symbol, Date(YYYY-MM-DD), Open, Close
+  const url = `https://stooq.com/q/l/?s=${allSyms}&f=sd2oc&h&e=csv`;
+
+  const tries = [
+    () => fetch('https://corsproxy.io/?' + encodeURIComponent(url)).then(r => { if(!r.ok) throw 0; return r.text(); }),
+    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw 0; return r.text(); }),
+    () => fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw 0; return r.text(); }),
+  ];
+
+  let parsed = null;
+  for (const fn of tries) {
     try {
-      const data = await fn();
-      const results = data.quoteResponse?.result || [];
-      if (results.length) {
-        results.forEach(q => { stockData[q.symbol] = { price: q.regularMarketPrice, chg: q.regularMarketChangePercent }; });
-        bulkOk = true; break;
-      }
+      const text = await fn();
+      if (!text || text.length < 10) continue;
+      const tmp = parseStooqCSV(text);
+      if (Object.keys(tmp).length) { parsed = tmp; break; }
     } catch(e) {}
   }
 
-  if (!bulkOk) {
-    /* fallback：逐支用 v8 chart 並行抓 */
-    const rows = await Promise.all(STOCKS.map(s => fetchOneStock(s.sym).then(d => ({ sym: s.sym, d }))));
-    rows.forEach(({ sym, d }) => { if (d) stockData[sym] = d; });
+  if (!parsed) {
+    ['stockCol0','stockCol1'].forEach(id =>
+      document.getElementById(id).innerHTML = '<div class="placeholder">資料無法取得</div>');
+    return;
   }
 
+  STOCKS.forEach(s => { if (parsed[s.sym]) stockData[s.sym] = parsed[s.sym]; });
+  COMMODITIES.forEach(c => { if (parsed[c.sym]) commodityData[c.sym] = parsed[c.sym]; });
   renderStocks();
-  if (!Object.keys(stockData).length) {
-    document.getElementById('stockList').innerHTML = '<div class="placeholder">股市資料無法取得</div>';
-  }
+  renderAssets();
 }
+
 function renderStocks() {
   const open = openSet();
-  const html = STOCKS.map(s => {
-    const on = open.has(s.mkt);
-    const d  = stockData[s.sym];
-    const price = d ? fmtNum(d.price, d.price > 1000 ? 0 : 2) : '—';
+  function makeRow(s) {
+    const on    = open.has(s.mkt);
+    const d     = stockData[s.sym];
+    const price = d ? fmtNum(d.price, d.price > 999 ? 0 : 2) : '—';
     const pct   = d ? d.chg : null;
     const cls   = chgClass(pct);
     const glow  = on && d ? `box-shadow:0 0 10px ${s.color}55;border:1px solid ${s.color}33` : '';
     return `<div class="row${on?' open':''}" style="${glow}">
-      <div class="stock-dot" style="background:${on?s.color:'rgba(255,255,255,.15)'}${on?';box-shadow:0 0 6px '+s.color:''}"></div>
-      <div class="lbl stock-lbl">
-        <div>${s.name}</div>
-        <div class="stock-name">${s.sub}</div>
-      </div>
-      <div class="val" style="font-size:22px">${price}</div>
+      <div class="stock-dot" style="background:${on?s.color:'rgba(255,255,255,.15)'}${on?';box-shadow:0 0 5px '+s.color:''}"></div>
+      <div class="lbl stock-lbl"><div>${s.name}</div><div class="stock-name">${s.sub}</div></div>
+      <div class="val">${price}</div>
       <div class="chg ${cls}">${chgTxt(pct)}</div>
       ${!on ? '<div class="closed-tag">休市</div>' : ''}
     </div>`;
-  }).join('');
-  document.getElementById('stockList').innerHTML = html;
+  }
+  const ph = '<div class="placeholder">連線中…</div>';
+  const c0 = STOCKS.filter(s => s.col === 0).map(makeRow).join('');
+  const c1 = STOCKS.filter(s => s.col === 1).map(makeRow).join('');
+  document.getElementById('stockCol0').innerHTML = c0 || ph;
+  document.getElementById('stockCol1').innerHTML = c1 || ph;
 }
 
 /* ══════════════════════════════════════════
-   虛擬貨幣
+   虛擬貨幣（CoinGecko）+ 大宗商品合併渲染
 ══════════════════════════════════════════ */
+let cryptoData = {};
+
 async function fetchCrypto() {
   const ids = CRYPTO.map(c => c.id).join(',');
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-    renderCrypto(data);
-  } catch(e) {
-    document.getElementById('cryptoList').innerHTML = '<div class="placeholder">幣價資料無法取得</div>';
-  }
+    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
+    if (!r.ok) throw new Error();
+    cryptoData = await r.json();
+  } catch(e) {}
+  renderAssets();
 }
-function renderCrypto(data) {
-  const html = CRYPTO.map(c => {
-    const d   = data[c.id];
+
+function renderAssets() {
+  let html = '';
+
+  // 大宗商品
+  const commHtml = COMMODITIES.map(c => {
+    const d   = commodityData[c.sym];
+    const pct = d ? d.chg : null;
+    const cls = chgClass(pct);
+    const price = d ? '$' + fmtNum(d.price, c.dec) : '—';
+    return `<div class="row">
+      <div class="crypto-icon">${c.icon}</div>
+      <div class="lbl crypto-lbl">${c.name}</div>
+      <div class="val">${price}</div>
+      <div class="chg ${cls}">${chgTxt(pct)}</div>
+    </div>`;
+  }).join('');
+  if (commHtml) html += '<div class="asset-sep">大宗商品</div>' + commHtml;
+
+  // 虛擬貨幣
+  const cryptoHtml = CRYPTO.map(c => {
+    const d   = cryptoData[c.id];
     const usd = d?.usd;
     const chg = d?.usd_24h_change;
     const cls = chgClass(chg);
-    let disp;
-    if (usd == null) disp = '—';
-    else if (usd >= 1000) disp = '$' + fmtNum(usd, 0);
-    else if (usd >= 1)    disp = '$' + fmtNum(usd, 2);
-    else                  disp = '$' + usd.toFixed(5);
+    let disp = usd == null ? '—' : usd >= 1000 ? '$'+fmtNum(usd,0) : usd >= 1 ? '$'+fmtNum(usd,2) : '$'+usd.toFixed(5);
     return `<div class="row">
       <div class="crypto-icon">${c.icon}</div>
       <div class="lbl crypto-lbl">${c.sym}</div>
-      <div class="val" style="font-size:22px">${disp}</div>
+      <div class="val">${disp}</div>
       <div class="chg ${cls}">${chgTxt(chg)}</div>
     </div>`;
   }).join('');
-  document.getElementById('cryptoList').innerHTML = html;
+  if (cryptoHtml) html += '<div class="asset-sep">虛擬貨幣</div>' + cryptoHtml;
+
+  document.getElementById('cryptoList').innerHTML = html || '<div class="placeholder">連線中…</div>';
 }
 
 /* ══════════════════════════════════════════
-   初始化與定時刷新
+   初始化
 ══════════════════════════════════════════ */
-// 1秒：時鐘
-setInterval(renderClocks, 1000);
-renderClocks();
-
-// 1分鐘：時段條 + 背景 + 股市開盤狀態重繪
-setInterval(() => { renderSession(); renderStocks(); }, 60000);
-renderSession();
-
-// 10分鐘：外匯
-setInterval(fetchForex, 10 * 60 * 1000);
-fetchForex();
-
-// 5分鐘：股市
-setInterval(fetchStocks, 5 * 60 * 1000);
-fetchStocks();
-
-// 3分鐘：虛擬貨幣
-setInterval(fetchCrypto, 3 * 60 * 1000);
-fetchCrypto();
+setInterval(renderClocks, 1000); renderClocks();
+setInterval(() => { renderSession(); renderStocks(); }, 60000); renderSession();
+setInterval(fetchForex,  10*60*1000); fetchForex();
+setInterval(fetchStooq,   5*60*1000); fetchStooq();
+setInterval(fetchCrypto,  3*60*1000); fetchCrypto();
 </script>
 </body>
 </html>
