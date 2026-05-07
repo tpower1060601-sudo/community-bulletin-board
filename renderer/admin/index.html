@@ -460,10 +460,10 @@ function renderVideoSlots() {
 
 function renderYtSlots(ch) {
   var el=$('ytSlots'+ch); if(!el) return;
-  var slots=(settings['youtubeSlots'+ch])||[{},{},{},{}];
-  while(slots.length<4) slots.push({});
+  var slots=(settings['youtubeSlots'+ch])||[];
+  while(slots.length<10) slots.push({});
   var html='<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;margin-bottom:6px;font-size:11px;color:var(--text2);letter-spacing:1px"><span style="text-align:center">啟用</span><span>頻道 ID</span><span>備註</span></div>';
-  for(var i=0;i<4;i++){
+  for(var i=0;i<10;i++){
     var s=slots[i]||{};
     html+='<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center">'+
       '<div style="text-align:center"><input type="radio" name="yt'+ch+'" id="yt'+ch+'r'+i+'" value="'+i+'"'+(s.active?' checked':'')+'></div>'+
@@ -548,7 +548,7 @@ function saveSettings() {
   [1,2].forEach(function(ch){
     var slots=[];
     var activeId='';
-    for(var si=0;si<4;si++){
+    for(var si=0;si<10;si++){
       var id=($('yt'+ch+'Id'+si)||{}).value.trim();
       var note=($('yt'+ch+'Note'+si)||{}).value.trim();
       var active=($('yt'+ch+'r'+si)||{}).checked;
