@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -124,9 +124,9 @@ body {
 
 @keyframes ticker {
   0%   { transform: translateX(0); }
-  12%  { transform: translateX(0); }   /* 初始停留 */
+  12%  { transform: translateX(0); }
   88%  { transform: translateX(var(--tx)); }
-  100% { transform: translateX(var(--tx)); } /* 末端停留 */
+  100% { transform: translateX(var(--tx)); }
 }
 
 /* 載入/錯誤 */
@@ -157,7 +157,6 @@ body {
 }
 
 /* ── 各列色彩主題 ── */
-/* Row 1: 公視 — 紅 */
 .row-1 {
   background: linear-gradient(90deg, rgba(239,68,68,0.07) 0%, transparent 35%);
   border-left: 5px solid #ef4444;
@@ -165,7 +164,6 @@ body {
 .row-1 .label-badge { color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.1); }
 .row-1 .live-dot { background:#ef4444; box-shadow:0 0 8px #ef4444; }
 
-/* Row 2: 財經 — 綠 */
 .row-2 {
   background: linear-gradient(90deg, rgba(16,185,129,0.07) 0%, transparent 35%);
   border-left: 5px solid #10b981;
@@ -173,7 +171,6 @@ body {
 .row-2 .label-badge { color:#10b981; border-color:rgba(16,185,129,0.35); background:rgba(16,185,129,0.1); }
 .row-2 .live-dot { background:#10b981; box-shadow:0 0 8px #10b981; }
 
-/* Row 3: 國際 — 青 */
 .row-3 {
   background: linear-gradient(90deg, rgba(56,189,248,0.07) 0%, transparent 35%);
   border-left: 5px solid #38bdf8;
@@ -181,7 +178,6 @@ body {
 .row-3 .label-badge { color:#38bdf8; border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.1); }
 .row-3 .live-dot { background:#38bdf8; box-shadow:0 0 8px #38bdf8; }
 
-/* Row 4: 國際財經 — 金 */
 .row-4 {
   background: linear-gradient(90deg, rgba(251,191,36,0.07) 0%, transparent 35%);
   border-left: 5px solid #fbbf24;
@@ -246,83 +242,145 @@ body {
 <script>
 'use strict';
 
-/* ── RSS 來源設定 ── */
+/* ────────────────────────────────────────────
+   RSS 來源設定（依可靠度排序，第一個優先）
+──────────────────────────────────────────── */
 const FEEDS = [
-  {
-    // 公視即時新聞
-    url: 'https://about.pts.org.tw/rss/XML/newsfeed.xml',
-    backup: 'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'
-  },
-  {
-    // 台灣財經：聯合報財經
-    url: 'https://udn.com/rssfeed/news/2/6641?ch=news',
-    backup: 'https://ec.ltn.com.tw/rss/news.xml'
-  },
-  {
-    // 國際即時：BBC World
-    url: 'https://feeds.bbci.co.uk/news/world/rss.xml',
-    backup: 'https://feeds.bbci.co.uk/news/rss.xml'
-  },
-  {
-    // 國際財經：BBC Business
-    url: 'https://feeds.bbci.co.uk/news/business/rss.xml',
-    backup: 'https://feeds.bbci.co.uk/news/technology/rss.xml'
-  }
+  [
+    // 公視即時 — 嘗試多個
+    'https://news.pts.org.tw/xml/newsfeed.xml',
+    'https://about.pts.org.tw/rss/XML/newsfeed.xml',
+    'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'
+  ],
+  [
+    // 台灣財經 — 中央社財經、自由財經、單純新聞
+    'https://www.cna.com.tw/rss/afe.aspx',
+    'https://ec.ltn.com.tw/rss/news.xml',
+    'https://www.cna.com.tw/rss/aall.aspx'
+  ],
+  [
+    // 國際即時 — BBC 中文、BBC World、中央社國際
+    'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml',
+    'https://feeds.bbci.co.uk/news/world/rss.xml',
+    'https://www.cna.com.tw/rss/aopl.aspx'
+  ],
+  [
+    // 國際財經 — BBC Business、Reuters
+    'https://feeds.bbci.co.uk/news/business/rss.xml',
+    'https://feeds.bbci.co.uk/news/world/rss.xml',
+    'https://feeds.bbci.co.uk/news/rss.xml'
+  ]
 ];
 
-const RSS2JSON  = 'https://api.rss2json.com/v1/api.json?count=30&rss_url=';
-const INTERVAL  = 5000;   // 5 秒換一則
-const REFETCH   = 5 * 60 * 1000;  // 5 分鐘重抓
+/* ────────────────────────────────────────────
+   CORS Proxy 清單（依序嘗試）
+──────────────────────────────────────────── */
+const PROXIES = [
+  url => `https://api.rss2json.com/v1/api.json?count=30&rss_url=${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+  url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
+];
 
-/* ── 狀態 ── */
+const INTERVAL = 5000;
+const REFETCH  = 5 * 60 * 1000;
+
+/* 狀態 */
 const rows = FEEDS.map(() => ({ items: [], idx: 0, timer: null }));
 
-/* ── RSS 抓取（透過 rss2json CORS proxy） ── */
-async function fetchFeed(ri, useBackup) {
-  const src = useBackup ? FEEDS[ri].backup : FEEDS[ri].url;
+/* ────────────────────────────────────────────
+   XML → titles（DOMParser 解析 RSS/Atom）
+──────────────────────────────────────────── */
+function parseXmlTitles(xmlText) {
   try {
-    const res  = await fetch(RSS2JSON + encodeURIComponent(src), { cache: 'no-cache' });
-    const data = await res.json();
-    if (data.status === 'ok' && data.items && data.items.length > 0) {
-      rows[ri].items = data.items
-        .map(i => i.title || '')
-        .filter(t => t.length > 0);
-      rows[ri].idx = 0;
-      if (!rows[ri].timer) startTicker(ri);
-      else showNext(ri, false);
-    } else {
-      if (!useBackup) fetchFeed(ri, true);
-      else showError(ri, '暫無資料');
-    }
-  } catch(e) {
-    if (!useBackup) {
-      fetchFeed(ri, true);
-    } else {
-      showError(ri, '資料載入失敗');
-      setTimeout(() => fetchFeed(ri, false), 30000);
-    }
-  }
+    const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
+    const items = doc.querySelectorAll('item title, entry title');
+    const titles = [];
+    items.forEach(el => {
+      const t = el.textContent.trim();
+      if (t && t !== 'undefined' && t.length > 2) titles.push(t);
+    });
+    return titles;
+  } catch(e) { return []; }
 }
 
+/* ────────────────────────────────────────────
+   單一 Proxy × 單一 Feed URL 嘗試
+──────────────────────────────────────────── */
+async function tryOne(proxyIdx, feedUrl) {
+  const proxyUrl = PROXIES[proxyIdx](feedUrl);
+  const res = await fetch(proxyUrl, { cache: 'no-cache' });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+
+  const text = await res.text();
+
+  /* rss2json 回傳 JSON */
+  if (proxyIdx === 0) {
+    const data = JSON.parse(text);
+    if (data.status === 'ok' && data.items && data.items.length) {
+      return data.items.map(i => i.title || '').filter(t => t.length > 2);
+    }
+    throw new Error('rss2json bad status: ' + data.status);
+  }
+
+  /* allorigins 把內容包在 contents 欄位 */
+  if (proxyIdx === 1) {
+    const json = JSON.parse(text);
+    const xml  = json.contents || '';
+    const titles = parseXmlTitles(xml);
+    if (titles.length) return titles;
+    throw new Error('allorigins no titles');
+  }
+
+  /* corsproxy.io 直接回傳 XML */
+  const titles = parseXmlTitles(text);
+  if (titles.length) return titles;
+  throw new Error('corsproxy no titles');
+}
+
+/* ────────────────────────────────────────────
+   對一個列嘗試所有 Proxy × 所有 Feed URL
+──────────────────────────────────────────── */
+async function fetchRow(ri) {
+  const feedList = FEEDS[ri];
+  for (let fi = 0; fi < feedList.length; fi++) {
+    for (let pi = 0; pi < PROXIES.length; pi++) {
+      try {
+        const titles = await tryOne(pi, feedList[fi]);
+        if (titles.length) {
+          rows[ri].items = titles;
+          rows[ri].idx   = 0;
+          if (!rows[ri].timer) startTicker(ri);
+          return; // 成功，結束
+        }
+      } catch(e) {
+        /* 繼續嘗試下一個組合 */
+      }
+    }
+  }
+  /* 所有組合都失敗 */
+  showError(ri, '無法取得新聞');
+  setTimeout(() => fetchRow(ri), 30000);
+}
+
+/* ────────────────────────────────────────────
+   UI 函式
+──────────────────────────────────────────── */
 function showError(ri, msg) {
   const el = document.getElementById('d' + ri);
   el.innerHTML = '<div class="slot state-current"><span class="news-text news-loading">' + msg + '</span></div>';
 }
 
-/* ── 換頁動畫（上下滑動） ── */
-function showNext(ri, animate) {
+function showNext(ri) {
   const row   = rows[ri];
   const el    = document.getElementById('d' + ri);
   const cntEl = document.getElementById('c' + ri);
   if (!row.items.length) return;
 
-  const title       = row.items[row.idx];
-  const displayW    = el.offsetWidth;
+  const title    = row.items[row.idx];
+  const displayW = el.offsetWidth;
 
-  // 計數
   cntEl.textContent = (row.idx + 1) + ' / ' + row.items.length;
 
-  // 建新 slot
   const newSlot = document.createElement('div');
   newSlot.className = 'slot state-enter';
 
@@ -332,49 +390,40 @@ function showNext(ri, animate) {
   newSlot.appendChild(span);
   el.appendChild(newSlot);
 
-  // 等 DOM 更新後測量
   requestAnimationFrame(() => {
     const tw = span.scrollWidth;
     if (tw > displayW - 20) {
-      const tx = -(tw - displayW + 40);
-      const dur = (Math.abs(tx) / 70 + 2).toFixed(1);   // 70px/s + 2s 停留
+      const tx  = -(tw - displayW + 40);
+      const dur = (Math.abs(tx) / 70 + 2).toFixed(1);
       span.style.setProperty('--tx', tx + 'px');
       span.style.animationDuration = dur + 's';
       span.style.animationDelay = '0.6s';
       span.classList.add('is-long');
     }
 
-    // 退出舊 slot
     const old = el.querySelector('.slot.state-current');
     if (old) old.className = 'slot state-exit';
 
-    // 進入新 slot
-    requestAnimationFrame(() => {
-      newSlot.className = 'slot state-current';
-    });
+    requestAnimationFrame(() => { newSlot.className = 'slot state-current'; });
 
-    // 清理舊 slot
-    setTimeout(() => {
-      if (old && old.parentNode) old.parentNode.removeChild(old);
-    }, 600);
+    setTimeout(() => { if (old && old.parentNode) old.parentNode.removeChild(old); }, 600);
   });
 }
 
 function startTicker(ri) {
-  showNext(ri, false);
+  showNext(ri);
   rows[ri].timer = setInterval(() => {
-    const row = rows[ri];
-    if (!row.items.length) return;
-    row.idx = (row.idx + 1) % row.items.length;
-    showNext(ri, true);
+    if (!rows[ri].items.length) return;
+    rows[ri].idx = (rows[ri].idx + 1) % rows[ri].items.length;
+    showNext(ri);
   }, INTERVAL);
 }
 
-/* ── 初始化 ── */
-FEEDS.forEach((_, i) => fetchFeed(i, false));
-
-// 定期重新抓取
-setInterval(() => FEEDS.forEach((_, i) => fetchFeed(i, false)), REFETCH);
+/* ────────────────────────────────────────────
+   初始化
+──────────────────────────────────────────── */
+FEEDS.forEach((_, i) => fetchRow(i));
+setInterval(() => FEEDS.forEach((_, i) => fetchRow(i)), REFETCH);
 </script>
 </body>
 </html>
