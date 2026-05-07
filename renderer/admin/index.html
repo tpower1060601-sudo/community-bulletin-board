@@ -198,20 +198,18 @@ input:checked + .slider:before{transform:translateX(20px);}
       </div>
       <div class="card">
         <div class="card-title">🎬 影片播放設定（screen6）</div>
-        <label style="margin-bottom:8px;display:block">影片網址清單（mp4 直連或可嵌入的網址）</label>
-        <div class="input-group" style="margin-bottom:12px">
-          <input type="text" id="newVideoUrl" placeholder="https://example.com/video.mp4">
-          <button class="btn btn-primary" onclick="addVideoUrl()">新增</button>
-        </div>
-        <div id="videoUrlList"></div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px">依序輪流播放，空白欄位自動跳過（mp4 直連或可嵌入網址）</div>
+        <div id="videoSlots"></div>
       </div>
       <div class="card">
-        <div class="card-title">📺 YouTube 設定</div>
-        <div class="form-row">
-          <div class="form-group"><label>YouTube 頻道 1 ID（screen8）</label><input type="text" id="sYoutubeId" placeholder="例如: KyT4qSK8lJo"></div>
-          <div class="form-group"><label>YouTube 頻道 2 ID（screen9）</label><input type="text" id="sYoutubeId2" placeholder="例如: eA6Aczd3FZM"></div>
-        </div>
-        <div style="font-size:12px;color:var(--text2);margin-top:4px">💡 請輸入 YouTube 影片或直播的 ID（網址中 v= 後面的部分）</div>
+        <div class="card-title">📺 YouTube 頻道 1（screen8）</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">勾選該列即設為使用中的頻道 ID</div>
+        <div id="ytSlots1"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📺 YouTube 頻道 2（screen9）</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">勾選該列即設為使用中的頻道 ID</div>
+        <div id="ytSlots2"></div>
       </div>
       <div class="card"><div class="card-title">🖥️ 視窗管理</div><div id="windowControls"></div></div>
     </div>
@@ -447,28 +445,33 @@ function removeImageUrl(i) {
   settings.imageUrls.splice(i,1);
   renderImageUrls();
 }
-function renderVideoUrls() {
-  var list=$('videoUrlList'); if(!list) return;
+function renderVideoSlots() {
+  var el=$('videoSlots'); if(!el) return;
   var urls=settings.videoUrls||[];
-  if(!urls.length){list.innerHTML='<div style="color:var(--text2);font-size:13px;padding:8px 0">尚無影片網址</div>';return;}
-  list.innerHTML=urls.map(function(url,i){
-    return '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'+
-      '<div style="flex:1;font-size:13px;color:var(--text2);word-break:break-all;background:rgba(0,0,0,0.3);padding:8px 12px;border-radius:6px">'+esc(url)+'</div>'+
-      '<button class="btn btn-danger btn-sm" onclick="removeVideoUrl('+i+')">✕</button>'+
+  var html='';
+  for(var i=0;i<4;i++){
+    html+='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'+
+      '<span style="flex-shrink:0;font-size:13px;color:var(--text2);width:44px">影片 '+(i+1)+'</span>'+
+      '<input type="text" id="vUrl'+i+'" placeholder="https://example.com/video.mp4" style="flex:1" value="'+esc(urls[i]||'')+'">'+
       '</div>';
-  }).join('');
+  }
+  el.innerHTML=html;
 }
-function addVideoUrl() {
-  var url=($('newVideoUrl')||{}).value.trim(); if(!url) return;
-  if(!settings.videoUrls) settings.videoUrls=[];
-  settings.videoUrls.push(url);
-  $('newVideoUrl').value='';
-  renderVideoUrls();
-}
-function removeVideoUrl(i) {
-  if(!settings.videoUrls) return;
-  settings.videoUrls.splice(i,1);
-  renderVideoUrls();
+
+function renderYtSlots(ch) {
+  var el=$('ytSlots'+ch); if(!el) return;
+  var slots=(settings['youtubeSlots'+ch])||[{},{},{},{}];
+  while(slots.length<4) slots.push({});
+  var html='<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;margin-bottom:6px;font-size:11px;color:var(--text2);letter-spacing:1px"><span style="text-align:center">啟用</span><span>頻道 ID</span><span>備註</span></div>';
+  for(var i=0;i<4;i++){
+    var s=slots[i]||{};
+    html+='<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center">'+
+      '<div style="text-align:center"><input type="radio" name="yt'+ch+'" id="yt'+ch+'r'+i+'" value="'+i+'"'+(s.active?' checked':'')+'></div>'+
+      '<input type="text" id="yt'+ch+'Id'+i+'" placeholder="例如: KyT4qSK8lJo" value="'+esc(s.id||'')+'">'+
+      '<input type="text" id="yt'+ch+'Note'+i+'" placeholder="備註（頻道名稱）" value="'+esc(s.note||'')+'">'+
+      '</div>';
+  }
+  el.innerHTML=html;
 }
 
 function loadSettingsForm() {
@@ -476,13 +479,13 @@ function loadSettingsForm() {
   if($('sWeatherApiKey')) $('sWeatherApiKey').value=settings.weatherApiKey||'';
   if($('sWeatherCity'))   $('sWeatherCity').value=settings.weatherCity||'';
   if($('sSlideInterval')) $('sSlideInterval').value=settings.slideInterval||6;
-  if($('sYoutubeId'))     $('sYoutubeId').value=settings.youtubeId||'';
-  if($('sYoutubeId2'))    $('sYoutubeId2').value=settings.youtubeId2||'';
   if($('sMeetingsUrl'))   $('sMeetingsUrl').value=settings.meetingsUrl||'';
   if($('sMeetingsZoom'))  $('sMeetingsZoom').value=settings.meetingsZoom||1.0;
   if($('sAdminPort'))     $('sAdminPort').value=settings.adminPort||8080;
   renderImageUrls();
-  renderVideoUrls();
+  renderVideoSlots();
+  renderYtSlots(1);
+  renderYtSlots(2);
   // GitHub Token 狀態
   var hasToken = !!window.ghBackup.token();
   var last = window.ghBackup.lastBackup();
@@ -536,9 +539,26 @@ function saveSettings() {
   settings.weatherApiKey=($('sWeatherApiKey')||{}).value||'';
   settings.weatherCity=($('sWeatherCity')||{}).value||'';
   settings.slideInterval=parseInt(($('sSlideInterval')||{}).value)||6;
-  settings.youtubeId=($('sYoutubeId')||{}).value||'';
-  settings.youtubeId2=($('sYoutubeId2')||{}).value||'';
   settings.adminPort=parseInt(($('sAdminPort')||{}).value)||8080;
+  // 影片 4 槽
+  var vUrls=[];
+  for(var vi=0;vi<4;vi++){var v=($('vUrl'+vi)||{}).value.trim();if(v)vUrls.push(v);}
+  settings.videoUrls=vUrls;
+  // YouTube 槽（兩個頻道）
+  [1,2].forEach(function(ch){
+    var slots=[];
+    var activeId='';
+    for(var si=0;si<4;si++){
+      var id=($('yt'+ch+'Id'+si)||{}).value.trim();
+      var note=($('yt'+ch+'Note'+si)||{}).value.trim();
+      var active=($('yt'+ch+'r'+si)||{}).checked;
+      slots.push({id:id,note:note,active:active});
+      if(active&&id) activeId=id;
+    }
+    settings['youtubeSlots'+ch]=slots;
+    if(ch===1) settings.youtubeId=activeId;
+    else       settings.youtubeId2=activeId;
+  });
   var pw=($('sAdminPassword')||{}).value; if(pw) settings.adminPassword=pw;
   var wins=settings.windows||[];
   for(var i=0;i<wins.length;i++){ var el=$('win-en-'+i); if(el) wins[i].enabled=el.checked; }
