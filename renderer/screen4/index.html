@@ -27,29 +27,31 @@ body {
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
 .clock { font-size: 40px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,.9); min-width: 140px; text-align: right; }
 
-/* 目前天氣 */
-.current { flex: 1; min-height: 0; display: flex; align-items: center; gap: 36px; }
-.weather-icon { font-size: 130px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 8px 28px rgba(255,255,255,.25)); animation: floatIcon 6s ease-in-out infinite; }
-@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
-.temp-block { display: flex; flex-direction: column; flex-shrink: 0; }
-.temp-main { font-size: 110px; font-weight: 900; line-height: 1; background: linear-gradient(180deg,#fff 40%,rgba(255,255,255,.55)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-.temp-unit { font-size: 44px; -webkit-text-fill-color: rgba(255,255,255,.45); }
-.desc { font-size: 26px; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: 5px; margin-top: 6px; }
-.hl { font-size: 19px; color: rgba(255,255,255,.45); margin-top: 8px; letter-spacing: 2px; }
+/* 目前天氣 — 三欄：左(日照) 中(溫度) 右(統計) */
+.current { flex: 1; min-height: 0; display: flex; align-items: stretch; gap: 20px; }
+
+/* 左欄：半圓日照弧 */
+.sun-panel { flex-shrink: 0; width: 240px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 14px 14px 10px; backdrop-filter: blur(24px); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.sun-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 8px; align-self: flex-start; }
+
+/* 中欄：天氣主資訊 */
+.center-block { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
+.weather-icon { font-size: 110px; line-height: 1; filter: drop-shadow(0 8px 28px rgba(255,255,255,.25)); animation: floatIcon 6s ease-in-out infinite; }
+@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-14px)} }
+.temp-main { font-size: 108px; font-weight: 900; line-height: 1; background: linear-gradient(180deg,#fff 40%,rgba(255,255,255,.55)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.temp-unit { font-size: 42px; -webkit-text-fill-color: rgba(255,255,255,.45); }
+.desc { font-size: 24px; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: 5px; margin-top: 4px; }
+.hl { font-size: 18px; color: rgba(255,255,255,.45); margin-top: 6px; letter-spacing: 2px; }
 .hl .hi { color: #fbbf24; } .hl .lo { color: #60a5fa; }
+.wind-row { display: flex; gap: 10px; margin-top: 12px; }
+.wind-row .stat { flex: 1; min-width: 100px; text-align: center; }
 
-/* 6格資訊卡 (3×2) */
-.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-left: auto; }
-.stat { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 14px 18px; backdrop-filter: blur(20px); min-width: 118px; }
+/* 右欄：6格資訊卡 (3×2) */
+.stats { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; align-content: center; }
+.stat { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 12px 16px; backdrop-filter: blur(20px); min-width: 110px; }
 .stat-lbl { font-size: 12px; color: rgba(255,255,255,.5); letter-spacing: 2px; font-weight: 700; }
-.stat-val { font-size: 26px; font-weight: 900; margin-top: 6px; }
-.stat-unit { font-size: 14px; opacity: .55; font-weight: 600; }
-
-/* 日照弧 + 風向列 */
-.sun-row { flex-shrink: 0; display: flex; align-items: stretch; gap: 10px; }
-.sun-wrap { flex: 1; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 8px 20px 2px; backdrop-filter: blur(24px); }
-.sun-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 2px; }
-.extra-cards { display: flex; flex-direction: column; gap: 10px; }
+.stat-val { font-size: 24px; font-weight: 900; margin-top: 6px; }
+.stat-unit { font-size: 13px; opacity: .55; font-weight: 600; }
 
 /* 圖表 */
 .chart-wrap { flex-shrink: 0; background: rgba(0,0,0,.32); border: 1px solid rgba(255,255,255,.1); border-radius: 24px; padding: 12px 24px 8px; backdrop-filter: blur(24px); }
@@ -167,44 +169,45 @@ function degToCompass(deg) {
   return d[Math.round((deg||0) / 22.5) % 16];
 }
 
-/* ── 日照弧 SVG ── */
+/* ── 日照弧 SVG（半圓形）── */
 function buildSunArc(sunriseTs, sunsetTs, nowTs) {
   const fmt = ts => { const d=new Date(ts*1000); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
   const isDay = nowTs >= sunriseTs && nowTs <= sunsetTs;
   const pct = Math.max(0, Math.min(1, (nowTs - sunriseTs) / (sunsetTs - sunriseTs)));
 
-  const cx=250, cy=88, rx=228, ry=68;
+  const cx=110, cy=100, r=86;
+  const lx=cx-r, rx2=cx+r;  // 24, 196
   const angle = Math.PI * (1 - pct);
-  const sunX = (cx + rx * Math.cos(angle)).toFixed(1);
-  const sunY = (cy - ry * Math.sin(angle)).toFixed(1);
+  const sunX = (cx + r * Math.cos(angle)).toFixed(1);
+  const sunY = (cy - r * Math.sin(angle)).toFixed(1);
   const large = pct > 0.5 ? 1 : 0;
 
   let compPath = '';
-  if (pct > 0.001 && pct < 0.999) {
-    compPath = `M 22,${cy} A ${rx},${ry} 0 ${large},1 ${sunX},${sunY}`;
-  } else if (pct >= 0.999) {
-    compPath = `M 22,${cy} A ${rx},${ry} 0 0,1 ${cx},${cy-ry} A ${rx},${ry} 0 0,1 478,${cy}`;
+  if (pct > 0.002 && pct < 0.998) {
+    compPath = `M ${lx},${cy} A ${r},${r} 0 ${large},1 ${sunX},${sunY}`;
   }
 
-  return `<svg viewBox="0 0 500 108" style="width:100%;height:108px;display:block" preserveAspectRatio="none">
+  return `<svg viewBox="0 0 220 130" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">
     <defs>
-      <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="rgba(56,189,248,.08)"/>
+      <radialGradient id="skyG2" cx="50%" cy="100%" r="85%">
+        <stop offset="0%" stop-color="rgba(56,189,248,.12)"/>
         <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-      </linearGradient>
+      </radialGradient>
     </defs>
-    <path d="M 22,${cy} A ${rx},${ry} 0 0,1 478,${cy} Z" fill="url(#skyG)"/>
-    <path d="M 22,${cy} A ${rx},${ry} 0 0,1 478,${cy}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="2" stroke-dasharray="6,5" stroke-linecap="round"/>
-    ${compPath ? `<path d="${compPath}" fill="none" stroke="${isDay ? 'rgba(251,191,36,.85)' : 'rgba(148,163,184,.5)'}" stroke-width="2.8" stroke-linecap="round"/>` : ''}
+    <path d="M ${lx},${cy} A ${r},${r} 0 0,1 ${rx2},${cy} Z" fill="url(#skyG2)"/>
+    <path d="M ${lx},${cy} A ${r},${r} 0 0,1 ${rx2},${cy}" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="2" stroke-dasharray="5,4" stroke-linecap="round"/>
+    ${compPath ? `<path d="${compPath}" fill="none" stroke="${isDay?'rgba(251,191,36,.9)':'rgba(148,163,184,.5)'}" stroke-width="2.6" stroke-linecap="round"/>` : ''}
     ${isDay
-      ? `<circle cx="${sunX}" cy="${sunY}" r="20" fill="rgba(251,191,36,.13)"/>
-         <circle cx="${sunX}" cy="${sunY}" r="10" fill="rgba(251,191,36,.95)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>`
-      : `<text x="250" y="56" text-anchor="middle" font-size="30" fill="rgba(148,163,184,.45)">☾</text>
-         <text x="250" y="80" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="rgba(148,163,184,.35)" letter-spacing="3">夜間</text>`
+      ? `<circle cx="${sunX}" cy="${sunY}" r="13" fill="rgba(251,191,36,.18)"/>
+         <circle cx="${sunX}" cy="${sunY}" r="7" fill="rgba(251,191,36,.95)" stroke="rgba(255,255,255,.45)" stroke-width="1.5"/>`
+      : `<text x="${cx}" y="${cy-r*0.4}" text-anchor="middle" font-size="26" fill="rgba(148,163,184,.5)">☾</text>
+         <text x="${cx}" y="${cy-r*0.15}" text-anchor="middle" font-size="10" font-family="Inter,sans-serif" fill="rgba(148,163,184,.3)" letter-spacing="3">夜間</text>`
     }
-    <line x1="12" y1="${cy}" x2="488" y2="${cy}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
-    <text x="22" y="${cy+20}" text-anchor="start" font-size="13" font-family="Inter,sans-serif" fill="rgba(251,146,60,.85)">日出 ${fmt(sunriseTs)}</text>
-    <text x="478" y="${cy+20}" text-anchor="end" font-size="13" font-family="Inter,sans-serif" fill="rgba(251,100,60,.85)">日落 ${fmt(sunsetTs)}</text>
+    <line x1="${lx-4}" y1="${cy}" x2="${rx2+4}" y2="${cy}" stroke="rgba(255,255,255,.1)" stroke-width="1"/>
+    <text x="${lx}" y="${cy+16}" text-anchor="middle" font-size="10" font-family="Inter,sans-serif" fill="rgba(251,146,60,.7)">日出</text>
+    <text x="${lx}" y="${cy+29}" text-anchor="middle" font-size="12" font-family="Inter,sans-serif" fill="rgba(251,146,60,.95)" font-weight="700">${fmt(sunriseTs)}</text>
+    <text x="${rx2}" y="${cy+16}" text-anchor="middle" font-size="10" font-family="Inter,sans-serif" fill="rgba(251,100,60,.7)">日落</text>
+    <text x="${rx2}" y="${cy+29}" text-anchor="middle" font-size="12" font-family="Inter,sans-serif" fill="rgba(251,100,60,.95)" font-weight="700">${fmt(sunsetTs)}</text>
   </svg>`;
 }
 
@@ -291,11 +294,19 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
       <div class="clock" id="clockEl">--:--:--</div>
     </div>
     <div class="current">
-      <div class="weather-icon">${icon}</div>
-      <div class="temp-block">
+      <div class="sun-panel">
+        <div class="sun-label">☀ 日照進度</div>
+        ${sunArc}
+      </div>
+      <div class="center-block">
+        <div class="weather-icon">${icon}</div>
         <div class="temp-main">${Math.round(cur.main.temp)}<span class="temp-unit">°C</span></div>
         <div class="desc">${desc}</div>
         <div class="hl">最高 <span class="hi">${dayHigh}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${dayLow}°C</span></div>
+        <div class="wind-row">
+          <div class="stat"><div class="stat-lbl">🧭 風向</div><div class="stat-val">${compass}</div></div>
+          <div class="stat"><div class="stat-lbl">💨 陣風</div><div class="stat-val">${extra.windGust != null ? extra.windGust.toFixed(1) : '—'}<span class="stat-unit"> m/s</span></div></div>
+        </div>
       </div>
       <div class="stats">
         <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${cur.main.humidity}<span class="stat-unit">%</span></div></div>
@@ -304,22 +315,6 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
         <div class="stat"><div class="stat-lbl">💨 風速</div><div class="stat-val">${cur.wind.speed}<span class="stat-unit"> m/s</span></div></div>
         <div class="stat"><div class="stat-lbl">👁️ 能見度</div><div class="stat-val">${((cur.visibility||0)/1000).toFixed(1)}<span class="stat-unit"> km</span></div></div>
         <div class="stat"><div class="stat-lbl">☁️ 雲量</div><div class="stat-val">${extra.clouds}<span class="stat-unit">%</span></div></div>
-      </div>
-    </div>
-    <div class="sun-row">
-      <div class="sun-wrap">
-        <div class="sun-label">☀ 日照進度 · 日出 / 日落</div>
-        ${sunArc}
-      </div>
-      <div class="extra-cards">
-        <div class="stat" style="flex:1;display:flex;flex-direction:column;justify-content:center">
-          <div class="stat-lbl">🧭 風向</div>
-          <div class="stat-val">${compass}</div>
-        </div>
-        <div class="stat" style="flex:1;display:flex;flex-direction:column;justify-content:center">
-          <div class="stat-lbl">💨 陣風</div>
-          <div class="stat-val">${extra.windGust != null ? extra.windGust.toFixed(1) : '—'}<span class="stat-unit"> m/s</span></div>
-        </div>
       </div>
     </div>
     <div class="chart-wrap">
