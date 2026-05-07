@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-07T15:30:09.990Z",
+  "_savedAt": "2026-05-07T15:50:04.254Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場",
     "list": []
@@ -10,8 +10,8 @@
     "weatherCity": "Taichung",
     "newsEnabled": false,
     "newsSource": "",
-    "youtubeId": "",
-    "youtubeId2": "",
+    "youtubeId": "CXQ-maBSxa4",
+    "youtubeId2": "KyT4qSK8lJo",
     "meetingsUrl": "",
     "meetingsZoom": 1,
     "adminPassword": "admin",
@@ -63,7 +63,52 @@
         "enabled": true
       }
     ],
-    "slideInterval": 15
+    "slideInterval": 15,
+    "videoUrls": [],
+    "youtubeSlots1": [
+      {
+        "id": "CXQ-maBSxa4",
+        "note": "非凡財經24H",
+        "active": true
+      },
+      {
+        "id": "V1p33hqPrUk",
+        "note": "東森51頻道24H",
+        "active": false
+      },
+      {
+        "id": "6IquAgfvYmc",
+        "note": "寰宇新聞台24H",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      }
+    ],
+    "youtubeSlots2": [
+      {
+        "id": "KyT4qSK8lJo",
+        "note": "台灣地震監視",
+        "active": true
+      },
+      {
+        "id": "JxX_CcfxIbU",
+        "note": "台灣日本地震監視",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      }
+    ]
   },
   "meetings": {
     "rooms": [
