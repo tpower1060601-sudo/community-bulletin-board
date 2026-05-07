@@ -284,7 +284,7 @@ function drawChart(canvas, data) {
   ctx.scale(DPR, DPR);
   const cw = W, ch = canvas.offsetHeight;
 
-  const PAD = { l:52, r:52, t:24, b:34 };
+  const PAD = { l:60, r:60, t:28, b:42 };
   const gW = cw - PAD.l - PAD.r;
   const gH = ch - PAD.t - PAD.b;
 
@@ -352,8 +352,8 @@ function drawChart(canvas, data) {
     ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI*2);
     ctx.fillStyle = '#fb923c'; ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,.92)';
-    ctx.font = 'bold 12px Inter,sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(Math.round(t) + '°', x, y - 11);
+    ctx.font = 'bold 15px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(t) + '°', x, y - 12);
   });
 
   /* 降雨概率標籤 */
@@ -361,18 +361,18 @@ function drawChart(canvas, data) {
     if (p < 10) return;
     const x = xOf(i), y = yOfP(p);
     ctx.fillStyle = 'rgba(147,197,253,.85)';
-    ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(Math.round(p) + '%', x, Math.max(y - 6, PAD.t + 15));
+    ctx.font = '13px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(p) + '%', x, Math.max(y - 7, PAD.t + 17));
   });
 
   /* X 軸時間標籤 */
   ctx.fillStyle = 'rgba(255,255,255,.42)';
-  ctx.font = '12px Inter,sans-serif';
+  ctx.font = '14px Inter,sans-serif';
   labels.forEach((lbl, i) => { ctx.textAlign = 'center'; ctx.fillText(lbl, xOf(i), ch - 6); });
 
   /* Y 軸溫度刻度 */
   ctx.fillStyle = 'rgba(255,255,255,.28)';
-  ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'right';
+  ctx.font = '13px Inter,sans-serif'; ctx.textAlign = 'right';
   [0,.25,.5,.75,1].forEach(f => {
     const t = tMin + (tMax - tMin) * (1 - f);
     ctx.fillText(Math.round(t) + '°', PAD.l - 7, PAD.t + f * gH + 4);
@@ -414,7 +414,7 @@ function render(cur, forecast) {
           <span><span class="leg-bar"  style="background:rgba(96,165,250,.5)"></span>降雨概率</span>
         </div>
       </div>
-      <canvas id="fChart" height="145"></canvas>
+      <canvas id="fChart" height="170"></canvas>
     </div>`;
 
   clockEl = document.getElementById('clockEl');
