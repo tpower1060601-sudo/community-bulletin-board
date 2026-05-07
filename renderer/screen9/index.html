@@ -38,6 +38,7 @@ function render(id) {
   }
 }
 async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
   const s = await window.api.get('settings');
   render(s.youtubeId2 || '');
 }

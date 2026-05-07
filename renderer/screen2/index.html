@@ -224,6 +224,7 @@ function renderMarquee() {
 }
 
 async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
   const [ann, sett] = await Promise.all([window.api.get('announcements'), window.api.get('settings')]);
   data = ann;
   if (sett.communityName) document.getElementById('communityName').innerHTML = `<span>${sett.communityName.slice(0,2)}</span>${sett.communityName.slice(2)}公告`;

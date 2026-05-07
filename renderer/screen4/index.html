@@ -376,6 +376,7 @@ window.addEventListener('resize', () => {
 });
 
 async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
   settings = await window.api.get('settings');
   fetchWeather();
   setInterval(fetchWeather, 10 * 60 * 1000);
