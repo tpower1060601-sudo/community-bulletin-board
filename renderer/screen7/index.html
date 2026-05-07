@@ -93,8 +93,8 @@ body {
 .slot.state-current {
   transform: translateY(0%);
   opacity: 1;
-  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1),
-              opacity   0.55s ease;
+  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
+              opacity   1.2s ease;
 }
 .slot.state-enter {
   transform: translateY(105%);
@@ -103,8 +103,8 @@ body {
 .slot.state-exit {
   transform: translateY(-105%);
   opacity: 0;
-  transition: transform 0.45s cubic-bezier(0.55, 0, 0.78, 0),
-              opacity   0.45s ease;
+  transition: transform 1.0s cubic-bezier(0.55, 0, 0.78, 0),
+              opacity   1.0s ease;
 }
 
 /* 新聞文字 */
@@ -406,7 +406,7 @@ function showNext(ri) {
 
     requestAnimationFrame(() => { newSlot.className = 'slot state-current'; });
 
-    setTimeout(() => { if (old && old.parentNode) old.parentNode.removeChild(old); }, 600);
+    setTimeout(() => { if (old && old.parentNode) old.parentNode.removeChild(old); }, 1200);
   });
 }
 
