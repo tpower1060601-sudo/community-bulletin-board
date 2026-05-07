@@ -6,151 +6,469 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  background: #020617;
-  color: #fff;
-  font-family: 'Inter', 'Microsoft JhengHei', sans-serif;
-  height: 100vh;
-  overflow: hidden;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  background: #020617; color: #fff;
+  font-family: 'Inter','Microsoft JhengHei',sans-serif;
+  height: 100vh; overflow: hidden; user-select: none;
 }
 
-.bg-grad {
-  position: absolute; inset: 0;
-  transition: background 3s ease; z-index: 0;
-  background: linear-gradient(160deg,#0f2035,#020617);
+/* ── 背景層 ── */
+#bg {
+  position: fixed; inset: 0; z-index: 0;
+  transition: background 4s ease;
+  background: linear-gradient(160deg, #0f2035, #020617);
+}
+#bg-fx { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
+#bg-overlay {
+  position: fixed; inset: 0; z-index: 2;
+  background: linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,.65) 100%);
 }
 
-.weather-content {
-  position: relative; z-index: 1;
-  text-align: center; padding: 0 40px;
-  width: 100%; display: flex;
-  flex-direction: column; align-items: center;
+/* ── 前景佈局 ── */
+.layout {
+  position: relative; z-index: 10;
+  height: 100vh; display: flex; flex-direction: column;
+  padding: 28px 52px 20px;
+  gap: 12px;
 }
 
-.city-name {
-  font-size: 56px; font-weight: 900; color: #fff;
-  letter-spacing: 8px; margin-bottom: 10px;
-  text-shadow: 0 4px 20px rgba(0,0,0,0.5);
+/* 頂列 */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-shrink: 0;
+}
+.city {
+  font-size: 54px; font-weight: 900; letter-spacing: 8px;
+  text-shadow: 0 4px 24px rgba(0,0,0,.7);
 }
 .live-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(0,0,0,0.4); padding: 8px 20px;
-  border-radius: 30px; border: 1px solid rgba(255,255,255,0.1);
-  font-size: 15px; color: rgba(255,255,255,0.8); letter-spacing: 2px;
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0,0,0,.45); padding: 8px 22px;
+  border-radius: 30px; border: 1px solid rgba(255,255,255,.12);
+  font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,.9);
 }
 .live-dot {
-  width: 10px; height: 10px; border-radius: 50%; background: #22c55e;
-  box-shadow: 0 0 12px #22c55e; animation: pulse 2s infinite;
+  width: 9px; height: 9px; border-radius: 50%; background: #22c55e;
+  box-shadow: 0 0 10px #22c55e; animation: pulse 2s infinite;
 }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.4)} }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
+.clock {
+  font-size: 40px; font-weight: 700; letter-spacing: 2px;
+  color: rgba(255,255,255,.9); min-width: 140px; text-align: right;
+}
 
+/* 主資訊區 */
+.current {
+  flex: 1; min-height: 0;
+  display: flex; align-items: center; gap: 40px;
+}
 .weather-icon {
-  font-size: 180px; margin: 16px 0;
-  filter: drop-shadow(0 10px 30px rgba(255,255,255,0.2));
+  font-size: 150px; line-height: 1; flex-shrink: 0;
+  filter: drop-shadow(0 8px 28px rgba(255,255,255,.25));
   animation: floatIcon 6s ease-in-out infinite;
 }
-@keyframes floatIcon {
-  0%,100%{transform:translateY(0)}
-  50%{transform:translateY(-18px);filter:drop-shadow(0 20px 40px rgba(255,255,255,0.4))}
-}
+@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
+
+.temp-block { display: flex; flex-direction: column; flex-shrink: 0; }
 .temp-main {
-  font-size: 120px; font-weight: 900; line-height: 1;
-  background: linear-gradient(180deg,#ffffff 0%,#a5b4fc 100%);
+  font-size: 118px; font-weight: 900; line-height: 1;
+  background: linear-gradient(180deg,#fff 40%,rgba(255,255,255,.55));
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
 }
-.temp-unit { font-size: 48px; vertical-align: super; -webkit-text-fill-color: rgba(255,255,255,0.6); }
-.desc { font-size: 32px; color: rgba(255,255,255,.8); letter-spacing: 4px; margin: 8px 0 36px; font-weight: 700; }
+.temp-unit { font-size: 46px; -webkit-text-fill-color: rgba(255,255,255,.45); }
+.desc { font-size: 28px; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: 5px; margin-top: 6px; }
+.hl { font-size: 20px; color: rgba(255,255,255,.45); margin-top: 10px; letter-spacing: 2px; }
+.hl .hi { color: #fbbf24; } .hl .lo { color: #60a5fa; }
 
-.stats-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-  width: 100%; max-width: 540px;
+.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-left: auto; }
+.stat {
+  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 20px; padding: 18px 22px; backdrop-filter: blur(20px);
+  min-width: 155px;
 }
-.stat-card {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 24px; padding: 24px 28px;
-  text-align: left; backdrop-filter: blur(25px);
-  animation: floatCard 8s ease-in-out infinite;
+.stat-lbl { font-size: 13px; color: rgba(255,255,255,.5); letter-spacing: 2px; font-weight: 700; }
+.stat-val { font-size: 30px; font-weight: 900; margin-top: 8px; }
+
+/* 圖表區 */
+.chart-wrap {
+  flex-shrink: 0;
+  background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.1);
+  border-radius: 24px; padding: 14px 24px 10px;
+  backdrop-filter: blur(24px);
 }
-.stat-card:nth-child(1){animation-delay:0s}
-.stat-card:nth-child(2){animation-delay:2s}
-.stat-card:nth-child(3){animation-delay:4s}
-.stat-card:nth-child(4){animation-delay:6s}
-@keyframes floatCard{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.chart-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px;
+}
+.chart-title {
+  font-size: 13px; font-weight: 800; letter-spacing: 3px;
+  color: rgba(255,255,255,.55); text-transform: uppercase;
+}
+.chart-legend { display: flex; gap: 18px; font-size: 12px; color: rgba(255,255,255,.45); align-items: center; }
+.leg-line { display: inline-block; width: 20px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+.leg-bar  { display: inline-block; width: 10px; height: 12px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
+#fChart { width: 100%; display: block; }
 
-.stat-label { font-size:16px; color:rgba(255,255,255,0.7); letter-spacing:2px; display:flex; align-items:center; gap:6px; font-weight:700; }
-.stat-label::before { content:attr(data-icon); font-size:20px; }
-.stat-value { font-size:34px; font-weight:900; margin-top:10px; color:#fff; }
-
-.hl-row { margin-top:36px; font-size:22px; color:rgba(255,255,255,.5); font-weight:700; letter-spacing:2px; background:rgba(0,0,0,0.25); padding:10px 30px; border-radius:20px; }
-.hl-row .hi{color:#fbbf24} .hl-row .lo{color:#60a5fa}
-
-.no-key { padding:50px; text-align:center; color:rgba(255,255,255,.4); background:rgba(255,255,255,0.05); border-radius:20px; font-size:22px; }
+/* 錯誤/載入 */
+.no-key {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; gap: 20px; color: rgba(255,255,255,.35); font-size: 26px; text-align: center;
+}
 </style>
 </head>
 <body>
-<div class="bg-grad" id="bgGrad"></div>
-<div class="weather-content" id="weatherContent">
-  <div style="color:rgba(255,255,255,.2);font-size:22px">載入中…</div>
+
+<div id="bg"></div>
+<div id="bg-fx"></div>
+<div id="bg-overlay"></div>
+<div class="layout" id="layout">
+  <div style="margin:auto;color:rgba(255,255,255,.2);font-size:22px">載入中…</div>
 </div>
 
 <script src="../../shared/api.js"></script>
 <script>
 'use strict';
-let settings = {};
+let settings = {}, clockEl = null, chartData = [], resizeTimer = null;
 
-const WEATHER_ICONS = {
+/* ── 時鐘 ── */
+function tick() {
+  if (!clockEl) return;
+  const n = new Date();
+  clockEl.textContent = String(n.getHours()).padStart(2,'0') + ':' +
+    String(n.getMinutes()).padStart(2,'0') + ':' + String(n.getSeconds()).padStart(2,'0');
+}
+setInterval(tick, 1000);
+
+/* ── 常數 ── */
+const ICONS = {
   '01d':'☀️','01n':'🌙','02d':'⛅','02n':'⛅','03d':'☁️','03n':'☁️',
   '04d':'☁️','04n':'☁️','09d':'🌧️','09n':'🌧️','10d':'🌦️','10n':'🌧️',
   '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'
 };
-const BG_GRADS = {
-  clear:'linear-gradient(160deg,#1a3a5c,#0f2035)',
-  clouds:'linear-gradient(160deg,#2c3e50,#1a252f)',
-  rain:'linear-gradient(160deg,#1c2c3e,#0d1b2a)',
-  drizzle:'linear-gradient(160deg,#1c2c3e,#0d1b2a)',
-  snow:'linear-gradient(160deg,#2c3a4a,#1a2a3a)',
-  thunderstorm:'linear-gradient(160deg,#1a1a2e,#0d0d1a)',
-  default:'linear-gradient(160deg,#0f2035,#020617)',
+const BG = {
+  clear:        'linear-gradient(155deg,#1a4a7a,#071528)',
+  clouds:       'linear-gradient(155deg,#2a3a4e,#111e2a)',
+  rain:         'linear-gradient(155deg,#112030,#06101a)',
+  drizzle:      'linear-gradient(155deg,#142535,#08141e)',
+  snow:         'linear-gradient(155deg,#243650,#101e30)',
+  thunderstorm: 'linear-gradient(155deg,#0a1218,#030608)',
+  mist:         'linear-gradient(155deg,#1a2030,#0d1520)',
+  fog:          'linear-gradient(155deg,#1a2030,#0d1520)',
+  default:      'linear-gradient(155deg,#0f2035,#020617)',
 };
 
+/* ── 背景動畫 ── */
+function clearFx() { document.getElementById('bg-fx').innerHTML = ''; }
+
+function injectStyle(id, css) {
+  if (document.getElementById(id)) return;
+  const s = document.createElement('style');
+  s.id = id; s.textContent = css;
+  document.head.appendChild(s);
+}
+
+function mkEl(tag, styles) {
+  const el = document.createElement(tag);
+  Object.assign(el.style, styles);
+  return el;
+}
+
+function startRain(heavy) {
+  injectStyle('kf-rain', '@keyframes rDrop{0%{transform:translateY(-8px) skewX(-4deg);opacity:0}4%{opacity:1}96%{opacity:1}100%{transform:translateY(101vh) skewX(-4deg);opacity:0}}');
+  const c = document.getElementById('bg-fx');
+  const n = heavy ? 90 : 50;
+  for (let i = 0; i < n; i++) {
+    const opa = heavy ? .08 + Math.random()*.1 : .04 + Math.random()*.07;
+    c.appendChild(mkEl('div', {
+      position:'absolute', left:Math.random()*100+'%', top:'-6px',
+      width:'1px', height:(heavy?20:13)+'px',
+      background:'rgba(180,215,255,'+opa+')',
+      animation:'rDrop '+(0.45+Math.random()*0.45)+'s '+(Math.random()*2.5)+'s linear infinite',
+    }));
+  }
+}
+
+function startSnow() {
+  injectStyle('kf-snow', '@keyframes sFlake{0%{transform:translateY(-20px) translateX(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(101vh) translateX(25px);opacity:0}}');
+  const c = document.getElementById('bg-fx');
+  '❄❅❆•••'.split('').forEach((ch, i) => {
+    for (let j = 0; j < 5; j++) {
+      const sz = 10 + Math.random()*14;
+      c.appendChild(Object.assign(mkEl('div', {
+        position:'absolute', left:Math.random()*100+'%', top:'-20px',
+        fontSize:sz+'px', color:'rgba(200,230,255,.18)',
+        animation:'sFlake '+(4+Math.random()*6)+'s '+(Math.random()*7)+'s linear infinite',
+      }), { textContent: ch }));
+    }
+  });
+}
+
+function startSun() {
+  injectStyle('kf-sun', '@keyframes sunP{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.18);opacity:.6}} @keyframes sunR{0%,100%{opacity:.3;width:200px}50%{opacity:.7;width:300px}}');
+  const c = document.getElementById('bg-fx');
+  c.appendChild(mkEl('div', {
+    position:'absolute', right:'7%', top:'4%',
+    width:'280px', height:'280px', borderRadius:'50%',
+    background:'radial-gradient(circle,rgba(255,210,60,.1) 0%,transparent 68%)',
+    animation:'sunP 4.5s ease-in-out infinite',
+  }));
+  for (let i = 0; i < 8; i++) {
+    c.appendChild(mkEl('div', {
+      position:'absolute', right:'calc(7% + 120px)', top:'calc(4% + 120px)',
+      width:'200px', height:'1px', transformOrigin:'0 50%',
+      background:'linear-gradient(90deg,transparent,rgba(255,210,60,.07))',
+      transform:'rotate('+(i*45)+'deg)',
+      animation:'sunR 7s '+(i*0.9)+'s ease-in-out infinite',
+    }));
+  }
+}
+
+function startClouds() {
+  injectStyle('kf-cloud', '@keyframes cDrift{from{transform:translateX(-220px)}to{transform:translateX(110vw)}}');
+  const c = document.getElementById('bg-fx');
+  [[130,'4%',25],[190,'11%',32],[110,'2%',20],[160,'19%',28]].forEach(([w, top, dur], i) => {
+    c.appendChild(mkEl('div', {
+      position:'absolute', top:top, width:w+'px', height:'44px',
+      borderRadius:'44px', background:'rgba(255,255,255,.04)', filter:'blur(10px)',
+      animation:'cDrift '+(dur+i*6)+'s '+(-Math.random()*20)+'s linear infinite',
+    }));
+  });
+}
+
+function startThunder() {
+  startRain(true);
+  injectStyle('kf-lightning', '@keyframes ltFl{0%{opacity:0}15%{opacity:1}30%{opacity:0}55%{opacity:.6}100%{opacity:0}}');
+  function flash() {
+    const f = mkEl('div', { position:'absolute', inset:'0', background:'rgba(180,210,255,.06)', animation:'ltFl .2s ease-out forwards' });
+    document.getElementById('bg-fx').appendChild(f);
+    setTimeout(() => f.remove(), 400);
+    setTimeout(flash, 5000 + Math.random() * 9000);
+  }
+  setTimeout(flash, 2500);
+}
+
+function applyBg(mainLower) {
+  clearFx();
+  document.getElementById('bg').style.background = BG[mainLower] || BG.default;
+  if (mainLower === 'clear')              startSun();
+  else if (mainLower === 'clouds')        startClouds();
+  else if (mainLower === 'rain')          startRain(true);
+  else if (mainLower === 'drizzle')       startRain(false);
+  else if (mainLower === 'snow')          startSnow();
+  else if (mainLower === 'thunderstorm')  startThunder();
+}
+
+/* ── 圖表（Canvas）── */
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+function drawChart(canvas, data) {
+  if (!data || data.length < 2) return;
+  const W = canvas.offsetWidth;
+  if (!W) return;
+  canvas.width = W * (window.devicePixelRatio || 1);
+  canvas.height = canvas.height * (window.devicePixelRatio || 1);
+  canvas.style.width = W + 'px';
+  const ctx = canvas.getContext('2d');
+  const DPR = window.devicePixelRatio || 1;
+  ctx.scale(DPR, DPR);
+  const cw = W, ch = canvas.offsetHeight;
+
+  const PAD = { l:52, r:52, t:24, b:34 };
+  const gW = cw - PAD.l - PAD.r;
+  const gH = ch - PAD.t - PAD.b;
+
+  const temps  = data.map(d => d.temp);
+  const pops   = data.map(d => d.pop * 100);
+  const labels = data.map(d => d.time);
+  const n = data.length;
+
+  const tMin = Math.min(...temps) - 2, tMax = Math.max(...temps) + 2;
+  const xOf = i => PAD.l + i * (gW / (n - 1));
+  const yOfT = t => PAD.t + gH - ((t - tMin) / (tMax - tMin)) * gH;
+  const yOfP = p => PAD.t + gH - (p / 100) * gH;
+
+  /* 降雨概率柱（背景） */
+  pops.forEach((p, i) => {
+    if (p < 5) return;
+    const x = xOf(i), bW = (gW / (n - 1)) * 0.45, bH = (p / 100) * gH;
+    const grd = ctx.createLinearGradient(0, PAD.t + gH - bH, 0, PAD.t + gH);
+    grd.addColorStop(0, 'rgba(96,165,250,.32)');
+    grd.addColorStop(1, 'rgba(96,165,250,.04)');
+    ctx.fillStyle = grd;
+    roundRectPath(ctx, x - bW / 2, PAD.t + gH - bH, bW, bH, 4);
+    ctx.fill();
+  });
+
+  /* 格線 */
+  ctx.strokeStyle = 'rgba(255,255,255,.06)';
+  ctx.lineWidth = 1;
+  [0,.25,.5,.75,1].forEach(f => {
+    const y = PAD.t + f * gH;
+    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(cw - PAD.r, y); ctx.stroke();
+  });
+
+  /* 溫度漸層填充 */
+  const fillGrd = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
+  fillGrd.addColorStop(0, 'rgba(251,146,60,.22)');
+  fillGrd.addColorStop(1, 'rgba(251,146,60,.01)');
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), PAD.t + gH);
+  ctx.lineTo(xOf(0), yOfT(temps[0]));
+  for (let i = 1; i < n; i++) {
+    const cp = gW / (n - 1) * 0.42;
+    ctx.bezierCurveTo(xOf(i-1)+cp, yOfT(temps[i-1]), xOf(i)-cp, yOfT(temps[i]), xOf(i), yOfT(temps[i]));
+  }
+  ctx.lineTo(xOf(n-1), PAD.t + gH);
+  ctx.closePath();
+  ctx.fillStyle = fillGrd;
+  ctx.fill();
+
+  /* 溫度曲線 */
+  ctx.beginPath();
+  ctx.moveTo(xOf(0), yOfT(temps[0]));
+  for (let i = 1; i < n; i++) {
+    const cp = gW / (n - 1) * 0.42;
+    ctx.bezierCurveTo(xOf(i-1)+cp, yOfT(temps[i-1]), xOf(i)-cp, yOfT(temps[i]), xOf(i), yOfT(temps[i]));
+  }
+  ctx.strokeStyle = 'rgba(251,146,60,.95)';
+  ctx.lineWidth = 2.5;
+  ctx.lineJoin = 'round';
+  ctx.stroke();
+
+  /* 溫度節點 + 標籤 */
+  temps.forEach((t, i) => {
+    const x = xOf(i), y = yOfT(t);
+    ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI*2);
+    ctx.fillStyle = '#fb923c'; ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,.92)';
+    ctx.font = 'bold 12px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(t) + '°', x, y - 11);
+  });
+
+  /* 降雨概率標籤 */
+  pops.forEach((p, i) => {
+    if (p < 10) return;
+    const x = xOf(i), y = yOfP(p);
+    ctx.fillStyle = 'rgba(147,197,253,.85)';
+    ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(Math.round(p) + '%', x, Math.max(y - 6, PAD.t + 15));
+  });
+
+  /* X 軸時間標籤 */
+  ctx.fillStyle = 'rgba(255,255,255,.42)';
+  ctx.font = '12px Inter,sans-serif';
+  labels.forEach((lbl, i) => { ctx.textAlign = 'center'; ctx.fillText(lbl, xOf(i), ch - 6); });
+
+  /* Y 軸溫度刻度 */
+  ctx.fillStyle = 'rgba(255,255,255,.28)';
+  ctx.font = '11px Inter,sans-serif'; ctx.textAlign = 'right';
+  [0,.25,.5,.75,1].forEach(f => {
+    const t = tMin + (tMax - tMin) * (1 - f);
+    ctx.fillText(Math.round(t) + '°', PAD.l - 7, PAD.t + f * gH + 4);
+  });
+}
+
+/* ── 渲染主畫面 ── */
+function render(cur, forecast) {
+  const icon = ICONS[cur.weather[0].icon] || '🌡️';
+  const main = cur.weather[0].main;
+  const desc = cur.weather[0].description;
+  applyBg(main.toLowerCase());
+
+  document.getElementById('layout').innerHTML = `
+    <div class="topbar">
+      <div class="city">${cur.name}</div>
+      <div class="live-badge"><span class="live-dot"></span>&nbsp;LIVE WEATHER</div>
+      <div class="clock" id="clockEl">--:--:--</div>
+    </div>
+    <div class="current">
+      <div class="weather-icon">${icon}</div>
+      <div class="temp-block">
+        <div class="temp-main">${Math.round(cur.main.temp)}<span class="temp-unit">°C</span></div>
+        <div class="desc">${desc}</div>
+        <div class="hl">最高 <span class="hi">${Math.round(cur.main.temp_max)}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${Math.round(cur.main.temp_min)}°C</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${cur.main.humidity}%</div></div>
+        <div class="stat"><div class="stat-lbl">💨 風速</div><div class="stat-val">${cur.wind.speed} m/s</div></div>
+        <div class="stat"><div class="stat-lbl">🌡️ 體感</div><div class="stat-val">${Math.round(cur.main.feels_like)}°C</div></div>
+        <div class="stat"><div class="stat-lbl">👁️ 能見度</div><div class="stat-val">${((cur.visibility||0)/1000).toFixed(1)} km</div></div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-head">
+        <div class="chart-title">⏱ 未來 24 小時預報</div>
+        <div class="chart-legend">
+          <span><span class="leg-line" style="background:#fb923c"></span>溫度</span>
+          <span><span class="leg-bar"  style="background:rgba(96,165,250,.5)"></span>降雨概率</span>
+        </div>
+      </div>
+      <canvas id="fChart" height="145"></canvas>
+    </div>`;
+
+  clockEl = document.getElementById('clockEl');
+  tick();
+
+  chartData = forecast;
+  requestAnimationFrame(() => {
+    const c = document.getElementById('fChart');
+    if (c) drawChart(c, chartData);
+  });
+}
+
+/* ── API 呼叫 ── */
 async function fetchWeather() {
-  const apiKey = settings.weatherApiKey;
-  const city   = settings.weatherCity || 'Taipei';
-  const el     = document.getElementById('weatherContent');
-  if (!apiKey) {
-    el.innerHTML = '<div class="no-key">💡 請至管理後台設定天氣 API Key<br><small style="font-size:16px;opacity:.5;margin-top:10px;display:block">openweathermap.org</small></div>';
+  const key  = settings.weatherApiKey;
+  const city = settings.weatherCity || 'Taipei';
+  if (!key) {
+    document.getElementById('layout').innerHTML =
+      '<div class="no-key">💡 請至管理後台設定天氣 API Key<br><small style="font-size:16px;opacity:.4;margin-top:10px;display:block">openweathermap.org（免費）</small></div>';
     return;
   }
   try {
-    const res  = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${apiKey}&units=metric&lang=zh_tw`);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'API error');
-    const icon = WEATHER_ICONS[data.weather[0].icon] || '🌡️';
-    const main = data.weather[0].main.toLowerCase();
-    document.getElementById('bgGrad').style.background = BG_GRADS[main] || BG_GRADS.default;
-    el.innerHTML = `
-      <div class="city-name">${data.name}</div>
-      <div class="live-badge"><span class="live-dot"></span> LIVE WEATHER</div>
-      <div class="weather-icon">${icon}</div>
-      <div class="temp-main">${Math.round(data.main.temp)}<span class="temp-unit">°C</span></div>
-      <div class="desc">${data.weather[0].description}</div>
-      <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label" data-icon="💧">濕度</div><div class="stat-value">${data.main.humidity}%</div></div>
-        <div class="stat-card"><div class="stat-label" data-icon="💨">風速</div><div class="stat-value">${data.wind.speed} m/s</div></div>
-        <div class="stat-card"><div class="stat-label" data-icon="🌡️">體感</div><div class="stat-value">${Math.round(data.main.feels_like)}°C</div></div>
-        <div class="stat-card"><div class="stat-label" data-icon="👁️">能見度</div><div class="stat-value">${((data.visibility||0)/1000).toFixed(1)} km</div></div>
-      </div>
-      <div class="hl-row">最高 <span class="hi">${Math.round(data.main.temp_max)}°C</span> &nbsp;／&nbsp; 最低 <span class="lo">${Math.round(data.main.temp_min)}°C</span></div>`;
+    const base = 'https://api.openweathermap.org/data/2.5';
+    const q    = `q=${encodeURIComponent(city)}&appid=${key}&units=metric&lang=zh_tw`;
+    const [cRes, fRes] = await Promise.all([
+      fetch(`${base}/weather?${q}`),
+      fetch(`${base}/forecast?${q}`)
+    ]);
+    const cur = await cRes.json();
+    if (!cRes.ok) throw new Error(cur.message || 'API error');
+    const fc  = await fRes.json();
+    const now = Date.now() / 1000;
+    const pts = (fc.list || [])
+      .filter(d => d.dt >= now - 1800)
+      .slice(0, 9)
+      .map(d => {
+        const h = new Date(d.dt * 1000);
+        return { time: String(h.getHours()).padStart(2,'0')+':00', temp: d.main.temp, pop: d.pop || 0 };
+      });
+    render(cur, pts);
   } catch(e) {
-    el.innerHTML = `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.5">${e.message}</small></div>`;
+    document.getElementById('layout').innerHTML =
+      `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.45">${e.message}</small></div>`;
   }
 }
+
+/* ── 視窗縮放重繪圖表 ── */
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    const c = document.getElementById('fChart');
+    if (c && chartData.length) drawChart(c, chartData);
+  }, 200);
+});
 
 async function init() {
   settings = await window.api.get('settings');
