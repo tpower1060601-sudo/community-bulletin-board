@@ -234,6 +234,26 @@ input:checked + .slider:before{transform:translateX(20px);}
           <div class="form-group"><label>Port</label><input type="number" id="sAdminPort"></div>
         </div>
       </div>
+      <div class="card">
+        <div class="card-title">☁️ GitHub 自動備份</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">
+          設定後，每次儲存資料都會自動備份到 GitHub。<br>
+          換電腦或清除瀏覽器資料後，開啟 admin 會自動還原。<br>
+          <a href="https://github.com/settings/tokens/new?scopes=repo&description=BBS+Backup" target="_blank" style="color:var(--accent)">→ 點此申請 GitHub Token（勾選 repo 權限）</a>
+        </div>
+        <div class="form-group">
+          <label>GitHub Personal Access Token</label>
+          <div class="input-group">
+            <input type="password" id="sGhToken" placeholder="ghp_xxxxxxxxxxxx">
+            <button class="btn btn-ghost" onclick="saveGhToken()">儲存 Token</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;align-items:center;margin-top:16px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="doBackup()">☁️ 立即備份</button>
+          <button class="btn btn-warning" onclick="doForceRestore()">⬇️ 從 GitHub 還原</button>
+          <div id="ghStatus" style="font-size:13px;color:var(--text2)"></div>
+        </div>
+      </div>
     </div>
   </main>
 </div>
@@ -365,13 +385,13 @@ function saveAnn(id) {
   if(id){ var idx=list.findIndex(function(x){return x.id===id;}); if(idx>-1) list[idx]=updated; }
   else { list.unshift(updated); }
   announcements.list=list;
-  window.api.save('announcements',announcements).then(function(){ toast('公告已儲存'); renderAnnouncements(); closeModal(); });
+  window.api.save('announcements',announcements).then(function(){ toast('公告已儲存'); renderAnnouncements(); closeModal(); triggerBackup(); });
 }
 
 function deleteAnn(id) {
   if(!confirm('確定要刪除這則公告嗎？')) return;
   announcements.list=(announcements.list||[]).filter(function(x){return x.id!==id;});
-  window.api.save('announcements',announcements).then(function(){ toast('公告已刪除','warning'); renderAnnouncements(); closeModal(); });
+  window.api.save('announcements',announcements).then(function(){ toast('公告已刪除','warning'); renderAnnouncements(); closeModal(); triggerBackup(); });
 }
 
 function renderBookings() {
@@ -460,6 +480,14 @@ function loadSettingsForm() {
   if($('sAdminPort'))     $('sAdminPort').value=settings.adminPort||8080;
   renderImageUrls();
   renderVideoUrls();
+  // GitHub Token 狀態
+  var hasToken = !!window.ghBackup.token();
+  var last = window.ghBackup.lastBackup();
+  if($('sGhToken')) $('sGhToken').placeholder = hasToken ? '（已設定，輸入新值可更換）' : 'ghp_xxxxxxxxxxxx';
+  setGhStatus(hasToken ? 'ok' : 'idle',
+    hasToken
+      ? '✅ Token 已設定' + (last ? '　上次備份：' + new Date(last).toLocaleString('zh-TW') : '')
+      : '尚未設定 Token');
   var ctrl=$('windowControls'), wHtml='', wins=settings.windows||[];
   // 計算 base URL：從 admin 頁面路徑推導出各 screen 的完整網址
   var adminHref = window.location.href.split('?')[0].split('#')[0];
@@ -513,12 +541,66 @@ function saveSettings() {
   for(var i=0;i<wins.length;i++){ var el=$('win-en-'+i); if(el) wins[i].enabled=el.checked; }
   settings.meetingsUrl=($('sMeetingsUrl')||{}).value||'';
   settings.meetingsZoom=parseFloat(($('sMeetingsZoom')||{}).value)||1.0;
-  Promise.all([window.api.save('settings',settings), window.api.save('meetings',meetings)]).then(function(){ toast('設定已更新'); loadAll(); });
+  Promise.all([window.api.save('settings',settings), window.api.save('meetings',meetings)]).then(function(){ toast('設定已更新'); loadAll(); triggerBackup(); });
 }
 
 function saveMarquee() {
   announcements.marquee=$('marqueeInput').value;
-  window.api.save('announcements',announcements).then(function(){ toast('跑馬燈已存'); });
+  window.api.save('announcements',announcements).then(function(){ toast('跑馬燈已存'); triggerBackup(); });
+}
+
+/* ── GitHub 備份 ─────────────────────────────────────────────────────── */
+function setGhStatus(state, msg) {
+  var el=$('ghStatus'); if(!el) return;
+  var colors={idle:'var(--text2)', ok:'var(--green)', err:'var(--red)', busy:'var(--orange)'};
+  el.style.color = colors[state]||colors.idle;
+  el.textContent = msg||'';
+}
+
+function saveGhToken() {
+  var t=($('sGhToken')||{}).value.trim();
+  if(!t){toast('請輸入 Token','error');return;}
+  window.ghBackup.setToken(t);
+  if($('sGhToken')) $('sGhToken').value='';
+  toast('Token 已儲存');
+  setGhStatus('idle','Token 已設定，下次儲存時自動備份');
+}
+
+function doBackup() {
+  if(!window.ghBackup.token()){toast('請先設定 GitHub Token','error');return;}
+  setGhStatus('busy','備份中…');
+  window.ghBackup.save().then(function(r){
+    if(r.ok){
+      setGhStatus('ok','✅ 備份成功：'+new Date().toLocaleTimeString('zh-TW'));
+      toast('已備份至 GitHub');
+    } else {
+      setGhStatus('err','❌ 備份失敗（Token 或網路問題）');
+      toast('備份失敗，請確認 Token','error');
+    }
+  });
+}
+
+function doForceRestore() {
+  if(!confirm('確定要從 GitHub 還原？本地資料將被覆蓋。')) return;
+  setGhStatus('busy','還原中…');
+  window.ghBackup.forceRestore().then(function(r){
+    if(r.restored){
+      setGhStatus('ok','✅ 還原成功：'+new Date().toLocaleTimeString('zh-TW'));
+      toast('已從 GitHub 還原，重新載入中…');
+      setTimeout(function(){ window.location.reload(); }, 1500);
+    } else {
+      setGhStatus('err','❌ 找不到備份（請先備份一次）');
+      toast('找不到備份檔案','error');
+    }
+  });
+}
+
+function triggerBackup() {
+  if(!window.ghBackup.token()) return;
+  window.ghBackup.save().then(function(r){
+    if(r.ok) setGhStatus('ok','✅ 自動備份：'+new Date().toLocaleTimeString('zh-TW'));
+    else      setGhStatus('err','❌ 自動備份失敗');
+  });
 }
 
 function closeModal() { $('modalBackdrop').classList.remove('open'); }
@@ -537,11 +619,17 @@ function doLogin() {
 }
 
 (function(){
-  if(!sessionStorage.getItem('adm_auth')){
-    $('loginOverlay').classList.add('open');
-  } else {
-    loadAll().catch(function(){});
-  }
+  // 嘗試自動還原（localStorage 完全空白時才會從 GitHub 拉資料）
+  window.ghBackup.autoRestore().then(function(r){
+    if(r.restored){
+      toast('已從 GitHub 自動還原資料 (' + (r.savedAt ? r.savedAt.slice(0,10) : '') + ')');
+    }
+    if(!sessionStorage.getItem('adm_auth')){
+      $('loginOverlay').classList.add('open');
+    } else {
+      loadAll().catch(function(){});
+    }
+  });
 })();
 </script>
 </body>
