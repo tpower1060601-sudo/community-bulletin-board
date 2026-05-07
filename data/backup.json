@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-07T15:21:15.646Z",
+  "_savedAt": "2026-05-07T15:30:09.990Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場",
     "list": []
@@ -63,7 +63,7 @@
         "enabled": true
       }
     ],
-    "slideInterval": 6000
+    "slideInterval": 15
   },
   "meetings": {
     "rooms": [
