@@ -12,111 +12,58 @@ body {
 }
 
 /* ── 背景層 ── */
-#bg {
-  position: fixed; inset: 0; z-index: 0;
-  transition: background 4s ease;
-  background: linear-gradient(160deg, #0f2035, #020617);
-}
+#bg { position: fixed; inset: 0; z-index: 0; transition: background 4s ease; background: linear-gradient(160deg,#0f2035,#020617); }
 #bg-fx { position: fixed; inset: 0; z-index: 1; pointer-events: none; overflow: hidden; }
-#bg-overlay {
-  position: fixed; inset: 0; z-index: 2;
-  background: linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,.65) 100%);
-}
+#bg-overlay { position: fixed; inset: 0; z-index: 2; background: linear-gradient(to bottom, rgba(0,0,0,.4) 0%, rgba(0,0,0,.65) 100%); }
 
-/* ── 前景佈局 ── */
-.layout {
-  position: relative; z-index: 10;
-  height: 100vh; display: flex; flex-direction: column;
-  padding: 28px 52px 20px;
-  gap: 12px;
-}
+/* ── 佈局 ── */
+.layout { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 24px 52px 16px; gap: 10px; }
 
 /* 頂列 */
-.topbar {
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
-}
-.city {
-  font-size: 54px; font-weight: 900; letter-spacing: 8px;
-  text-shadow: 0 4px 24px rgba(0,0,0,.7);
-}
-.live-badge {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(0,0,0,.45); padding: 8px 22px;
-  border-radius: 30px; border: 1px solid rgba(255,255,255,.12);
-  font-size: 14px; letter-spacing: 2px; color: rgba(255,255,255,.9);
-}
-.live-dot {
-  width: 9px; height: 9px; border-radius: 50%; background: #22c55e;
-  box-shadow: 0 0 10px #22c55e; animation: pulse 2s infinite;
-}
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.city { font-size: 54px; font-weight: 900; letter-spacing: 8px; text-shadow: 0 4px 24px rgba(0,0,0,.7); }
+.live-badge { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,.45); padding: 8px 22px; border-radius: 30px; border: 1px solid rgba(255,255,255,.12); font-size: 14px; letter-spacing: 2px; }
+.live-dot { width: 9px; height: 9px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 10px #22c55e; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
-.clock {
-  font-size: 40px; font-weight: 700; letter-spacing: 2px;
-  color: rgba(255,255,255,.9); min-width: 140px; text-align: right;
-}
+.clock { font-size: 40px; font-weight: 700; letter-spacing: 2px; color: rgba(255,255,255,.9); min-width: 140px; text-align: right; }
 
-/* 主資訊區 */
-.current {
-  flex: 1; min-height: 0;
-  display: flex; align-items: center; gap: 40px;
-}
-.weather-icon {
-  font-size: 150px; line-height: 1; flex-shrink: 0;
-  filter: drop-shadow(0 8px 28px rgba(255,255,255,.25));
-  animation: floatIcon 6s ease-in-out infinite;
-}
-@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
-
+/* 目前天氣 */
+.current { flex: 1; min-height: 0; display: flex; align-items: center; gap: 36px; }
+.weather-icon { font-size: 130px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 8px 28px rgba(255,255,255,.25)); animation: floatIcon 6s ease-in-out infinite; }
+@keyframes floatIcon { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
 .temp-block { display: flex; flex-direction: column; flex-shrink: 0; }
-.temp-main {
-  font-size: 118px; font-weight: 900; line-height: 1;
-  background: linear-gradient(180deg,#fff 40%,rgba(255,255,255,.55));
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-}
-.temp-unit { font-size: 46px; -webkit-text-fill-color: rgba(255,255,255,.45); }
-.desc { font-size: 28px; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: 5px; margin-top: 6px; }
-.hl { font-size: 20px; color: rgba(255,255,255,.45); margin-top: 10px; letter-spacing: 2px; }
+.temp-main { font-size: 110px; font-weight: 900; line-height: 1; background: linear-gradient(180deg,#fff 40%,rgba(255,255,255,.55)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.temp-unit { font-size: 44px; -webkit-text-fill-color: rgba(255,255,255,.45); }
+.desc { font-size: 26px; font-weight: 700; color: rgba(255,255,255,.8); letter-spacing: 5px; margin-top: 6px; }
+.hl { font-size: 19px; color: rgba(255,255,255,.45); margin-top: 8px; letter-spacing: 2px; }
 .hl .hi { color: #fbbf24; } .hl .lo { color: #60a5fa; }
 
-.stats { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-left: auto; }
-.stat {
-  background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 20px; padding: 18px 22px; backdrop-filter: blur(20px);
-  min-width: 155px;
-}
-.stat-lbl { font-size: 13px; color: rgba(255,255,255,.5); letter-spacing: 2px; font-weight: 700; }
-.stat-val { font-size: 30px; font-weight: 900; margin-top: 8px; }
+/* 6格資訊卡 (3×2) */
+.stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-left: auto; }
+.stat { background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.1); border-radius: 18px; padding: 14px 18px; backdrop-filter: blur(20px); min-width: 118px; }
+.stat-lbl { font-size: 12px; color: rgba(255,255,255,.5); letter-spacing: 2px; font-weight: 700; }
+.stat-val { font-size: 26px; font-weight: 900; margin-top: 6px; }
+.stat-unit { font-size: 14px; opacity: .55; font-weight: 600; }
 
-/* 圖表區 */
-.chart-wrap {
-  flex-shrink: 0;
-  background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.1);
-  border-radius: 24px; padding: 14px 24px 10px;
-  backdrop-filter: blur(24px);
-}
-.chart-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 8px;
-}
-.chart-title {
-  font-size: 13px; font-weight: 800; letter-spacing: 3px;
-  color: rgba(255,255,255,.55); text-transform: uppercase;
-}
+/* 日照弧 + 風向列 */
+.sun-row { flex-shrink: 0; display: flex; align-items: stretch; gap: 10px; }
+.sun-wrap { flex: 1; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.1); border-radius: 20px; padding: 8px 20px 2px; backdrop-filter: blur(24px); }
+.sun-label { font-size: 11px; font-weight: 800; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 2px; }
+.extra-cards { display: flex; flex-direction: column; gap: 10px; }
+
+/* 圖表 */
+.chart-wrap { flex-shrink: 0; background: rgba(0,0,0,.32); border: 1px solid rgba(255,255,255,.1); border-radius: 24px; padding: 12px 24px 8px; backdrop-filter: blur(24px); }
+.chart-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.chart-title { font-size: 13px; font-weight: 800; letter-spacing: 3px; color: rgba(255,255,255,.55); text-transform: uppercase; }
 .chart-legend { display: flex; gap: 18px; font-size: 12px; color: rgba(255,255,255,.45); align-items: center; }
 .leg-line { display: inline-block; width: 20px; height: 3px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
 .leg-bar  { display: inline-block; width: 10px; height: 12px; border-radius: 2px; vertical-align: middle; margin-right: 5px; }
 #fChart { width: 100%; display: block; }
 
-/* 錯誤/載入 */
-.no-key {
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  height: 100%; gap: 20px; color: rgba(255,255,255,.35); font-size: 26px; text-align: center;
-}
+.no-key { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; color: rgba(255,255,255,.35); font-size: 26px; text-align: center; }
 </style>
 </head>
 <body>
-
 <div id="bg"></div>
 <div id="bg-fx"></div>
 <div id="bg-overlay"></div>
@@ -145,245 +92,196 @@ const ICONS = {
   '11d':'⛈️','11n':'⛈️','13d':'❄️','13n':'❄️','50d':'🌫️','50n':'🌫️'
 };
 const BG = {
-  clear:        'linear-gradient(155deg,#1a4a7a,#071528)',
-  clouds:       'linear-gradient(155deg,#2a3a4e,#111e2a)',
-  rain:         'linear-gradient(155deg,#112030,#06101a)',
-  drizzle:      'linear-gradient(155deg,#142535,#08141e)',
-  snow:         'linear-gradient(155deg,#243650,#101e30)',
-  thunderstorm: 'linear-gradient(155deg,#0a1218,#030608)',
-  mist:         'linear-gradient(155deg,#1a2030,#0d1520)',
-  fog:          'linear-gradient(155deg,#1a2030,#0d1520)',
-  default:      'linear-gradient(155deg,#0f2035,#020617)',
+  clear:'linear-gradient(155deg,#1a4a7a,#071528)',
+  clouds:'linear-gradient(155deg,#2a3a4e,#111e2a)',
+  rain:'linear-gradient(155deg,#112030,#06101a)',
+  drizzle:'linear-gradient(155deg,#142535,#08141e)',
+  snow:'linear-gradient(155deg,#243650,#101e30)',
+  thunderstorm:'linear-gradient(155deg,#0a1218,#030608)',
+  mist:'linear-gradient(155deg,#1a2030,#0d1520)',
+  fog:'linear-gradient(155deg,#1a2030,#0d1520)',
+  default:'linear-gradient(155deg,#0f2035,#020617)',
 };
 
 /* ── 背景動畫 ── */
 function clearFx() { document.getElementById('bg-fx').innerHTML = ''; }
-
 function injectStyle(id, css) {
   if (document.getElementById(id)) return;
-  const s = document.createElement('style');
-  s.id = id; s.textContent = css;
-  document.head.appendChild(s);
+  const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s);
 }
-
-function mkEl(tag, styles) {
-  const el = document.createElement(tag);
-  Object.assign(el.style, styles);
-  return el;
-}
+function mkEl(tag, styles) { const el = document.createElement(tag); Object.assign(el.style, styles); return el; }
 
 function startRain(heavy) {
-  injectStyle('kf-rain', '@keyframes rDrop{0%{transform:translateY(-8px) skewX(-4deg);opacity:0}4%{opacity:1}96%{opacity:1}100%{transform:translateY(101vh) skewX(-4deg);opacity:0}}');
+  injectStyle('kf-rain','@keyframes rDrop{0%{transform:translateY(-8px) skewX(-4deg);opacity:0}4%{opacity:1}96%{opacity:1}100%{transform:translateY(101vh) skewX(-4deg);opacity:0}}');
   const c = document.getElementById('bg-fx');
-  const n = heavy ? 90 : 50;
-  for (let i = 0; i < n; i++) {
-    const opa = heavy ? .08 + Math.random()*.1 : .04 + Math.random()*.07;
-    c.appendChild(mkEl('div', {
-      position:'absolute', left:Math.random()*100+'%', top:'-6px',
-      width:'1px', height:(heavy?20:13)+'px',
-      background:'rgba(180,215,255,'+opa+')',
-      animation:'rDrop '+(0.45+Math.random()*0.45)+'s '+(Math.random()*2.5)+'s linear infinite',
-    }));
+  for (let i = 0; i < (heavy?90:50); i++) {
+    const opa = heavy ? .08+Math.random()*.1 : .04+Math.random()*.07;
+    c.appendChild(mkEl('div',{position:'absolute',left:Math.random()*100+'%',top:'-6px',width:'1px',height:(heavy?20:13)+'px',background:'rgba(180,215,255,'+opa+')',animation:'rDrop '+(0.45+Math.random()*0.45)+'s '+(Math.random()*2.5)+'s linear infinite'}));
   }
 }
-
 function startSnow() {
-  injectStyle('kf-snow', '@keyframes sFlake{0%{transform:translateY(-20px) translateX(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(101vh) translateX(25px);opacity:0}}');
+  injectStyle('kf-snow','@keyframes sFlake{0%{transform:translateY(-20px) translateX(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(101vh) translateX(25px);opacity:0}}');
   const c = document.getElementById('bg-fx');
-  '❄❅❆•••'.split('').forEach((ch, i) => {
-    for (let j = 0; j < 5; j++) {
-      const sz = 10 + Math.random()*14;
-      c.appendChild(Object.assign(mkEl('div', {
-        position:'absolute', left:Math.random()*100+'%', top:'-20px',
-        fontSize:sz+'px', color:'rgba(200,230,255,.18)',
-        animation:'sFlake '+(4+Math.random()*6)+'s '+(Math.random()*7)+'s linear infinite',
-      }), { textContent: ch }));
-    }
+  '❄❅❆•••'.split('').forEach(ch => {
+    for (let j=0;j<5;j++) { const sz=10+Math.random()*14; c.appendChild(Object.assign(mkEl('div',{position:'absolute',left:Math.random()*100+'%',top:'-20px',fontSize:sz+'px',color:'rgba(200,230,255,.18)',animation:'sFlake '+(4+Math.random()*6)+'s '+(Math.random()*7)+'s linear infinite'}),{textContent:ch})); }
   });
 }
-
 function startSun() {
-  injectStyle('kf-sun', '@keyframes sunP{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.18);opacity:.6}} @keyframes sunR{0%,100%{opacity:.3;width:200px}50%{opacity:.7;width:300px}}');
+  injectStyle('kf-sun','@keyframes sunP{0%,100%{transform:scale(1);opacity:.9}50%{transform:scale(1.18);opacity:.6}} @keyframes sunR{0%,100%{opacity:.3;width:200px}50%{opacity:.7;width:300px}}');
   const c = document.getElementById('bg-fx');
-  c.appendChild(mkEl('div', {
-    position:'absolute', right:'7%', top:'4%',
-    width:'280px', height:'280px', borderRadius:'50%',
-    background:'radial-gradient(circle,rgba(255,210,60,.1) 0%,transparent 68%)',
-    animation:'sunP 4.5s ease-in-out infinite',
-  }));
-  for (let i = 0; i < 8; i++) {
-    c.appendChild(mkEl('div', {
-      position:'absolute', right:'calc(7% + 120px)', top:'calc(4% + 120px)',
-      width:'200px', height:'1px', transformOrigin:'0 50%',
-      background:'linear-gradient(90deg,transparent,rgba(255,210,60,.07))',
-      transform:'rotate('+(i*45)+'deg)',
-      animation:'sunR 7s '+(i*0.9)+'s ease-in-out infinite',
-    }));
-  }
+  c.appendChild(mkEl('div',{position:'absolute',right:'7%',top:'4%',width:'280px',height:'280px',borderRadius:'50%',background:'radial-gradient(circle,rgba(255,210,60,.1) 0%,transparent 68%)',animation:'sunP 4.5s ease-in-out infinite'}));
+  for (let i=0;i<8;i++) c.appendChild(mkEl('div',{position:'absolute',right:'calc(7% + 120px)',top:'calc(4% + 120px)',width:'200px',height:'1px',transformOrigin:'0 50%',background:'linear-gradient(90deg,transparent,rgba(255,210,60,.07))',transform:'rotate('+(i*45)+'deg)',animation:'sunR 7s '+(i*0.9)+'s ease-in-out infinite'}));
 }
-
 function startClouds() {
-  injectStyle('kf-cloud', '@keyframes cDrift{from{transform:translateX(-220px)}to{transform:translateX(110vw)}}');
+  injectStyle('kf-cloud','@keyframes cDrift{from{transform:translateX(-220px)}to{transform:translateX(110vw)}}');
   const c = document.getElementById('bg-fx');
-  [[130,'4%',25],[190,'11%',32],[110,'2%',20],[160,'19%',28]].forEach(([w, top, dur], i) => {
-    c.appendChild(mkEl('div', {
-      position:'absolute', top:top, width:w+'px', height:'44px',
-      borderRadius:'44px', background:'rgba(255,255,255,.04)', filter:'blur(10px)',
-      animation:'cDrift '+(dur+i*6)+'s '+(-Math.random()*20)+'s linear infinite',
-    }));
+  [[130,'4%',25],[190,'11%',32],[110,'2%',20],[160,'19%',28]].forEach(([w,top,dur],i) => {
+    c.appendChild(mkEl('div',{position:'absolute',top:top,width:w+'px',height:'44px',borderRadius:'44px',background:'rgba(255,255,255,.04)',filter:'blur(10px)',animation:'cDrift '+(dur+i*6)+'s '+(-Math.random()*20)+'s linear infinite'}));
   });
 }
-
 function startThunder() {
   startRain(true);
-  injectStyle('kf-lightning', '@keyframes ltFl{0%{opacity:0}15%{opacity:1}30%{opacity:0}55%{opacity:.6}100%{opacity:0}}');
+  injectStyle('kf-lt','@keyframes ltFl{0%{opacity:0}15%{opacity:1}30%{opacity:0}55%{opacity:.6}100%{opacity:0}}');
   function flash() {
-    const f = mkEl('div', { position:'absolute', inset:'0', background:'rgba(180,210,255,.06)', animation:'ltFl .2s ease-out forwards' });
+    const f = mkEl('div',{position:'absolute',inset:'0',background:'rgba(180,210,255,.06)',animation:'ltFl .2s ease-out forwards'});
     document.getElementById('bg-fx').appendChild(f);
-    setTimeout(() => f.remove(), 400);
-    setTimeout(flash, 5000 + Math.random() * 9000);
+    setTimeout(()=>f.remove(),400);
+    setTimeout(flash, 5000+Math.random()*9000);
   }
   setTimeout(flash, 2500);
 }
-
-function applyBg(mainLower) {
+function applyBg(m) {
   clearFx();
-  document.getElementById('bg').style.background = BG[mainLower] || BG.default;
-  if (mainLower === 'clear')              startSun();
-  else if (mainLower === 'clouds')        startClouds();
-  else if (mainLower === 'rain')          startRain(true);
-  else if (mainLower === 'drizzle')       startRain(false);
-  else if (mainLower === 'snow')          startSnow();
-  else if (mainLower === 'thunderstorm')  startThunder();
+  document.getElementById('bg').style.background = BG[m] || BG.default;
+  if (m==='clear') startSun();
+  else if (m==='clouds') startClouds();
+  else if (m==='rain') startRain(true);
+  else if (m==='drizzle') startRain(false);
+  else if (m==='snow') startSnow();
+  else if (m==='thunderstorm') startThunder();
+}
+
+/* ── 風向 ── */
+function degToCompass(deg) {
+  const d = ['北','北北東','東北','東北東','東','東南東','東南','南南東','南','南南西','西南','西南西','西','西北西','西北','北北西'];
+  return d[Math.round((deg||0) / 22.5) % 16];
+}
+
+/* ── 日照弧 SVG ── */
+function buildSunArc(sunriseTs, sunsetTs, nowTs) {
+  const fmt = ts => { const d=new Date(ts*1000); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  const isDay = nowTs >= sunriseTs && nowTs <= sunsetTs;
+  const pct = Math.max(0, Math.min(1, (nowTs - sunriseTs) / (sunsetTs - sunriseTs)));
+
+  const cx=250, cy=88, rx=228, ry=68;
+  const angle = Math.PI * (1 - pct);
+  const sunX = (cx + rx * Math.cos(angle)).toFixed(1);
+  const sunY = (cy - ry * Math.sin(angle)).toFixed(1);
+  const large = pct > 0.5 ? 1 : 0;
+
+  let compPath = '';
+  if (pct > 0.001 && pct < 0.999) {
+    compPath = `M 22,${cy} A ${rx},${ry} 0 ${large},1 ${sunX},${sunY}`;
+  } else if (pct >= 0.999) {
+    compPath = `M 22,${cy} A ${rx},${ry} 0 0,1 ${cx},${cy-ry} A ${rx},${ry} 0 0,1 478,${cy}`;
+  }
+
+  return `<svg viewBox="0 0 500 108" style="width:100%;height:108px;display:block" preserveAspectRatio="none">
+    <defs>
+      <linearGradient id="skyG" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(56,189,248,.08)"/>
+        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+      </linearGradient>
+    </defs>
+    <path d="M 22,${cy} A ${rx},${ry} 0 0,1 478,${cy} Z" fill="url(#skyG)"/>
+    <path d="M 22,${cy} A ${rx},${ry} 0 0,1 478,${cy}" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="2" stroke-dasharray="6,5" stroke-linecap="round"/>
+    ${compPath ? `<path d="${compPath}" fill="none" stroke="${isDay ? 'rgba(251,191,36,.85)' : 'rgba(148,163,184,.5)'}" stroke-width="2.8" stroke-linecap="round"/>` : ''}
+    ${isDay
+      ? `<circle cx="${sunX}" cy="${sunY}" r="20" fill="rgba(251,191,36,.13)"/>
+         <circle cx="${sunX}" cy="${sunY}" r="10" fill="rgba(251,191,36,.95)" stroke="rgba(255,255,255,.4)" stroke-width="1.5"/>`
+      : `<text x="250" y="56" text-anchor="middle" font-size="30" fill="rgba(148,163,184,.45)">☾</text>
+         <text x="250" y="80" text-anchor="middle" font-size="11" font-family="Inter,sans-serif" fill="rgba(148,163,184,.35)" letter-spacing="3">夜間</text>`
+    }
+    <line x1="12" y1="${cy}" x2="488" y2="${cy}" stroke="rgba(255,255,255,.08)" stroke-width="1"/>
+    <text x="22" y="${cy+20}" text-anchor="start" font-size="13" font-family="Inter,sans-serif" fill="rgba(251,146,60,.85)">日出 ${fmt(sunriseTs)}</text>
+    <text x="478" y="${cy+20}" text-anchor="end" font-size="13" font-family="Inter,sans-serif" fill="rgba(251,100,60,.85)">日落 ${fmt(sunsetTs)}</text>
+  </svg>`;
 }
 
 /* ── 圖表（Canvas）── */
 function roundRectPath(ctx, x, y, w, h, r) {
   ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y); ctx.closePath();
 }
 
 function drawChart(canvas, data) {
   if (!data || data.length < 2) return;
-  const W = canvas.offsetWidth;
-  if (!W) return;
-  canvas.width = W * (window.devicePixelRatio || 1);
-  canvas.height = canvas.height * (window.devicePixelRatio || 1);
+  const W = canvas.offsetWidth; if (!W) return;
+  const DPR = window.devicePixelRatio || 1;
+  canvas.width  = W * DPR;
+  canvas.height = canvas.offsetHeight * DPR;
   canvas.style.width = W + 'px';
   const ctx = canvas.getContext('2d');
-  const DPR = window.devicePixelRatio || 1;
   ctx.scale(DPR, DPR);
   const cw = W, ch = canvas.offsetHeight;
-
   const PAD = { l:60, r:60, t:28, b:42 };
-  const gW = cw - PAD.l - PAD.r;
-  const gH = ch - PAD.t - PAD.b;
-
-  const temps  = data.map(d => d.temp);
-  const pops   = data.map(d => d.pop * 100);
-  const labels = data.map(d => d.time);
+  const gW = cw - PAD.l - PAD.r, gH = ch - PAD.t - PAD.b;
+  const temps = data.map(d=>d.temp), pops = data.map(d=>d.pop*100), labels = data.map(d=>d.time);
   const n = data.length;
+  const tMin = Math.min(...temps)-2, tMax = Math.max(...temps)+2;
+  const xOf = i => PAD.l + i*(gW/(n-1));
+  const yOfT = t => PAD.t + gH - ((t-tMin)/(tMax-tMin))*gH;
+  const yOfP = p => PAD.t + gH - (p/100)*gH;
 
-  const tMin = Math.min(...temps) - 2, tMax = Math.max(...temps) + 2;
-  const xOf = i => PAD.l + i * (gW / (n - 1));
-  const yOfT = t => PAD.t + gH - ((t - tMin) / (tMax - tMin)) * gH;
-  const yOfP = p => PAD.t + gH - (p / 100) * gH;
-
-  /* 降雨概率柱（背景） */
-  pops.forEach((p, i) => {
-    if (p < 5) return;
-    const x = xOf(i), bW = (gW / (n - 1)) * 0.45, bH = (p / 100) * gH;
-    const grd = ctx.createLinearGradient(0, PAD.t + gH - bH, 0, PAD.t + gH);
-    grd.addColorStop(0, 'rgba(96,165,250,.32)');
-    grd.addColorStop(1, 'rgba(96,165,250,.04)');
-    ctx.fillStyle = grd;
-    roundRectPath(ctx, x - bW / 2, PAD.t + gH - bH, bW, bH, 4);
-    ctx.fill();
+  pops.forEach((p,i) => {
+    if (p<5) return;
+    const x=xOf(i), bW=(gW/(n-1))*0.45, bH=(p/100)*gH;
+    const grd=ctx.createLinearGradient(0,PAD.t+gH-bH,0,PAD.t+gH);
+    grd.addColorStop(0,'rgba(96,165,250,.32)'); grd.addColorStop(1,'rgba(96,165,250,.04)');
+    ctx.fillStyle=grd; roundRectPath(ctx,x-bW/2,PAD.t+gH-bH,bW,bH,4); ctx.fill();
   });
+  ctx.strokeStyle='rgba(255,255,255,.06)'; ctx.lineWidth=1;
+  [0,.25,.5,.75,1].forEach(f=>{ const y=PAD.t+f*gH; ctx.beginPath(); ctx.moveTo(PAD.l,y); ctx.lineTo(cw-PAD.r,y); ctx.stroke(); });
 
-  /* 格線 */
-  ctx.strokeStyle = 'rgba(255,255,255,.06)';
-  ctx.lineWidth = 1;
-  [0,.25,.5,.75,1].forEach(f => {
-    const y = PAD.t + f * gH;
-    ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(cw - PAD.r, y); ctx.stroke();
+  const fGrd=ctx.createLinearGradient(0,PAD.t,0,PAD.t+gH);
+  fGrd.addColorStop(0,'rgba(251,146,60,.22)'); fGrd.addColorStop(1,'rgba(251,146,60,.01)');
+  ctx.beginPath(); ctx.moveTo(xOf(0),PAD.t+gH); ctx.lineTo(xOf(0),yOfT(temps[0]));
+  for (let i=1;i<n;i++) { const cp=gW/(n-1)*0.42; ctx.bezierCurveTo(xOf(i-1)+cp,yOfT(temps[i-1]),xOf(i)-cp,yOfT(temps[i]),xOf(i),yOfT(temps[i])); }
+  ctx.lineTo(xOf(n-1),PAD.t+gH); ctx.closePath(); ctx.fillStyle=fGrd; ctx.fill();
+
+  ctx.beginPath(); ctx.moveTo(xOf(0),yOfT(temps[0]));
+  for (let i=1;i<n;i++) { const cp=gW/(n-1)*0.42; ctx.bezierCurveTo(xOf(i-1)+cp,yOfT(temps[i-1]),xOf(i)-cp,yOfT(temps[i]),xOf(i),yOfT(temps[i])); }
+  ctx.strokeStyle='rgba(251,146,60,.95)'; ctx.lineWidth=2.5; ctx.lineJoin='round'; ctx.stroke();
+
+  temps.forEach((t,i) => {
+    const x=xOf(i), y=yOfT(t);
+    ctx.beginPath(); ctx.arc(x,y,4.5,0,Math.PI*2); ctx.fillStyle='#fb923c'; ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.92)'; ctx.font='bold 15px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(Math.round(t)+'°', x, y-12);
   });
-
-  /* 溫度漸層填充 */
-  const fillGrd = ctx.createLinearGradient(0, PAD.t, 0, PAD.t + gH);
-  fillGrd.addColorStop(0, 'rgba(251,146,60,.22)');
-  fillGrd.addColorStop(1, 'rgba(251,146,60,.01)');
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), PAD.t + gH);
-  ctx.lineTo(xOf(0), yOfT(temps[0]));
-  for (let i = 1; i < n; i++) {
-    const cp = gW / (n - 1) * 0.42;
-    ctx.bezierCurveTo(xOf(i-1)+cp, yOfT(temps[i-1]), xOf(i)-cp, yOfT(temps[i]), xOf(i), yOfT(temps[i]));
-  }
-  ctx.lineTo(xOf(n-1), PAD.t + gH);
-  ctx.closePath();
-  ctx.fillStyle = fillGrd;
-  ctx.fill();
-
-  /* 溫度曲線 */
-  ctx.beginPath();
-  ctx.moveTo(xOf(0), yOfT(temps[0]));
-  for (let i = 1; i < n; i++) {
-    const cp = gW / (n - 1) * 0.42;
-    ctx.bezierCurveTo(xOf(i-1)+cp, yOfT(temps[i-1]), xOf(i)-cp, yOfT(temps[i]), xOf(i), yOfT(temps[i]));
-  }
-  ctx.strokeStyle = 'rgba(251,146,60,.95)';
-  ctx.lineWidth = 2.5;
-  ctx.lineJoin = 'round';
-  ctx.stroke();
-
-  /* 溫度節點 + 標籤 */
-  temps.forEach((t, i) => {
-    const x = xOf(i), y = yOfT(t);
-    ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI*2);
-    ctx.fillStyle = '#fb923c'; ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,.92)';
-    ctx.font = 'bold 15px Inter,sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(Math.round(t) + '°', x, y - 12);
+  pops.forEach((p,i) => {
+    if (p<10) return;
+    const x=xOf(i), y=yOfP(p);
+    ctx.fillStyle='rgba(147,197,253,.85)'; ctx.font='13px Inter,sans-serif'; ctx.textAlign='center';
+    ctx.fillText(Math.round(p)+'%', x, Math.max(y-7,PAD.t+17));
   });
-
-  /* 降雨概率標籤 */
-  pops.forEach((p, i) => {
-    if (p < 10) return;
-    const x = xOf(i), y = yOfP(p);
-    ctx.fillStyle = 'rgba(147,197,253,.85)';
-    ctx.font = '13px Inter,sans-serif'; ctx.textAlign = 'center';
-    ctx.fillText(Math.round(p) + '%', x, Math.max(y - 7, PAD.t + 17));
-  });
-
-  /* X 軸時間標籤 */
-  ctx.fillStyle = 'rgba(255,255,255,.42)';
-  ctx.font = '14px Inter,sans-serif';
-  labels.forEach((lbl, i) => { ctx.textAlign = 'center'; ctx.fillText(lbl, xOf(i), ch - 6); });
-
-  /* Y 軸溫度刻度 */
-  ctx.fillStyle = 'rgba(255,255,255,.28)';
-  ctx.font = '13px Inter,sans-serif'; ctx.textAlign = 'right';
-  [0,.25,.5,.75,1].forEach(f => {
-    const t = tMin + (tMax - tMin) * (1 - f);
-    ctx.fillText(Math.round(t) + '°', PAD.l - 7, PAD.t + f * gH + 4);
-  });
+  ctx.fillStyle='rgba(255,255,255,.42)'; ctx.font='14px Inter,sans-serif';
+  labels.forEach((lbl,i)=>{ ctx.textAlign='center'; ctx.fillText(lbl,xOf(i),ch-6); });
+  ctx.fillStyle='rgba(255,255,255,.28)'; ctx.font='13px Inter,sans-serif'; ctx.textAlign='right';
+  [0,.25,.5,.75,1].forEach(f=>{ const t=tMin+(tMax-tMin)*(1-f); ctx.fillText(Math.round(t)+'°',PAD.l-7,PAD.t+f*gH+4); });
 }
 
 /* ── 渲染主畫面 ── */
-function render(cur, forecast, dayHigh, dayLow) {
-  const icon = ICONS[cur.weather[0].icon] || '🌡️';
-  const main = cur.weather[0].main;
-  const desc = cur.weather[0].description;
+function render(cur, forecast, dayHigh, dayLow, extra) {
+  const icon    = ICONS[cur.weather[0].icon] || '🌡️';
+  const main    = cur.weather[0].main;
+  const desc    = cur.weather[0].description;
+  const compass = degToCompass(extra.windDeg);
+  const sunArc  = buildSunArc(extra.sunrise, extra.sunset, Date.now() / 1000);
+
   applyBg(main.toLowerCase());
 
   document.getElementById('layout').innerHTML = `
@@ -400,10 +298,28 @@ function render(cur, forecast, dayHigh, dayLow) {
         <div class="hl">最高 <span class="hi">${dayHigh}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${dayLow}°C</span></div>
       </div>
       <div class="stats">
-        <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${cur.main.humidity}%</div></div>
-        <div class="stat"><div class="stat-lbl">💨 風速</div><div class="stat-val">${cur.wind.speed} m/s</div></div>
-        <div class="stat"><div class="stat-lbl">🌡️ 體感</div><div class="stat-val">${Math.round(cur.main.feels_like)}°C</div></div>
-        <div class="stat"><div class="stat-lbl">👁️ 能見度</div><div class="stat-val">${((cur.visibility||0)/1000).toFixed(1)} km</div></div>
+        <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${cur.main.humidity}<span class="stat-unit">%</span></div></div>
+        <div class="stat"><div class="stat-lbl">🌡️ 體感</div><div class="stat-val">${Math.round(cur.main.feels_like)}<span class="stat-unit">°C</span></div></div>
+        <div class="stat"><div class="stat-lbl">🔵 氣壓</div><div class="stat-val">${cur.main.pressure}<span class="stat-unit"> hPa</span></div></div>
+        <div class="stat"><div class="stat-lbl">💨 風速</div><div class="stat-val">${cur.wind.speed}<span class="stat-unit"> m/s</span></div></div>
+        <div class="stat"><div class="stat-lbl">👁️ 能見度</div><div class="stat-val">${((cur.visibility||0)/1000).toFixed(1)}<span class="stat-unit"> km</span></div></div>
+        <div class="stat"><div class="stat-lbl">☁️ 雲量</div><div class="stat-val">${extra.clouds}<span class="stat-unit">%</span></div></div>
+      </div>
+    </div>
+    <div class="sun-row">
+      <div class="sun-wrap">
+        <div class="sun-label">☀ 日照進度 · 日出 / 日落</div>
+        ${sunArc}
+      </div>
+      <div class="extra-cards">
+        <div class="stat" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+          <div class="stat-lbl">🧭 風向</div>
+          <div class="stat-val">${compass}</div>
+        </div>
+        <div class="stat" style="flex:1;display:flex;flex-direction:column;justify-content:center">
+          <div class="stat-lbl">💨 陣風</div>
+          <div class="stat-val">${extra.windGust != null ? extra.windGust.toFixed(1) : '—'}<span class="stat-unit"> m/s</span></div>
+        </div>
       </div>
     </div>
     <div class="chart-wrap">
@@ -411,67 +327,57 @@ function render(cur, forecast, dayHigh, dayLow) {
         <div class="chart-title">⏱ 未來 24 小時預報</div>
         <div class="chart-legend">
           <span><span class="leg-line" style="background:#fb923c"></span>溫度</span>
-          <span><span class="leg-bar"  style="background:rgba(96,165,250,.5)"></span>降雨概率</span>
+          <span><span class="leg-bar" style="background:rgba(96,165,250,.5)"></span>降雨概率</span>
         </div>
       </div>
-      <canvas id="fChart" height="170"></canvas>
+      <canvas id="fChart" height="150"></canvas>
     </div>`;
 
   clockEl = document.getElementById('clockEl');
   tick();
-
   chartData = forecast;
-  requestAnimationFrame(() => {
-    const c = document.getElementById('fChart');
-    if (c) drawChart(c, chartData);
-  });
+  requestAnimationFrame(() => { const c = document.getElementById('fChart'); if (c) drawChart(c, chartData); });
 }
 
-/* ── API 呼叫 ── */
+/* ── API ── */
 async function fetchWeather() {
-  const key  = settings.weatherApiKey;
-  const city = settings.weatherCity || 'Taipei';
+  const key = settings.weatherApiKey, city = settings.weatherCity || 'Taipei';
   if (!key) {
-    document.getElementById('layout').innerHTML =
-      '<div class="no-key">💡 請至管理後台設定天氣 API Key<br><small style="font-size:16px;opacity:.4;margin-top:10px;display:block">openweathermap.org（免費）</small></div>';
+    document.getElementById('layout').innerHTML = '<div class="no-key">💡 請至管理後台設定天氣 API Key<br><small style="font-size:16px;opacity:.4;margin-top:10px;display:block">openweathermap.org（免費）</small></div>';
     return;
   }
   try {
     const base = 'https://api.openweathermap.org/data/2.5';
     const q    = `q=${encodeURIComponent(city)}&appid=${key}&units=metric&lang=zh_tw`;
-    const [cRes, fRes] = await Promise.all([
-      fetch(`${base}/weather?${q}`),
-      fetch(`${base}/forecast?${q}`)
-    ]);
+    const [cRes, fRes] = await Promise.all([fetch(`${base}/weather?${q}`), fetch(`${base}/forecast?${q}`)]);
     const cur = await cRes.json();
     if (!cRes.ok) throw new Error(cur.message || 'API error');
     const fc  = await fRes.json();
     const now = Date.now() / 1000;
-    const pts = (fc.list || [])
-      .filter(d => d.dt >= now - 1800)
-      .slice(0, 9)
-      .map(d => {
-        const h = new Date(d.dt * 1000);
-        return { time: String(h.getHours()).padStart(2,'0')+':00', temp: d.main.temp, pop: d.pop || 0 };
-      });
-    // 從預報資料計算真正的24小時高低溫（比即時天氣API的temp_max/min更準確）
-    const fcTemps = pts.map(d => d.temp);
+    const pts = (fc.list||[]).filter(d=>d.dt>=now-1800).slice(0,9).map(d=>{
+      const h=new Date(d.dt*1000);
+      return { time:String(h.getHours()).padStart(2,'0')+':00', temp:d.main.temp, pop:d.pop||0 };
+    });
+    const fcTemps = pts.map(d=>d.temp);
     const dayHigh = fcTemps.length ? Math.round(Math.max(...fcTemps)) : Math.round(cur.main.temp_max);
     const dayLow  = fcTemps.length ? Math.round(Math.min(...fcTemps)) : Math.round(cur.main.temp_min);
-    render(cur, pts, dayHigh, dayLow);
+    const extra = {
+      sunrise:  cur.sys.sunrise,
+      sunset:   cur.sys.sunset,
+      windDeg:  cur.wind.deg || 0,
+      windGust: cur.wind.gust != null ? cur.wind.gust : null,
+      pressure: cur.main.pressure,
+      clouds:   cur.clouds ? cur.clouds.all : 0,
+    };
+    render(cur, pts, dayHigh, dayLow, extra);
   } catch(e) {
-    document.getElementById('layout').innerHTML =
-      `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.45">${e.message}</small></div>`;
+    document.getElementById('layout').innerHTML = `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.45">${e.message}</small></div>`;
   }
 }
 
-/* ── 視窗縮放重繪圖表 ── */
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => {
-    const c = document.getElementById('fChart');
-    if (c && chartData.length) drawChart(c, chartData);
-  }, 200);
+  resizeTimer = setTimeout(() => { const c=document.getElementById('fChart'); if(c&&chartData.length) drawChart(c,chartData); }, 200);
 });
 
 async function init() {
