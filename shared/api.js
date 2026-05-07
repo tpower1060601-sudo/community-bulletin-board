@@ -33,7 +33,24 @@
   function lsGet(key) {
     try {
       const raw = localStorage.getItem(PREFIX + key);
-      if (raw) return JSON.parse(raw);
+      if (raw) {
+        const stored = JSON.parse(raw);
+        // 當 key 為 settings，自動補上 DEFAULTS 裡有但 localStorage 沒有的視窗，
+        // 同時更新已有視窗的標題（避免舊快取顯示過時名稱）
+        if (key === 'settings' && DEFAULTS.settings.windows) {
+          const wins = stored.windows || [];
+          DEFAULTS.settings.windows.forEach(function(dw) {
+            const idx = wins.findIndex(function(w) { return w.id === dw.id; });
+            if (idx === -1) {
+              wins.push(JSON.parse(JSON.stringify(dw))); // 補上缺少的視窗
+            } else {
+              wins[idx].title = dw.title; // 更新標題
+            }
+          });
+          stored.windows = wins;
+        }
+        return stored;
+      }
     } catch (e) { /* ignore */ }
     return JSON.parse(JSON.stringify(DEFAULTS[key] != null ? DEFAULTS[key] : null));
   }
