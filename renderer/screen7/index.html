@@ -174,17 +174,10 @@ body {
 .row-3 {
   background: linear-gradient(90deg, rgba(56,189,248,0.07) 0%, transparent 35%);
   border-left: 5px solid #38bdf8;
+  border-bottom: none;
 }
 .row-3 .label-badge { color:#38bdf8; border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.1); }
 .row-3 .live-dot { background:#38bdf8; box-shadow:0 0 8px #38bdf8; }
-
-.row-4 {
-  background: linear-gradient(90deg, rgba(251,191,36,0.07) 0%, transparent 35%);
-  border-left: 5px solid #fbbf24;
-  border-bottom: none;
-}
-.row-4 .label-badge { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.1); }
-.row-4 .live-dot { background:#fbbf24; box-shadow:0 0 8px #fbbf24; }
 </style>
 </head>
 <body>
@@ -192,8 +185,8 @@ body {
 <div class="news-rows">
   <div class="news-row row-1">
     <div class="row-label">
-      <div class="label-badge"><span class="live-dot"></span>公視即時新聞</div>
-      <div class="label-sub">PTS LIVE NEWS</div>
+      <div class="label-badge"><span class="live-dot"></span>台灣財經新聞</div>
+      <div class="label-sub">TW FINANCE</div>
     </div>
     <div class="divider"></div>
     <div class="news-display" id="d0">
@@ -204,8 +197,8 @@ body {
 
   <div class="news-row row-2">
     <div class="row-label">
-      <div class="label-badge"><span class="live-dot"></span>台灣財經新聞</div>
-      <div class="label-sub">TW FINANCE</div>
+      <div class="label-badge"><span class="live-dot"></span>國際即時新聞</div>
+      <div class="label-sub">WORLD NEWS</div>
     </div>
     <div class="divider"></div>
     <div class="news-display" id="d1">
@@ -216,26 +209,14 @@ body {
 
   <div class="news-row row-3">
     <div class="row-label">
-      <div class="label-badge"><span class="live-dot"></span>國際即時新聞</div>
-      <div class="label-sub">WORLD NEWS</div>
+      <div class="label-badge"><span class="live-dot"></span>國際財經新聞</div>
+      <div class="label-sub">GLOBAL FINANCE</div>
     </div>
     <div class="divider"></div>
     <div class="news-display" id="d2">
       <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
     </div>
     <div class="row-counter" id="c2"></div>
-  </div>
-
-  <div class="news-row row-4">
-    <div class="row-label">
-      <div class="label-badge"><span class="live-dot"></span>國際財經新聞</div>
-      <div class="label-sub">GLOBAL FINANCE</div>
-    </div>
-    <div class="divider"></div>
-    <div class="news-display" id="d3">
-      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
-    </div>
-    <div class="row-counter" id="c3"></div>
   </div>
 </div>
 
@@ -246,12 +227,6 @@ body {
    RSS 來源設定（依可靠度排序，第一個優先）
 ──────────────────────────────────────────── */
 const FEEDS = [
-  [
-    // 公視即時 — 嘗試多個
-    'https://news.pts.org.tw/xml/newsfeed.xml',
-    'https://about.pts.org.tw/rss/XML/newsfeed.xml',
-    'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'
-  ],
   [
     // 台灣財經 — Yahoo財經(已驗證可用)、中央社財經、自由財經
     'https://tw.news.yahoo.com/rss/finance',
