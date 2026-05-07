@@ -29,9 +29,9 @@ body {
   padding:10px 6px; border-right:1px solid rgba(255,255,255,.06); position:relative;
 }
 .wc:last-child { border-right:none; }
-.wc-city { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.35); text-transform:uppercase; }
-.wc-time { font-size:28px; font-weight:900; letter-spacing:1px; font-variant-numeric:tabular-nums; line-height:1.1; }
-.wc-date { font-size:10px; color:rgba(255,255,255,.28); margin-top:1px; }
+.wc-city { font-size:12px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.4); text-transform:uppercase; }
+.wc-time { font-size:36px; font-weight:900; letter-spacing:1px; font-variant-numeric:tabular-nums; line-height:1.1; }
+.wc-date { font-size:11px; color:rgba(255,255,255,.32); margin-top:2px; }
 .wc-open {
   position:absolute; top:8px; right:8px;
   width:7px; height:7px; border-radius:50%;
@@ -67,38 +67,38 @@ body {
   display:flex; flex-direction:column; padding:14px 20px; transition:background 2s ease;
 }
 .panel:last-child { border-right:none; }
-.panel-title { font-size:11px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.3); text-transform:uppercase; margin-bottom:10px; flex-shrink:0; }
+.panel-title { font-size:13px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.35); text-transform:uppercase; margin-bottom:12px; flex-shrink:0; }
 .panel-scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
 .panel-scroll::-webkit-scrollbar { width:3px; }
 .panel-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
 
 /* ── 共用行樣式 ── */
 .row {
-  display:flex; align-items:center; padding:8px 10px; border-radius:10px;
-  margin-bottom:6px; background:rgba(255,255,255,.04); transition:background .4s, box-shadow .4s;
+  display:flex; align-items:center; padding:12px 12px; border-radius:10px;
+  margin-bottom:8px; background:rgba(255,255,255,.04); transition:background .4s, box-shadow .4s;
 }
 .row.open { background:rgba(255,255,255,.07); }
-.lbl { font-size:12px; font-weight:700; color:rgba(255,255,255,.5); flex-shrink:0; letter-spacing:.5px; }
-.val { flex:1; font-size:20px; font-weight:900; font-variant-numeric:tabular-nums; padding:0 8px; }
-.chg { font-size:12px; font-weight:700; text-align:right; flex-shrink:0; }
+.lbl { font-size:14px; font-weight:700; color:rgba(255,255,255,.55); flex-shrink:0; letter-spacing:.5px; }
+.val { flex:1; font-size:24px; font-weight:900; font-variant-numeric:tabular-nums; padding:0 10px; }
+.chg { font-size:14px; font-weight:700; text-align:right; flex-shrink:0; }
 .up { color:#4ade80; }
 .dn { color:#f87171; }
 .nc { color:rgba(255,255,255,.3); }
 
 /* ── 外匯專用 ── */
-.fx-lbl { width:72px; }
-.fx-val { font-size:19px; }
-.fx-unit { font-size:11px; opacity:.4; margin-left:3px; font-weight:600; }
+.fx-lbl { width:80px; }
+.fx-val { font-size:26px; }
+.fx-unit { font-size:13px; opacity:.4; margin-left:4px; font-weight:600; }
 
 /* ── 股市專用 ── */
-.stock-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-right:8px; }
-.stock-lbl { width:80px; }
-.stock-name { font-size:10px; color:rgba(255,255,255,.3); letter-spacing:.5px; }
-.closed-tag { font-size:10px; letter-spacing:1px; color:rgba(255,255,255,.2); margin-left:6px; flex-shrink:0; }
+.stock-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; margin-right:10px; }
+.stock-lbl { width:90px; }
+.stock-name { font-size:12px; color:rgba(255,255,255,.35); letter-spacing:.5px; }
+.closed-tag { font-size:12px; letter-spacing:1px; color:rgba(255,255,255,.25); margin-left:6px; flex-shrink:0; }
 
 /* ── 虛擬貨幣 ── */
-.crypto-icon { font-size:18px; width:28px; flex-shrink:0; }
-.crypto-lbl { width:52px; }
+.crypto-icon { font-size:22px; width:32px; flex-shrink:0; }
+.crypto-lbl { width:58px; }
 
 .placeholder { color:rgba(255,255,255,.2); font-size:13px; letter-spacing:3px; text-align:center; padding:20px 0; }
 </style>
@@ -326,24 +326,43 @@ function renderForex() {
 let stockData = {};
 async function fetchStocks() {
   const syms = STOCKS.map(s => s.sym).join(',');
-  const yfUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&lang=en-US&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
-  try {
-    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(yfUrl);
-    const res = await fetch(proxy);
-    if (!res.ok) throw new Error();
-    const outer = await res.json();
-    const data = JSON.parse(outer.contents);
-    const results = data.quoteResponse?.result || [];
-    results.forEach(q => {
-      stockData[q.symbol] = {
-        price: q.regularMarketPrice,
-        chg:   q.regularMarketChangePercent,
-      };
-    });
-    renderStocks();
-  } catch(e) {
-    document.getElementById('stockList').innerHTML = '<div class="placeholder">股市資料無法取得</div>';
+  const yfUrl = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(syms)}&lang=en-US&region=US&fields=regularMarketPrice,regularMarketChange,regularMarketChangePercent`;
+
+  const PROXIES = [
+    // corsproxy.io — returns raw JSON directly
+    async url => {
+      const r = await fetch('https://corsproxy.io/?' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('corsproxy ' + r.status);
+      return await r.json();
+    },
+    // allorigins — wraps in {contents:"..."}
+    async url => {
+      const r = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(url));
+      if (!r.ok) throw new Error('allorigins ' + r.status);
+      const outer = await r.json();
+      return JSON.parse(outer.contents);
+    },
+    // thingproxy — returns raw JSON
+    async url => {
+      const r = await fetch('https://thingproxy.freeboard.io/fetch/' + url);
+      if (!r.ok) throw new Error('thingproxy ' + r.status);
+      return await r.json();
+    },
+  ];
+
+  for (const proxy of PROXIES) {
+    try {
+      const data = await proxy(yfUrl);
+      const results = data.quoteResponse?.result || [];
+      if (!results.length) throw new Error('empty');
+      results.forEach(q => {
+        stockData[q.symbol] = { price: q.regularMarketPrice, chg: q.regularMarketChangePercent };
+      });
+      renderStocks();
+      return;
+    } catch(e) { /* try next */ }
   }
+  document.getElementById('stockList').innerHTML = '<div class="placeholder">股市資料無法取得</div>';
 }
 function renderStocks() {
   const open = openSet();
@@ -360,7 +379,7 @@ function renderStocks() {
         <div>${s.name}</div>
         <div class="stock-name">${s.sub}</div>
       </div>
-      <div class="val" style="font-size:18px">${price}</div>
+      <div class="val" style="font-size:22px">${price}</div>
       <div class="chg ${cls}">${chgTxt(pct)}</div>
       ${!on ? '<div class="closed-tag">休市</div>' : ''}
     </div>`;
@@ -396,7 +415,7 @@ function renderCrypto(data) {
     return `<div class="row">
       <div class="crypto-icon">${c.icon}</div>
       <div class="lbl crypto-lbl">${c.sym}</div>
-      <div class="val" style="font-size:17px">${disp}</div>
+      <div class="val" style="font-size:22px">${disp}</div>
       <div class="chg ${cls}">${chgTxt(chg)}</div>
     </div>`;
   }).join('');
