@@ -140,6 +140,7 @@ body {
   </div>
 </div>
 
+<script src="../../shared/api.js"></script>
 <script>
 'use strict';
 
@@ -175,24 +176,24 @@ const SEG_UTC = [
   { name:'紐約',    start:13.5, end:20,   color:'#4ade80', mkt:'us'     },
 ];
 
-// col 0 = 亞洲欄, col 1 = 歐美欄
+// col 0 = 亞洲欄, col 1 = 歐美欄  sym = Twelve Data symbol
 const STOCKS = [
-  { sym:'^twii',  name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa', col:0 },
-  { sym:'^nky',   name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b', col:0 },
-  { sym:'^hsi',   name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c', col:0 },
-  { sym:'^sse',   name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b', col:0 },
-  { sym:'^kospi', name:'KOSPI',    sub:'KSE',  mkt:'KSE',  color:'#e879f9', col:0 },
-  { sym:'^ftse',  name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8', col:1 },
-  { sym:'^dax',   name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa', col:1 },
-  { sym:'^spx',   name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80', col:1 },
-  { sym:'^dji',   name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399', col:1 },
-  { sym:'^ndq',   name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7', col:1 },
-  { sym:'^sox',   name:'費半SOX',  sub:'PHLX', mkt:'NYSE', color:'#fbbf24', col:1 },
+  { sym:'TWII',  name:'台灣加權', sub:'TWSE', mkt:'TWSE', color:'#a78bfa', col:0 },
+  { sym:'NI225', name:'日經225',  sub:'TSE',  mkt:'TSE',  color:'#f59e0b', col:0 },
+  { sym:'HSI',   name:'恒生',     sub:'HKEX', mkt:'HKEX', color:'#fb923c', col:0 },
+  { sym:'SSEC',  name:'上證',     sub:'SSE',  mkt:'SSE',  color:'#ff6b6b', col:0 },
+  { sym:'KOSPI', name:'KOSPI',    sub:'KSE',  mkt:'KSE',  color:'#e879f9', col:0 },
+  { sym:'FTSE',  name:'富時100',  sub:'LSE',  mkt:'LSE',  color:'#38bdf8', col:1 },
+  { sym:'DAX',   name:'DAX',      sub:'FSE',  mkt:'FSE',  color:'#60a5fa', col:1 },
+  { sym:'SPX',   name:'S&P 500',  sub:'NYSE', mkt:'NYSE', color:'#4ade80', col:1 },
+  { sym:'DJI',   name:'道瓊',     sub:'NYSE', mkt:'NYSE', color:'#34d399', col:1 },
+  { sym:'IXIC',  name:'NASDAQ',   sub:'NYSE', mkt:'NYSE', color:'#6ee7b7', col:1 },
+  { sym:'SOX',   name:'費半SOX',  sub:'PHLX', mkt:'NYSE', color:'#fbbf24', col:1 },
 ];
 
 const COMMODITIES = [
-  { sym:'gc.f', name:'黃金',   unit:'oz',  icon:'🥇', dec:0 },
-  { sym:'cl.f', name:'WTI原油', unit:'桶', icon:'🛢', dec:2 },
+  { sym:'XAU/USD', name:'黃金',    icon:'🥇', dec:0 },
+  { sym:'WTI',     name:'WTI原油', icon:'🛢', dec:2 },
 ];
 
 const FX_PAIRS = [
@@ -314,62 +315,56 @@ function renderForex() {
 }
 
 /* ══════════════════════════════════════════
-   股市指數 + 大宗商品（Stooq.com）
-   Stooq 是免費指數行情來源，不需要 API key，
-   透過 CORS proxy 抓取 CSV 後解析
+   股市指數 + 大宗商品（Twelve Data API）
+   申請免費 Key：https://twelvedata.com
+   免費額度 800 次/天，每 5 分鐘抓一次綽綽有餘
 ══════════════════════════════════════════ */
 let stockData = {};
 let commodityData = {};
+let tdKey = '';
 
-function parseStooqCSV(text) {
-  const result = {};
-  const lines = text.trim().split('\n');
-  // skip header if present
-  const start = /^(symbol|ticker|date)/i.test(lines[0]) ? 1 : 0;
-  for (let i = start; i < lines.length; i++) {
-    const p = lines[i].split(',');
-    if (p.length < 4) continue;
-    const sym   = p[0].trim().toLowerCase();
-    const open  = parseFloat(p[2]);
-    const close = parseFloat(p[3]);
-    if (!isNaN(open) && !isNaN(close) && open > 0 && close > 0) {
-      result[sym] = { price: close, chg: (close - open) / open * 100 };
-    }
+async function fetchTwelveData() {
+  if (!tdKey) {
+    const s = await window.api.get('settings');
+    tdKey = s.twelveDataKey || '';
   }
-  return result;
-}
-
-async function fetchStooq() {
-  const allSyms = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)].join(',');
-  // f=sd2oc → Symbol, Date(YYYY-MM-DD), Open, Close
-  const url = `https://stooq.com/q/l/?s=${allSyms}&f=sd2oc&h&e=csv`;
-
-  const tries = [
-    () => fetch('https://corsproxy.io/?' + encodeURIComponent(url)).then(r => { if(!r.ok) throw 0; return r.text(); }),
-    () => fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw 0; return r.text(); }),
-    () => fetch('https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)).then(r => { if(!r.ok) throw 0; return r.text(); }),
-  ];
-
-  let parsed = null;
-  for (const fn of tries) {
-    try {
-      const text = await fn();
-      if (!text || text.length < 10) continue;
-      const tmp = parseStooqCSV(text);
-      if (Object.keys(tmp).length) { parsed = tmp; break; }
-    } catch(e) {}
-  }
-
-  if (!parsed) {
-    ['stockCol0','stockCol1'].forEach(id =>
-      document.getElementById(id).innerHTML = '<div class="placeholder">資料無法取得</div>');
+  if (!tdKey) {
+    const msg = '<div class="placeholder" style="font-size:12px;line-height:2">請至管理後台<br>「系統設定」填入<br>Twelve Data API Key</div>';
+    document.getElementById('stockCol0').innerHTML = msg;
+    document.getElementById('stockCol1').innerHTML = '';
     return;
   }
 
-  STOCKS.forEach(s => { if (parsed[s.sym]) stockData[s.sym] = parsed[s.sym]; });
-  COMMODITIES.forEach(c => { if (parsed[c.sym]) commodityData[c.sym] = parsed[c.sym]; });
-  renderStocks();
-  renderAssets();
+  const allSyms = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)].join(',');
+  const url = `https://api.twelvedata.com/quote?symbol=${allSyms}&apikey=${tdKey}`;
+
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    const data = await r.json();
+    if (data.code) throw new Error(data.message); // top-level error
+
+    // 多 symbol 時 response 是 { SYM: {...} }，單 symbol 時是 flat object
+    const isMulti = !data.symbol;
+    STOCKS.forEach(s => {
+      const q = isMulti ? data[s.sym] : (data.symbol === s.sym ? data : null);
+      if (q && !q.code && q.close != null) {
+        stockData[s.sym] = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
+      }
+    });
+    COMMODITIES.forEach(c => {
+      const q = isMulti ? data[c.sym] : null;
+      if (q && !q.code && q.close != null) {
+        commodityData[c.sym] = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
+      }
+    });
+
+    renderStocks();
+    renderAssets();
+  } catch(e) {
+    ['stockCol0','stockCol1'].forEach(id =>
+      document.getElementById(id).innerHTML = '<div class="placeholder">API 連線失敗</div>');
+  }
 }
 
 function renderStocks() {
@@ -454,8 +449,15 @@ function renderAssets() {
 setInterval(renderClocks, 1000); renderClocks();
 setInterval(() => { renderSession(); renderStocks(); }, 60000); renderSession();
 setInterval(fetchForex,  10*60*1000); fetchForex();
-setInterval(fetchStooq,   5*60*1000); fetchStooq();
+setInterval(fetchTwelveData, 5*60*1000); fetchTwelveData();
 setInterval(fetchCrypto,  3*60*1000); fetchCrypto();
+
+// 管理後台儲存 settings 後立即套用新 key
+if (window.api) {
+  window.api.on('settings:updated', s => {
+    if (s.twelveDataKey !== undefined) { tdKey = s.twelveDataKey; fetchTwelveData(); }
+  });
+}
 </script>
 </body>
 </html>
