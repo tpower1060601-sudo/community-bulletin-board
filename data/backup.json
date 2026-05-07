@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-07T15:57:44.589Z",
+  "_savedAt": "2026-05-07T16:16:45.374Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場",
     "list": []
@@ -11,7 +11,7 @@
     "newsEnabled": false,
     "newsSource": "",
     "youtubeId": "CXQ-maBSxa4",
-    "youtubeId2": "meHTKm4XBS8",
+    "youtubeId2": "lM2pZZf8Kag",
     "meetingsUrl": "",
     "meetingsZoom": 1,
     "adminPassword": "admin",
@@ -85,6 +85,36 @@
         "id": "iEpJwprxDdk",
         "note": "Bloomberg Business News Live",
         "active": false
+      },
+      {
+        "id": "KQp-e_XQnDE",
+        "note": "Yahoo Finance 24/7 Stream: Daily Market Coverage & more",
+        "active": false
+      },
+      {
+        "id": "9NyxcX3rhQs",
+        "note": "LIVE: CNBC Marathon - Documentaries and deep dives 24/7",
+        "active": false
+      },
+      {
+        "id": "iipR5yUp36o",
+        "note": "LIVE: ABC News Live - 24/7 news, context and analysis",
+        "active": false
+      },
+      {
+        "id": "C96oohpWBGw",
+        "note": "LIVE NEWS: LiveNOW FOX 24/7 LIVE STREAM",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
       }
     ],
     "youtubeSlots2": [
@@ -101,11 +131,41 @@
       {
         "id": "meHTKm4XBS8",
         "note": "華視地震、降雨監視",
+        "active": false
+      },
+      {
+        "id": "lM2pZZf8Kag",
+        "note": "LiveⒼ01天氣、雨量、溫度即時觀測24H》",
         "active": true
       },
       {
-        "id": "C96oohpWBGw",
-        "note": "LIVE NEWS: LiveNOW FOX 24/7 LIVE STREAM",
+        "id": "kWRhLLbLFE0",
+        "note": "NASA Cameras Just Caught This on the ISS Live Feed",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
+        "active": false
+      },
+      {
+        "id": "",
+        "note": "",
         "active": false
       }
     ]
