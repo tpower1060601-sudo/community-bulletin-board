@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-08T03:54:53.037Z",
+  "_savedAt": "2026-05-08T03:55:30.365Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -22,7 +22,7 @@
         "title": "大樓公共管道重要公告",
         "type": "notice",
         "duration": 10,
-        "content": "近日大樓發生污水管堵塞回冒之情事，造成部分業戶財務損失，敬請各位業戶發揮公德心，請勿將<font color=\"#fc0303\" size=\"4\"><b>非衛生紙外之所有物品(面紙、濕紙巾、衛生棉...等)</b></font>丟入馬桶，以維護大樓公共管路暢通。",
+        "content": "近日大樓發生污水管堵塞回冒之情事，造成部分業戶財務損失，敬請各位業戶發揮公德心，請勿將<font color=\"#fc0303\" size=\"6\"><b style=\"\">非衛生紙外之所有物品(面紙、濕紙巾、衛生棉...等)</b></font>丟入馬桶，以維護大樓公共管路暢通。",
         "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778212433162_1141104_______1.jpg",
         "alwaysValid": true,
         "startDate": "",
