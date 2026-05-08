@@ -365,6 +365,78 @@ function renderAnnouncements() {
   body.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">尚無公告</td></tr>';
 }
 
+/* ── 公告圖片上傳（GitHub API） ───────────────────────────────── */
+var GH_IMG_REPO = 'tpower1060601-sudo/community-bulletin-board';
+var GH_IMG_API  = 'https://api.github.com/repos/' + GH_IMG_REPO + '/contents/';
+
+function uploadAnnImage(file) {
+  var token = localStorage.getItem('bbs_gh_token') || '';
+  if (!token) {
+    toast('請先在「備份與還原」頁面設定 GitHub Token', 'warning');
+    return Promise.resolve(null);
+  }
+  return new Promise(function(resolve) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var b64 = e.target.result.split(',')[1];
+      var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      var path = 'data/images/' + Date.now() + '_' + safeName;
+      var apiUrl = GH_IMG_API + path;
+      fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'token ' + token,
+          'Content-Type': 'application/json',
+          'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify({ message: 'upload image: ' + file.name, content: b64 })
+      })
+      .then(function(r) {
+        if (r.ok) {
+          var rawUrl = 'https://raw.githubusercontent.com/' + GH_IMG_REPO + '/main/' + path;
+          resolve(rawUrl);
+        } else {
+          r.text().then(function(t){ console.error('[img upload]', r.status, t); });
+          toast('圖片上傳失敗（HTTP ' + r.status + '）', 'warning');
+          resolve(null);
+        }
+      })
+      .catch(function(err) { toast('圖片上傳錯誤: ' + err.message, 'warning'); resolve(null); });
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleAnnImageUpload(input) {
+  var file = input.files[0]; if (!file) return;
+  var status = document.getElementById('annImageStatus');
+  if (status) status.textContent = '上傳中…';
+  uploadAnnImage(file).then(function(url) {
+    if (!url) { if (status) status.textContent = '上傳失敗'; return; }
+    var hiddenUrl = document.getElementById('annImageUrl');
+    var thumb     = document.getElementById('annImageThumb');
+    var preview   = document.getElementById('annImagePreview');
+    if (hiddenUrl) hiddenUrl.value = url;
+    if (thumb)    { thumb.src = url; }
+    if (preview)  { preview.style.display = 'flex'; }
+    if (status)   status.textContent = file.name;
+    toast('圖片上傳成功 ✓');
+  });
+}
+
+function clearAnnImage() {
+  var hiddenUrl = document.getElementById('annImageUrl');
+  var thumb     = document.getElementById('annImageThumb');
+  var preview   = document.getElementById('annImagePreview');
+  var status    = document.getElementById('annImageStatus');
+  var fileInput = document.getElementById('annImageFile');
+  if (hiddenUrl) hiddenUrl.value = '';
+  if (thumb)    thumb.src = '';
+  if (preview)  preview.style.display = 'none';
+  if (status)   status.textContent = '未選擇';
+  if (fileInput) fileInput.value = '';
+}
+
 function fmt(cmd, val) {
   document.getElementById('annContent').focus();
   document.execCommand(cmd, false, val || null);
@@ -402,9 +474,20 @@ function openAnnModal(id) {
       '</div>'+
       '<div id="annContent" contenteditable="true" class="rich-editor" data-placeholder="輸入公告內容…"></div>'+
     '</div>'+
-    '<div class="form-group"><label>圖片網址（選填）</label>'+
-      '<input type="text" id="annImageUrl" placeholder="https://… 貼上圖片直連網址，或留空" value="'+esc(a.imageUrl||'')+'">'+
-      '<div style="font-size:11px;color:var(--text2);margin-top:4px">圖片將顯示在公告文字下方</div>'+
+    '<div class="form-group"><label>公告圖片（選填）</label>'+
+      '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
+        '<label class="btn btn-ghost btn-sm" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px">'+
+          '📁 選擇圖片'+
+          '<input type="file" id="annImageFile" accept="image/*" style="display:none" onchange="handleAnnImageUpload(this)">'+
+        '</label>'+
+        '<span id="annImageStatus" style="font-size:12px;color:var(--text2)">未選擇</span>'+
+      '</div>'+
+      '<input type="hidden" id="annImageUrl" value="'+esc(a.imageUrl||'')+'">'+
+      '<div id="annImagePreview" style="margin-top:10px;display:none;align-items:center;gap:12px">'+
+        '<img id="annImageThumb" style="max-height:72px;max-width:160px;border-radius:8px;object-fit:contain;border:1px solid var(--border)">'+
+        '<button class="btn btn-danger btn-sm" onclick="clearAnnImage()">✕ 移除</button>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--text2);margin-top:6px">圖片將顯示在公告左側；需先在「備份與還原」設定 GitHub Token 才能上傳</div>'+
     '</div>'+
     '<div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:8px;margin-top:4px">'+
       '<div class="switch-group" style="margin-bottom:12px"><span>一直有效（常駐）</span>'+
@@ -417,6 +500,15 @@ function openAnnModal(id) {
   /* 載入既有內容（HTML 格式） */
   var editor = document.getElementById('annContent');
   if (editor) editor.innerHTML = a.content || '';
+  /* 載入既有圖片預覽 */
+  if (a.imageUrl) {
+    var thumb = document.getElementById('annImageThumb');
+    var preview = document.getElementById('annImagePreview');
+    var status = document.getElementById('annImageStatus');
+    if (thumb) thumb.src = a.imageUrl;
+    if (preview) { preview.style.display = 'flex'; }
+    if (status) status.textContent = a.imageUrl.split('/').pop().split('?')[0];
+  }
   $('modalFooter').innerHTML=
     (isNew?'':'<button class="btn btn-warning" onclick="deleteAnn('+id+')">刪除</button>')+
     '<div style="flex:1"></div>'+
