@@ -31,7 +31,34 @@ body {
 }
 .slide.active { opacity:1; }
 
-.slide-inner { max-width: 1200px; text-align: center; width: 100%; }
+.slide-inner { max-width: 1400px; text-align: center; width: 100%; }
+
+/* 左圖右文版型 */
+.slide-with-img {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 64px;
+  text-align: left;
+}
+.slide-img-col {
+  flex-shrink: 0;
+  width: 420px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slide-img-col img {
+  width: 100%;
+  max-height: 62vh;
+  border-radius: 20px;
+  object-fit: contain;
+  box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+}
+.slide-text-col {
+  flex: 1;
+  min-width: 0;
+}
 .slide-badge {
   display: inline-block;
   padding: 10px 24px;
@@ -62,19 +89,6 @@ body {
 }
 .slide-date { margin-top: 40px; font-size:24px; color:rgba(255,255,255,.35); }
 
-/* 圖片區塊 */
-.slide-img-wrap {
-  margin-top: 28px;
-  display: flex;
-  justify-content: center;
-}
-.slide-img-wrap img {
-  max-width: 80%;
-  max-height: 35vh;
-  border-radius: 16px;
-  object-fit: contain;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-}
 
 /* Dots */
 .dots {
@@ -177,18 +191,21 @@ function render() {
 
   slidesEl.innerHTML = active.map((a,i) => {
     const type = a.type||'general';
-    const imgHtml = a.imageUrl
-      ? `<div class="slide-img-wrap"><img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.parentNode.style.display='none'"></div>`
-      : '';
-    return `<div class="slide${i===0?' active':''}" data-i="${i}">
-      <div class="slide-inner">
+    const hasImg = !!a.imageUrl;
+    const textBlock = `
         <div class="slide-badge badge-${type}">${TYPE_LABEL[type]||'公告'}</div>
         <div class="slide-title">${esc(a.title)}</div>
         <div class="slide-body">${a.content||''}</div>
-        ${imgHtml}
-        <div class="slide-date">${a.date||''}</div>
-      </div>
-    </div>`;
+        <div class="slide-date">${a.date||''}</div>`;
+    const inner = hasImg
+      ? `<div class="slide-inner slide-with-img">
+          <div class="slide-img-col">
+            <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.parentNode.style.display='none'">
+          </div>
+          <div class="slide-text-col">${textBlock}</div>
+        </div>`
+      : `<div class="slide-inner">${textBlock}</div>`;
+    return `<div class="slide${i===0?' active':''}" data-i="${i}">${inner}</div>`;
   }).join('');
 
   dotsEl.innerHTML = active.map((_,i) =>
