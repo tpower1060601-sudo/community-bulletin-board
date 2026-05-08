@@ -88,12 +88,23 @@ input:checked + .slider:before{transform:translateX(20px);}
 
 .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .modal-backdrop.open{display:flex;}
-.modal{background:var(--sidebar);width:500px;border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
-.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal{background:var(--sidebar);width:620px;max-height:90vh;border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
+.modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .modal-title{font-size:18px;font-weight:800;}
 .modal-close{background:none;border:none;color:var(--text2);font-size:20px;}
-.modal-body{padding:24px;}
-.modal-footer{padding:16px 24px;background:rgba(0,0,0,0.2);display:flex;justify-content:flex-end;gap:12px;}
+.modal-body{padding:24px;overflow-y:auto;flex:1;}
+.modal-footer{padding:16px 24px;background:rgba(0,0,0,0.2);display:flex;justify-content:flex-end;gap:12px;flex-shrink:0;}
+
+/* 富文本工具列 */
+.rich-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:rgba(0,0,0,0.35);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;}
+.rich-toolbar button{background:rgba(255,255,255,0.08);color:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;font-family:inherit;transition:background 0.15s;}
+.rich-toolbar button:hover{background:rgba(255,255,255,0.18);}
+.rich-toolbar select{background:#0f172a !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:13px;width:auto;}
+.rich-toolbar input[type=color]{width:32px;height:30px;padding:2px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:none;}
+.rich-toolbar .tb-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.rich-editor{min-height:130px;max-height:220px;overflow-y:auto;padding:12px 14px;background:#0f172a;color:#fff;border:1px solid var(--border);border-radius:0 0 8px 8px;outline:none;line-height:1.9;font-size:15px;font-family:inherit;}
+.rich-editor:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,0.2);}
+.rich-editor:empty::before{content:attr(data-placeholder);color:rgba(255,255,255,0.25);pointer-events:none;}
 
 .login-overlay{display:none;position:fixed;inset:0;background:#020617;z-index:2000;align-items:center;justify-content:center;}
 .login-overlay.open{display:flex;}
@@ -354,6 +365,11 @@ function renderAnnouncements() {
   body.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">尚無公告</td></tr>';
 }
 
+function fmt(cmd, val) {
+  document.getElementById('annContent').focus();
+  document.execCommand(cmd, false, val || null);
+}
+
 function openAnnModal(id) {
   var a=(announcements.list||[]).find(function(x){return x.id===id;})||{};
   var isNew=!a.id, alwaysValid=a.alwaysValid!==false;
@@ -366,8 +382,31 @@ function openAnnModal(id) {
       '<option value="event"'+(a.type==='event'?' selected':'')+'>活動通知</option>'+
       '<option value="urgent"'+(a.type==='urgent'?' selected':'')+'>緊急公佈</option>'+
     '</select></div>'+
-    '<div class="form-group"><label>內容</label><textarea id="annContent" rows="5">'+esc(a.content)+'</textarea></div>'+
-    '<div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:8px;margin-top:20px">'+
+    '<div class="form-group"><label>內容</label>'+
+      '<div class="rich-toolbar">'+
+        '<button onclick="fmt(\'bold\')" title="粗體"><b>B</b></button>'+
+        '<button onclick="fmt(\'italic\')" title="斜體"><i>I</i></button>'+
+        '<div class="tb-sep"></div>'+
+        '<select onchange="fmt(\'fontSize\',this.value);this.selectedIndex=0" title="字體大小">'+
+          '<option value="">大小</option>'+
+          '<option value="2">小</option>'+
+          '<option value="3">中</option>'+
+          '<option value="4">大</option>'+
+          '<option value="5">特大</option>'+
+          '<option value="6">超大</option>'+
+        '</select>'+
+        '<div class="tb-sep"></div>'+
+        '<input type="color" id="txtColor" value="#ffffff" title="文字顏色" onchange="fmt(\'foreColor\',this.value)">'+
+        '<div class="tb-sep"></div>'+
+        '<button onclick="fmt(\'removeFormat\')" title="清除格式" style="font-size:11px">清除</button>'+
+      '</div>'+
+      '<div id="annContent" contenteditable="true" class="rich-editor" data-placeholder="輸入公告內容…"></div>'+
+    '</div>'+
+    '<div class="form-group"><label>圖片網址（選填）</label>'+
+      '<input type="text" id="annImageUrl" placeholder="https://… 貼上圖片直連網址，或留空" value="'+esc(a.imageUrl||'')+'">'+
+      '<div style="font-size:11px;color:var(--text2);margin-top:4px">圖片將顯示在公告文字下方</div>'+
+    '</div>'+
+    '<div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:8px;margin-top:4px">'+
       '<div class="switch-group" style="margin-bottom:12px"><span>一直有效（常駐）</span>'+
         '<label class="switch"><input type="checkbox" id="annAlwaysValid"'+(alwaysValid?' checked':'')+' onchange="$(\'annDateRange\').style.display=this.checked?\'none\':\'flex\'"><span class="slider"></span></label></div>'+
       '<div class="form-row" id="annDateRange" style="display:'+(alwaysValid?'none':'flex')+'">'+
@@ -375,6 +414,9 @@ function openAnnModal(id) {
         '<div class="form-group"><label>結束時間</label><div style="display:flex;gap:8px"><input type="date" id="annEndDate" value="'+esc(a.endDate)+'"><input type="time" id="annEndTime" value="'+esc(a.endTime)+'"></div></div>'+
       '</div>'+
     '</div>';
+  /* 載入既有內容（HTML 格式） */
+  var editor = document.getElementById('annContent');
+  if (editor) editor.innerHTML = a.content || '';
   $('modalFooter').innerHTML=
     (isNew?'':'<button class="btn btn-warning" onclick="deleteAnn('+id+')">刪除</button>')+
     '<div style="flex:1"></div>'+
@@ -385,9 +427,12 @@ function openAnnModal(id) {
 
 function saveAnn(id) {
   var list=announcements.list||[];
+  var editor=$('annContent');
   var updated={
     id:id||new Date().getTime(),
-    title:$('annTitle').value, type:$('annType').value, content:$('annContent').value,
+    title:$('annTitle').value, type:$('annType').value,
+    content: editor ? editor.innerHTML : '',
+    imageUrl: ($('annImageUrl')||{}).value ? $('annImageUrl').value.trim() : '',
     alwaysValid:$('annAlwaysValid').checked,
     startDate:$('annStartDate').value, startTime:$('annStartTime').value,
     endDate:$('annEndDate').value,   endTime:$('annEndTime').value,
