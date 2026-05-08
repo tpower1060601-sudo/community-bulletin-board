@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-08T03:52:50.319Z",
+  "_savedAt": "2026-05-08T03:53:18.783Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -9,7 +9,7 @@
         "type": "notice",
         "duration": 10,
         "content": "為提升電梯運輸效率，發揮空間效益，請業戶多加配合:\n1.<b><font color=\"#ff0000\">尖峰時段</font></b>請將後背包改為手拿。\n2.請依樓層<b><font color=\"#f90101\">正向搭乘</font></b>，勿反向提早佔位。\n3.使用手推車時請搭乘貨梯，以免磕碰電梯內鏡面及裝潢。",
-        "imageUrl": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778212393540_1141219_______1.jpg",
         "alwaysValid": true,
         "startDate": "",
         "startTime": "",
