@@ -13,23 +13,24 @@ body {
 
 .layout { height:100vh; display:flex; flex-direction:column; }
 
-/* ── 世界時鐘列 ── */
+/* ── 世界時鐘列（指針式）── */
 .clock-bar {
   flex-shrink:0; display:flex;
   background:rgba(0,0,0,.55); border-bottom:1px solid rgba(255,255,255,.08);
   backdrop-filter:blur(20px);
+  height: 158px;
 }
 .wc {
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:10px 6px; border-right:1px solid rgba(255,255,255,.06); position:relative;
+  padding:8px 6px 6px; border-right:1px solid rgba(255,255,255,.06); position:relative;
+  gap:5px;
 }
 .wc:last-child { border-right:none; }
-.wc-city { font-size:12px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.4); text-transform:uppercase; }
-.wc-time { font-size:36px; font-weight:900; letter-spacing:1px; font-variant-numeric:tabular-nums; line-height:1.1; }
-.wc-date { font-size:11px; color:rgba(255,255,255,.32); margin-top:2px; }
+.wc-city { font-size:11px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.45); text-transform:uppercase; }
+.wc-date { font-size:10px; color:rgba(255,255,255,.28); letter-spacing:.5px; }
 .wc-open {
-  position:absolute; top:8px; right:8px;
-  width:7px; height:7px; border-radius:50%;
+  position:absolute; top:7px; right:8px;
+  width:6px; height:6px; border-radius:50%;
   background:#22c55e; box-shadow:0 0 8px #22c55e;
   animation:pulse 2s ease-in-out infinite;
 }
@@ -266,23 +267,182 @@ function isMarketOpen(mkt) {
   return min >= m.oh * 60 + m.om && min < m.ch * 60 + m.cm;
 }
 
-function tickClocks() {
-  const bar = document.getElementById('clockBar');
-  if (!bar) return;
-  const now = new Date();
-  bar.innerHTML = CITIES.map(c => {
-    const t = now.toLocaleTimeString('zh-TW', { timeZone:c.tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
-    const d = now.toLocaleDateString('zh-TW', { timeZone:c.tz, month:'2-digit', day:'2-digit', weekday:'short' });
-    const open = isMarketOpen(c.mkt);
-    return `<div class="wc">
-      ${open ? '<div class="wc-open"></div>' : ''}
-      <div class="wc-city">${c.city}</div>
-      <div class="wc-time">${t}</div>
-      <div class="wc-date">${d}</div>
-    </div>`;
-  }).join('');
+/* ── 金屬錶手繪製 helper ── */
+function drawMetalHand(ctx, cx, cy, angle, length, baseW, tailLen, col1, col2) {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(angle);
+  const g = ctx.createLinearGradient(-baseW, 0, baseW, 0);
+  g.addColorStop(0,   col1);
+  g.addColorStop(0.45, col2);
+  g.addColorStop(0.55, col2);
+  g.addColorStop(1,   col1);
+  ctx.beginPath();
+  ctx.moveTo(-baseW / 2, tailLen);
+  ctx.lineTo(-1,        -length);
+  ctx.lineTo( 1,        -length);
+  ctx.lineTo( baseW / 2, tailLen);
+  ctx.closePath();
+  ctx.fillStyle = g;
+  ctx.fill();
+  ctx.restore();
 }
 
+/* ── 金屬錶面繪製 ── */
+function drawClock(canvas, h, m, s) {
+  const ctx  = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W / 2, cy = H / 2;
+  const r  = cx - 1;
+  const PI2 = Math.PI * 2;
+
+  ctx.clearRect(0, 0, W, H);
+
+  /* ① 最外層：拋光鋼圈 */
+  const bezel = ctx.createLinearGradient(0, 0, W, H);
+  bezel.addColorStop(0,    '#b0bec8');
+  bezel.addColorStop(0.22, '#e8eef3');
+  bezel.addColorStop(0.45, '#7a8e9a');
+  bezel.addColorStop(0.68, '#c8d5de');
+  bezel.addColorStop(1,    '#9aaab5');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, PI2);
+  ctx.fillStyle = bezel;
+  ctx.fill();
+
+  /* ② 鋼圈內凹槽（深色環） */
+  const groove = ctx.createLinearGradient(W, H, 0, 0);
+  groove.addColorStop(0, '#1e282f');
+  groove.addColorStop(0.5,'#394550');
+  groove.addColorStop(1,  '#151e25');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.915, 0, PI2);
+  ctx.fillStyle = groove;
+  ctx.fill();
+
+  /* ③ 錶盤：槍鐵色漸層 */
+  const face = ctx.createRadialGradient(cx - r*0.15, cy - r*0.15, 0, cx, cy, r * 0.9);
+  face.addColorStop(0,   '#2e3d4a');
+  face.addColorStop(0.55,'#1a2830');
+  face.addColorStop(1,   '#0d1820');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.9, 0, PI2);
+  ctx.fillStyle = face;
+  ctx.fill();
+
+  /* ④ 錶盤光澤反光（左上角弧形高光） */
+  const shine = ctx.createRadialGradient(cx - r*0.4, cy - r*0.5, 0, cx - r*0.2, cy - r*0.2, r*0.7);
+  shine.addColorStop(0,   'rgba(255,255,255,0.07)');
+  shine.addColorStop(1,   'rgba(255,255,255,0)');
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.9, 0, PI2);
+  ctx.fillStyle = shine;
+  ctx.fill();
+
+  /* ⑤ 刻度：矩形時標 + 細分鐘刻 */
+  for (let i = 0; i < 60; i++) {
+    const ang = (i / 60) * PI2 - Math.PI / 2;
+    const isHour = (i % 5 === 0);
+    const isQuarter = (i % 15 === 0);
+
+    if (isHour) {
+      const mW   = isQuarter ? 3.5 : 2.5;
+      const mLen = isQuarter ? r * 0.14 : r * 0.11;
+      const outerR = r * 0.86;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(ang + Math.PI / 2);
+      const mg = ctx.createLinearGradient(-mW, 0, mW, 0);
+      mg.addColorStop(0,   'rgba(130,155,175,0.7)');
+      mg.addColorStop(0.5, 'rgba(230,245,255,0.98)');
+      mg.addColorStop(1,   'rgba(130,155,175,0.7)');
+      ctx.fillStyle = mg;
+      ctx.fillRect(-mW / 2, -outerR, mW, mLen);
+      ctx.restore();
+    } else {
+      const inner = r * 0.82;
+      const outer = r * 0.86;
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(ang) * inner, cy + Math.sin(ang) * inner);
+      ctx.lineTo(cx + Math.cos(ang) * outer, cy + Math.sin(ang) * outer);
+      ctx.strokeStyle = 'rgba(190,210,225,0.35)';
+      ctx.lineWidth = 0.7;
+      ctx.stroke();
+    }
+  }
+
+  /* ⑥ 時針 — 漸層劍形 */
+  const hAng = ((h % 12) / 12 + m / 720) * PI2 - Math.PI / 2;
+  drawMetalHand(ctx, cx, cy, hAng, r * 0.52, 7, r * 0.12,
+    'rgba(90,110,125,0.9)', 'rgba(230,240,250,1)');
+
+  /* ⑦ 分針 — 漸層劍形（更長更細） */
+  const mAng = (m / 60 + s / 3600) * PI2 - Math.PI / 2;
+  drawMetalHand(ctx, cx, cy, mAng, r * 0.73, 4.5, r * 0.12,
+    'rgba(80,100,115,0.9)', 'rgba(215,230,245,1)');
+
+  /* ⑧ 秒針 — 瑞士運動風：橙紅色主針 + 配重尾 */
+  const sAng = (s / 60) * PI2 - Math.PI / 2;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(sAng);
+  ctx.strokeStyle = '#e05020';
+  ctx.lineWidth = 1.1;
+  ctx.lineCap  = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0,  r * 0.13);
+  ctx.lineTo(0, -r * 0.80);
+  ctx.stroke();
+  /* 配重矩形 */
+  ctx.fillStyle = '#e05020';
+  ctx.fillRect(-3, r * 0.09, 6, r * 0.22);
+  ctx.restore();
+
+  /* ⑨ 中心蓋：拋光金屬感 */
+  const cap = ctx.createRadialGradient(cx - 1.2, cy - 1.2, 0, cx, cy, 5);
+  cap.addColorStop(0,   '#e8eef5');
+  cap.addColorStop(0.45,'#9aacba');
+  cap.addColorStop(1,   '#2a3840');
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, PI2);
+  ctx.fillStyle = cap;
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(cx, cy, 5, 0, PI2);
+  ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+  ctx.lineWidth = 0.6;
+  ctx.stroke();
+}
+
+/* 建立時鐘列 HTML（只執行一次） */
+function buildClockBar() {
+  const bar = document.getElementById('clockBar');
+  if (!bar) return;
+  bar.innerHTML = CITIES.map((c, i) => `
+    <div class="wc">
+      <div class="wc-open" id="wc-dot-${i}" style="display:none"></div>
+      <div class="wc-city">${c.city}</div>
+      <canvas id="wc-cvs-${i}" width="100" height="100"></canvas>
+      <div class="wc-date" id="wc-date-${i}"></div>
+    </div>`).join('');
+}
+
+/* 每秒更新時針畫面與日期 */
+function tickClocks() {
+  const now = new Date();
+  CITIES.forEach((c, i) => {
+    const loc = new Date(now.toLocaleString('en-US', { timeZone: c.tz }));
+    const h = loc.getHours(), m = loc.getMinutes(), s = loc.getSeconds();
+    const canvas = document.getElementById('wc-cvs-' + i);
+    if (canvas) drawClock(canvas, h, m, s);
+    const dateEl = document.getElementById('wc-date-' + i);
+    if (dateEl) dateEl.textContent = now.toLocaleDateString('zh-TW', { timeZone: c.tz, month:'2-digit', day:'2-digit', weekday:'short' });
+    const dot = document.getElementById('wc-dot-' + i);
+    if (dot) dot.style.display = isMarketOpen(c.mkt) ? 'block' : 'none';
+  });
+}
+
+buildClockBar();
 tickClocks();
 setInterval(tickClocks, 1000);
 
