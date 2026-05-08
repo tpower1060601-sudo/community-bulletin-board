@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>樓層告示牌 螢幕二 15F–28F</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#050505;font-family:'Microsoft JhengHei','PingFang TC','Hiragino Sans TC','Noto Sans TC',sans-serif}
+#bd{position:absolute;inset:18px;display:flex;flex-direction:column;gap:3px;border:1px solid #1c1005;border-radius:6px;padding:5px}
+.sl{position:relative;flex:1}
+.bg,.bc{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 20px;background:#101010}
+.bg{z-index:1}.bc{z-index:2}
+.th,.bf{position:absolute;left:0;right:0;height:50%;overflow:hidden}
+.th{top:0;z-index:3;transform-origin:50% 100%}
+.bf{bottom:0;z-index:4;transform-origin:50% 0%}
+.th .in,.bf .in{position:absolute;left:0;right:0;height:200%;display:flex;align-items:center;justify-content:center;padding:0 20px;background:#101010}
+.th .in{top:0}.bf .in{bottom:0}
+.dv{position:absolute;left:0;right:0;top:50%;height:2px;background:#050505;z-index:10}
+.fl{flex-shrink:0;width:155px;text-align:center;font-size:60px;font-weight:900;color:#c87010;letter-spacing:2px}
+.co{flex:1;font-size:44px;font-weight:400;color:#d4b050;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div id="bd"></div>
+<script>
+// ╔══════════════════════════════════════════════════════╗
+// ║  ★ 資料區塊 — 修改此處即可更新告示牌內容 ★        ║
+// ║  格式: { "floor": "樓層代號", "company": "公司名" } ║
+// ╚══════════════════════════════════════════════════════╝
+var DATA = [
+  {
+    "floor": "15A",
+    "company": "能匠自動化機械(股)公司"
+  },
+  {
+    "floor": "15B",
+    "company": "聖昌益整合有限公司"
+  },
+  {
+    "floor": "15C",
+    "company": "利璟投資有限公司"
+  },
+  {
+    "floor": "15D",
+    "company": "君鴻不動產估價師事務所"
+  },
+  {
+    "floor": "15E",
+    "company": "睿群集團 / 敬虔法律"
+  },
+  {
+    "floor": "15F",
+    "company": "呈嘉工程有限公司"
+  },
+  {
+    "floor": "15G",
+    "company": "艾朵傳媒有限公司"
+  },
+  {
+    "floor": "15H",
+    "company": "花緹生技美容國際有限公司"
+  },
+  {
+    "floor": "16A",
+    "company": "親家建設(股)公司"
+  },
+  {
+    "floor": "17A",
+    "company": "鼎京科技有限公司"
+  },
+  {
+    "floor": "17B",
+    "company": ""
+  },
+  {
+    "floor": "17C",
+    "company": "亞昕集團 台中分公司"
+  },
+  {
+    "floor": "17D",
+    "company": "亞昕集團 台中分公司"
+  },
+  {
+    "floor": "17E",
+    "company": "景得整合設計有限公司"
+  },
+  {
+    "floor": "17F",
+    "company": "宸鈊有限公司"
+  },
+  {
+    "floor": "17G",
+    "company": "光銳事業股份有限公司"
+  },
+  {
+    "floor": "17H",
+    "company": ""
+  },
+  {
+    "floor": "18A",
+    "company": "代代木國際精品(股)公司"
+  },
+  {
+    "floor": "18B",
+    "company": "香港商亞莉奈有限公司"
+  },
+  {
+    "floor": "18C",
+    "company": ""
+  },
+  {
+    "floor": "18D",
+    "company": "MUFU 台灣微米科技"
+  },
+  {
+    "floor": "18E",
+    "company": "和泰保經輔助人聯誼會館"
+  },
+  {
+    "floor": "18F",
+    "company": "和泰保經輔助人聯誼會館"
+  },
+  {
+    "floor": "18G",
+    "company": "和泰保經輔助人聯誼會館"
+  },
+  {
+    "floor": "18H",
+    "company": "紳格室內裝修設計有限公司"
+  },
+  {
+    "floor": "19A",
+    "company": "豐穀建設開發(股)公司"
+  },
+  {
+    "floor": "19B",
+    "company": "豐安營造工程(股)公司"
+  },
+  {
+    "floor": "19C",
+    "company": "春耕不動產經紀(股)公司"
+  },
+  {
+    "floor": "19D",
+    "company": "春耕不動產經紀(股)公司"
+  },
+  {
+    "floor": "19E",
+    "company": "地方建築有限公司"
+  },
+  {
+    "floor": "19F",
+    "company": "捷康生技股份有限公司"
+  },
+  {
+    "floor": "19G",
+    "company": "捷康生技股份有限公司"
+  },
+  {
+    "floor": "19H",
+    "company": "捷康生技股份有限公司"
+  },
+  {
+    "floor": "20A",
+    "company": "臺中市不動產建築開發商業同業公會"
+  },
+  {
+    "floor": "20B",
+    "company": "臺中市不動產建築開發商業同業公會"
+  },
+  {
+    "floor": "20C",
+    "company": "臺中市不動產建築開發商業同業公會"
+  },
+  {
+    "floor": "20D",
+    "company": ""
+  },
+  {
+    "floor": "20E",
+    "company": "Reconfort"
+  },
+  {
+    "floor": "20F",
+    "company": "瑞博企業有限公司"
+  },
+  {
+    "floor": "20G",
+    "company": "浚創管理顧問有限公司"
+  },
+  {
+    "floor": "20H",
+    "company": "萬智匯行銷電商基地"
+  },
+  {
+    "floor": "21A",
+    "company": ""
+  },
+  {
+    "floor": "22A",
+    "company": "永華聯合會計師事務所"
+  },
+  {
+    "floor": "22B",
+    "company": "永華聯合會計師事務所"
+  },
+  {
+    "floor": "22C",
+    "company": "金開(股)公司"
+  },
+  {
+    "floor": "22D",
+    "company": "快思(股)公司"
+  },
+  {
+    "floor": "22E",
+    "company": "ARA Fine Jewellery"
+  },
+  {
+    "floor": "22F",
+    "company": "南榮貿易(股)公司"
+  },
+  {
+    "floor": "22G",
+    "company": "采義科技有限公司"
+  },
+  {
+    "floor": "22H",
+    "company": "茂居建設有限公司 / 富居營造(股)公司"
+  },
+  {
+    "floor": "23A",
+    "company": "星穎國際顧問有限公司"
+  },
+  {
+    "floor": "23B",
+    "company": ""
+  },
+  {
+    "floor": "23C",
+    "company": "大唐國際保經 / 蘇菲夫人心靈芳療"
+  },
+  {
+    "floor": "23D",
+    "company": "駿亞生醫科技(股)公司"
+  },
+  {
+    "floor": "23E",
+    "company": "奕昇有限公司 / 大禾設計"
+  },
+  {
+    "floor": "23F",
+    "company": ""
+  },
+  {
+    "floor": "23G",
+    "company": ""
+  },
+  {
+    "floor": "23H",
+    "company": "賽席爾商盈創有限公司"
+  },
+  {
+    "floor": "24A",
+    "company": "群創事業有限公司"
+  },
+  {
+    "floor": "24B",
+    "company": ""
+  },
+  {
+    "floor": "24C",
+    "company": "橋締國際有限公司"
+  },
+  {
+    "floor": "24D",
+    "company": "大峽谷照明系統集團"
+  },
+  {
+    "floor": "24E",
+    "company": "德馨投顧"
+  },
+  {
+    "floor": "24F",
+    "company": ""
+  },
+  {
+    "floor": "24G",
+    "company": "新陽能源股份有限公司"
+  },
+  {
+    "floor": "24H",
+    "company": "新大集團 / 新科開發(股)公司"
+  },
+  {
+    "floor": "25A",
+    "company": "允將建設(股)公司"
+  },
+  {
+    "floor": "26A",
+    "company": "安永聯合會計師事務所"
+  },
+  {
+    "floor": "26B",
+    "company": "安永聯合會計師事務所"
+  },
+  {
+    "floor": "27A",
+    "company": ""
+  },
+  {
+    "floor": "28A",
+    "company": "永豐商業銀行(股)公司"
+  }
+];
+
+var PAGE_MS = 10000;  // 每頁停留毫秒（10000 = 10 秒）
+var STAGGER  = 180;   // 每列翻牌間隔毫秒
+// ──────────────────────────────────────────────────────
+// 系統程式碼，請勿修改以下內容
+// ──────────────────────────────────────────────────────
+var PG=16,bd=document.getElementById('bd'),pgs=[],sl=[];
+for(var j=0;j<DATA.length;j+=PG)pgs.push(DATA.slice(j,j+PG));
+if(!pgs.length)pgs.push([]);
+while(pgs[pgs.length-1].length<PG)pgs[pgs.length-1].push({floor:'',company:''});
+for(var i=0;i<PG;i++){
+  var e=document.createElement('div');e.className='sl';
+  e.innerHTML='<div class="bg"><div class="fl"></div><div class="co"></div></div>'
+    +'<div class="bc"><div class="fl"></div><div class="co"></div></div>'
+    +'<div class="th"><div class="in"><div class="fl"></div><div class="co"></div></div></div>'
+    +'<div class="bf" style="transform:perspective(900px) rotateX(-90deg)"><div class="in"><div class="fl"></div><div class="co"></div></div></div>'
+    +'<div class="dv"></div>';
+  bd.appendChild(e);
+  sl.push({bg:e.querySelector('.bg'),bc:e.querySelector('.bc'),
+    th:e.querySelector('.th'),thi:e.querySelector('.th .in'),
+    bf:e.querySelector('.bf'),bfi:e.querySelector('.bf .in')});
+}
+function sc(el,f,c){el.querySelector('.fl').textContent=f||'';el.querySelector('.co').textContent=c||'';el.style.opacity=(f||c)?'1':'0.06';}
+function initSlots(pi){pgs[pi].forEach(function(d,i){var s=sl[i];sc(s.bg,d.floor,d.company);sc(s.bc,d.floor,d.company);sc(s.thi,d.floor,d.company);sc(s.bfi,d.floor,d.company);s.th.style.transition='none';s.th.style.transform='';s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';});}
+function flipRow(s,f,c,done){sc(s.bg,f,c);sc(s.bfi,f,c);s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';requestAnimationFrame(function(){s.th.style.transition='transform 0.28s ease-in';s.th.style.transform='perspective(900px) rotateX(-90deg)';setTimeout(function(){s.bf.style.transition='transform 0.28s ease-out';s.bf.style.transform='perspective(900px) rotateX(0deg)';setTimeout(function(){sc(s.bc,f,c);sc(s.thi,f,c);s.th.style.transition='none';s.th.style.transform='';s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';if(done)done();},360);},200);});}
+var cur=0;initSlots(0);
+(function run(){if(pgs.length<=1)return;var nxt=(cur+1)%pgs.length;setTimeout(function(){for(var i=0;i<PG;i++){(function(idx){var d=pgs[nxt][idx];setTimeout(function(){flipRow(sl[idx],d.floor,d.company,idx===PG-1?function(){cur=nxt;run();}:null);},idx*STAGGER);})(i);}},PAGE_MS);})();
+</script>
+</body>
+</html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<title>樓層告示牌 螢幕一 1F–14F</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#050505;font-family:'Microsoft JhengHei','PingFang TC','Hiragino Sans TC','Noto Sans TC',sans-serif}
+#bd{position:absolute;inset:18px;display:flex;flex-direction:column;gap:3px;border:1px solid #1c1005;border-radius:6px;padding:5px}
+.sl{position:relative;flex:1}
+.bg,.bc{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 20px;background:#101010}
+.bg{z-index:1}.bc{z-index:2}
+.th,.bf{position:absolute;left:0;right:0;height:50%;overflow:hidden}
+.th{top:0;z-index:3;transform-origin:50% 100%}
+.bf{bottom:0;z-index:4;transform-origin:50% 0%}
+.th .in,.bf .in{position:absolute;left:0;right:0;height:200%;display:flex;align-items:center;justify-content:center;padding:0 20px;background:#101010}
+.th .in{top:0}.bf .in{bottom:0}
+.dv{position:absolute;left:0;right:0;top:50%;height:2px;background:#050505;z-index:10}
+.fl{flex-shrink:0;width:155px;text-align:center;font-size:60px;font-weight:900;color:#c87010;letter-spacing:2px}
+.co{flex:1;font-size:44px;font-weight:400;color:#d4b050;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:1px}
+</style>
+</head>
+<body>
+<div id="bd"></div>
+<script>
+// ╔══════════════════════════════════════════════════════╗
+// ║  ★ 資料區塊 — 修改此處即可更新告示牌內容 ★        ║
+// ║  格式: { "floor": "樓層代號", "company": "公司名" } ║
+// ╚══════════════════════════════════════════════════════╝
+var DATA = [
+  {
+    "floor": "1A",
+    "company": "永豐銀行-中科分行"
+  },
+  {
+    "floor": "1B",
+    "company": "社團法人台灣基督教繁星協會"
+  },
+  {
+    "floor": "2B",
+    "company": "社團法人台灣基督教繁星協會"
+  },
+  {
+    "floor": "3A",
+    "company": "荷華達康生物科技(股)公司"
+  },
+  {
+    "floor": "3B",
+    "company": "泰瑩科技(股)公司"
+  },
+  {
+    "floor": "3C",
+    "company": "WORK HUB智能空間 | 稅管家"
+  },
+  {
+    "floor": "4A",
+    "company": "威傑士國際開發有限公司"
+  },
+  {
+    "floor": "4B",
+    "company": "寶漾國際(股)公司"
+  },
+  {
+    "floor": "4C",
+    "company": "哈佛國際法律事務所"
+  },
+  {
+    "floor": "4D",
+    "company": "連盈資訊服務有限公司"
+  },
+  {
+    "floor": "4E",
+    "company": "PUPRIME"
+  },
+  {
+    "floor": "4F",
+    "company": "山海邑 / 光明頂"
+  },
+  {
+    "floor": "4G",
+    "company": "豐彩藝術(股)公司"
+  },
+  {
+    "floor": "4H",
+    "company": "遠視界科技(股)公司"
+  },
+  {
+    "floor": "5A",
+    "company": "書香同城有限公司"
+  },
+  {
+    "floor": "5B",
+    "company": "mark / 班馬克國際有限公司"
+  },
+  {
+    "floor": "5C",
+    "company": ""
+  },
+  {
+    "floor": "5D",
+    "company": "寰瀛法律事務所"
+  },
+  {
+    "floor": "5E",
+    "company": "雷力科技股份有限公司"
+  },
+  {
+    "floor": "5F",
+    "company": "也樂居保全(股)公司"
+  },
+  {
+    "floor": "5G",
+    "company": "堃成營造(股)公司"
+  },
+  {
+    "floor": "5H",
+    "company": "廣原行實業有限公司"
+  },
+  {
+    "floor": "6A",
+    "company": "亞太資源集團 | 首創國際資本"
+  },
+  {
+    "floor": "6B",
+    "company": "新逸資訊科技有限公司"
+  },
+  {
+    "floor": "6C",
+    "company": "思瑞建築(股)有限公司"
+  },
+  {
+    "floor": "6D",
+    "company": "定城實業有限公司"
+  },
+  {
+    "floor": "6E",
+    "company": ""
+  },
+  {
+    "floor": "6F",
+    "company": ""
+  },
+  {
+    "floor": "6G",
+    "company": ""
+  },
+  {
+    "floor": "6H",
+    "company": ""
+  },
+  {
+    "floor": "7A",
+    "company": "眾醫生技科技(股)公司"
+  },
+  {
+    "floor": "7B",
+    "company": "中信法律事務所"
+  },
+  {
+    "floor": "7C",
+    "company": "蒼晟系統核心有限公司"
+  },
+  {
+    "floor": "7D",
+    "company": "中鼎資訊科技有限公司"
+  },
+  {
+    "floor": "7E",
+    "company": "璀璨年華投資股份有限公司"
+  },
+  {
+    "floor": "7F",
+    "company": ""
+  },
+  {
+    "floor": "7G",
+    "company": ""
+  },
+  {
+    "floor": "7H",
+    "company": ""
+  },
+  {
+    "floor": "8A",
+    "company": ""
+  },
+  {
+    "floor": "8B",
+    "company": ""
+  },
+  {
+    "floor": "8C",
+    "company": "嵐宇科技(股)公司"
+  },
+  {
+    "floor": "8D",
+    "company": "想想國際餐飲集團"
+  },
+  {
+    "floor": "8E",
+    "company": "築藝坊室內裝修有限公司"
+  },
+  {
+    "floor": "8F",
+    "company": "天空科技有限公司"
+  },
+  {
+    "floor": "8G",
+    "company": "安永聯合會計師事務所"
+  },
+  {
+    "floor": "8H",
+    "company": "安永聯合會計師事務所"
+  },
+  {
+    "floor": "9A",
+    "company": "斯丹德企業有限公司"
+  },
+  {
+    "floor": "9B",
+    "company": "智業有限公司"
+  },
+  {
+    "floor": "9C",
+    "company": "志強國際企業股份有限公司"
+  },
+  {
+    "floor": "9D",
+    "company": "台慈軸承有限公司"
+  },
+  {
+    "floor": "9E",
+    "company": "騏璣資訊科技(股)公司"
+  },
+  {
+    "floor": "9F",
+    "company": "S.F. Management Consulting LTD."
+  },
+  {
+    "floor": "9G",
+    "company": ""
+  },
+  {
+    "floor": "9H",
+    "company": ""
+  },
+  {
+    "floor": "10A",
+    "company": "惠眾建設(股)公司"
+  },
+  {
+    "floor": "10B",
+    "company": ""
+  },
+  {
+    "floor": "10C",
+    "company": "睿禾投資顧問(股)公司"
+  },
+  {
+    "floor": "10D",
+    "company": ""
+  },
+  {
+    "floor": "10E",
+    "company": "大易空間計設有限公司"
+  },
+  {
+    "floor": "10F",
+    "company": "鋐鏹工程顧問股份有限公司"
+  },
+  {
+    "floor": "10G",
+    "company": ""
+  },
+  {
+    "floor": "10H",
+    "company": ""
+  },
+  {
+    "floor": "11A",
+    "company": "迅捷物流供應鏈股份有限公司"
+  },
+  {
+    "floor": "11B",
+    "company": "橙杏顧問 / 眾勤國際"
+  },
+  {
+    "floor": "11C",
+    "company": "愛生育生物科技(股)公司"
+  },
+  {
+    "floor": "11D",
+    "company": "台灣木工機械工業同業公會"
+  },
+  {
+    "floor": "11E",
+    "company": "遠雄房地產發展股份有限公司"
+  },
+  {
+    "floor": "11F",
+    "company": ""
+  },
+  {
+    "floor": "11G",
+    "company": ""
+  },
+  {
+    "floor": "11H",
+    "company": "崴寶精密科技(股)公司"
+  },
+  {
+    "floor": "12A",
+    "company": ""
+  },
+  {
+    "floor": "12B",
+    "company": "黑本艾美影像設計有限公司"
+  },
+  {
+    "floor": "12C",
+    "company": ""
+  },
+  {
+    "floor": "12D",
+    "company": "浩信聯合會計師事務所"
+  },
+  {
+    "floor": "12E",
+    "company": ""
+  },
+  {
+    "floor": "12F",
+    "company": ""
+  },
+  {
+    "floor": "12G",
+    "company": "創客共好商務中心"
+  },
+  {
+    "floor": "12H",
+    "company": "創客共好商務中心"
+  },
+  {
+    "floor": "13A",
+    "company": "白水國際商務中心"
+  },
+  {
+    "floor": "13B",
+    "company": "昕格聯合辦公空間"
+  },
+  {
+    "floor": "13C",
+    "company": "創客共好商務中心"
+  },
+  {
+    "floor": "13D",
+    "company": "京固國際通商有限公司"
+  },
+  {
+    "floor": "13E",
+    "company": "技成科技(股)公司"
+  },
+  {
+    "floor": "13F",
+    "company": "昌淇股份有限公司"
+  },
+  {
+    "floor": "13G",
+    "company": ""
+  },
+  {
+    "floor": "13H",
+    "company": ""
+  },
+  {
+    "floor": "14A",
+    "company": ""
+  },
+  {
+    "floor": "14B",
+    "company": ""
+  },
+  {
+    "floor": "14C",
+    "company": ""
+  },
+  {
+    "floor": "14D",
+    "company": "勤業投資(股)公司"
+  },
+  {
+    "floor": "14E",
+    "company": "勤業投資(股)公司"
+  },
+  {
+    "floor": "14F",
+    "company": ""
+  },
+  {
+    "floor": "14G",
+    "company": "京宇法律事務所 / 長福會計"
+  },
+  {
+    "floor": "14H",
+    "company": "精聯保險經紀人(股)公司"
+  }
+];
+
+var PAGE_MS = 10000;  // 每頁停留毫秒（10000 = 10 秒）
+var STAGGER  = 180;   // 每列翻牌間隔毫秒
+// ──────────────────────────────────────────────────────
+// 系統程式碼，請勿修改以下內容
+// ──────────────────────────────────────────────────────
+var PG=16,bd=document.getElementById('bd'),pgs=[],sl=[];
+for(var j=0;j<DATA.length;j+=PG)pgs.push(DATA.slice(j,j+PG));
+if(!pgs.length)pgs.push([]);
+while(pgs[pgs.length-1].length<PG)pgs[pgs.length-1].push({floor:'',company:''});
+for(var i=0;i<PG;i++){
+  var e=document.createElement('div');e.className='sl';
+  e.innerHTML='<div class="bg"><div class="fl"></div><div class="co"></div></div>'
+    +'<div class="bc"><div class="fl"></div><div class="co"></div></div>'
+    +'<div class="th"><div class="in"><div class="fl"></div><div class="co"></div></div></div>'
+    +'<div class="bf" style="transform:perspective(900px) rotateX(-90deg)"><div class="in"><div class="fl"></div><div class="co"></div></div></div>'
+    +'<div class="dv"></div>';
+  bd.appendChild(e);
+  sl.push({bg:e.querySelector('.bg'),bc:e.querySelector('.bc'),
+    th:e.querySelector('.th'),thi:e.querySelector('.th .in'),
+    bf:e.querySelector('.bf'),bfi:e.querySelector('.bf .in')});
+}
+function sc(el,f,c){el.querySelector('.fl').textContent=f||'';el.querySelector('.co').textContent=c||'';el.style.opacity=(f||c)?'1':'0.06';}
+function initSlots(pi){pgs[pi].forEach(function(d,i){var s=sl[i];sc(s.bg,d.floor,d.company);sc(s.bc,d.floor,d.company);sc(s.thi,d.floor,d.company);sc(s.bfi,d.floor,d.company);s.th.style.transition='none';s.th.style.transform='';s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';});}
+function flipRow(s,f,c,done){sc(s.bg,f,c);sc(s.bfi,f,c);s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';requestAnimationFrame(function(){s.th.style.transition='transform 0.28s ease-in';s.th.style.transform='perspective(900px) rotateX(-90deg)';setTimeout(function(){s.bf.style.transition='transform 0.28s ease-out';s.bf.style.transform='perspective(900px) rotateX(0deg)';setTimeout(function(){sc(s.bc,f,c);sc(s.thi,f,c);s.th.style.transition='none';s.th.style.transform='';s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';if(done)done();},360);},200);});}
+var cur=0;initSlots(0);
+(function run(){if(pgs.length<=1)return;var nxt=(cur+1)%pgs.length;setTimeout(function(){for(var i=0;i<PG;i++){(function(idx){var d=pgs[nxt][idx];setTimeout(function(){flipRow(sl[idx],d.floor,d.company,idx===PG-1?function(){cur=nxt;run();}:null);},idx*STAGGER);})(i);}},PAGE_MS);})();
+</script>
+</body>
+</html>
