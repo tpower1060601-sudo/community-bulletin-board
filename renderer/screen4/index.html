@@ -135,10 +135,39 @@ function startSun() {
   for (let i=0;i<8;i++) c.appendChild(mkEl('div',{position:'absolute',right:'calc(7% + 120px)',top:'calc(4% + 120px)',width:'200px',height:'1px',transformOrigin:'0 50%',background:'linear-gradient(90deg,transparent,rgba(255,210,60,.07))',transform:'rotate('+(i*45)+'deg)',animation:'sunR 7s '+(i*0.9)+'s ease-in-out infinite'}));
 }
 function startClouds() {
-  injectStyle('kf-cloud','@keyframes cDrift{from{transform:translateX(-220px)}to{transform:translateX(110vw)}}');
+  injectStyle('kf-cloud','@keyframes cDrift{from{transform:translateX(-320px)}to{transform:translateX(115vw)}}');
   const c = document.getElementById('bg-fx');
-  [[130,'4%',25],[190,'11%',32],[110,'2%',20],[160,'19%',28]].forEach(([w,top,dur],i) => {
-    c.appendChild(mkEl('div',{position:'absolute',top:top,width:w+'px',height:'44px',borderRadius:'44px',background:'rgba(255,255,255,.04)',filter:'blur(10px)',animation:'cDrift '+(dur+i*6)+'s '+(-Math.random()*20)+'s linear infinite'}));
+  // [寬, top位置, 動畫秒數, 不透明度, 高度]
+  const configs = [
+    [240, '5%',  28, .13, 60],
+    [320, '12%', 38, .10, 72],
+    [180, '2%',  22, .15, 52],
+    [280, '20%', 34, .09, 64],
+    [200, '8%',  42, .11, 56],
+    [360, '16%', 50, .08, 80],
+  ];
+  configs.forEach(([w, top, dur, opa, h], i) => {
+    // 主雲體
+    const cloud = mkEl('div', {
+      position: 'absolute', top: top,
+      width: w + 'px', height: h + 'px',
+      borderRadius: '50px',
+      background: `rgba(200,220,240,${opa})`,
+      filter: 'blur(18px)',
+      animation: `cDrift ${dur + i * 4}s ${-Math.random() * 30}s linear infinite`
+    });
+    c.appendChild(cloud);
+    // 上方隆起（讓雲更有積雲感）
+    const bump = mkEl('div', {
+      position: 'absolute', top: top,
+      left: (Math.random() * w * 0.3) + 'px',
+      width: (w * 0.5) + 'px', height: (h * 0.8) + 'px',
+      borderRadius: '50%',
+      background: `rgba(210,225,245,${opa * 0.7})`,
+      filter: 'blur(22px)',
+      animation: `cDrift ${dur + i * 4}s ${-Math.random() * 30}s linear infinite`
+    });
+    c.appendChild(bump);
   });
 }
 function startThunder() {
