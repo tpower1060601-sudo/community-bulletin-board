@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-08T04:01:42.712Z",
+  "_savedAt": "2026-05-08T04:02:24.992Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -48,7 +48,7 @@
     ]
   },
   "settings": {
-    "communityName": "親家市政廣場&也樂居物業管理",
+    "communityName": "親家市政廣場管理委員會",
     "weatherApiKey": "607d88654e58cfcf43fd1727e364342e",
     "weatherCity": "Taichung",
     "newsEnabled": false,
