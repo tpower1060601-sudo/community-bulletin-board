@@ -25,11 +25,15 @@ body {
   align-items: center;
   justify-content: center;
   padding: 40px 60px;
-  opacity: 0;
-  transition: opacity .8s ease;
+  transform: translateY(105%);
+  transition: transform 0.85s cubic-bezier(0.22, 1, 0.36, 1);
   background: radial-gradient(ellipse at center, rgba(0,40,80,.5) 0%, transparent 70%);
 }
-.slide.active { opacity:1; }
+.slide.active { transform: translateY(0%); }
+.slide.exit {
+  transform: translateY(-105%);
+  transition: transform 0.65s cubic-bezier(0.55, 0, 0.78, 0);
+}
 
 .slide-inner { max-width: 1400px; text-align: center; width: 100%; }
 
@@ -153,16 +157,24 @@ body {
 <script src="../../shared/api.js"></script>
 <script>
 const TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活動公告', notice:'重要通知' };
-const INTERVAL = 7000;
+const DEFAULT_DURATION = 7000;
 
 let data = { marquee:'', list:[] };
 let current = 0, timer = null;
+let activeList = []; // 目前顯示中的公告（含 duration）
 
-function startProgress() {
+/* 取得第 idx 張投影片的顯示毫秒數 */
+function getDuration(idx) {
+  const a = activeList[idx];
+  const sec = a && parseInt(a.duration) > 0 ? parseInt(a.duration) : 7;
+  return Math.max(3, sec) * 1000;
+}
+
+function startProgress(ms) {
   const bar = document.getElementById('progressBar');
   bar.style.transition = 'none'; bar.style.width = '0%';
   requestAnimationFrame(() => {
-    bar.style.transition = `width ${INTERVAL}ms linear`;
+    bar.style.transition = `width ${ms}ms linear`;
     bar.style.width = '100%';
   });
 }
@@ -186,8 +198,11 @@ function render() {
   if (!active.length) {
     slidesEl.innerHTML = '<div style="color:rgba(255,255,255,.2);font-size:24px;text-align:center;margin-top:40%">暫無公告</div>';
     dotsEl.innerHTML = '';
+    activeList = [];
     return;
   }
+
+  activeList = active;
 
   slidesEl.innerHTML = active.map((a,i) => {
     const type = a.type||'general';
@@ -213,25 +228,44 @@ function render() {
   ).join('');
 
   current = 0;
-  startSlider(active.length);
+  startSlider();
 }
 
 function goTo(idx) {
   const slides = document.querySelectorAll('.slide');
   const dots   = document.querySelectorAll('.dot');
   if (!slides.length) return;
-  slides[current].classList.remove('active');
+
+  /* 舊投影片：往上飛出 */
+  const oldSlide = slides[current];
+  oldSlide.classList.remove('active');
+  oldSlide.classList.add('exit');
   dots[current].classList.remove('active');
-  current = idx % slides.length;
+  /* 動畫結束後歸位（等待下次從下方進場） */
+  setTimeout(() => oldSlide.classList.remove('exit'), 700);
+
+  current = ((idx % slides.length) + slides.length) % slides.length;
+
+  /* 新投影片：從下方滑入 */
   slides[current].classList.add('active');
   dots[current].classList.add('active');
-  startProgress();
+
+  const dur = getDuration(current);
+  startProgress(dur);
+  scheduleNext(dur);
 }
 
-function startSlider(count) {
-  if (timer) clearInterval(timer);
-  startProgress();
-  if (count > 1) timer = setInterval(() => goTo(current + 1), INTERVAL);
+function scheduleNext(dur) {
+  if (timer) clearTimeout(timer);
+  if (activeList.length <= 1) return;
+  timer = setTimeout(() => goTo(current + 1), dur);
+}
+
+function startSlider() {
+  if (timer) clearTimeout(timer);
+  const dur = getDuration(0);
+  startProgress(dur);
+  scheduleNext(dur);
 }
 
 function renderMarquee() {

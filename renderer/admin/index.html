@@ -360,7 +360,8 @@ function renderAnnouncements() {
     var sc=isAnnActive(a);
     var sh=sc===1?'<span style="color:#10b981;font-weight:700">顯示中</span>':sc===0?'<span style="color:#fbbf24;font-weight:700">待發布</span>':'<span style="color:#f43f5e;font-weight:700">已結束</span>';
     var ds=(a.alwaysValid!==false)?'常駐':((a.startDate||'')+' ~ '+(a.endDate||''));
-    html+='<tr><td>'+esc(a.title)+'</td><td><span class="tag tag-'+(a.type||'general')+'">'+esc(a.type||'一般')+'</span></td><td>'+ds+'</td><td>'+sh+'</td><td><button class="btn btn-ghost btn-sm" onclick="openAnnModal('+a.id+')">編輯</button></td></tr>';
+    var durBadge='<span style="color:var(--text2);font-size:12px;margin-left:6px">⏱ '+(a.duration||7)+'s</span>';
+    html+='<tr><td>'+esc(a.title)+durBadge+'</td><td><span class="tag tag-'+(a.type||'general')+'">'+esc(a.type||'一般')+'</span></td><td>'+ds+'</td><td>'+sh+'</td><td><button class="btn btn-ghost btn-sm" onclick="openAnnModal('+a.id+')">編輯</button></td></tr>';
   }
   body.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">尚無公告</td></tr>';
 }
@@ -448,12 +449,20 @@ function openAnnModal(id) {
   $('modalTitle').innerText=isNew?'新增公告':'編輯公告';
   $('modalBody').innerHTML=
     '<div class="form-group"><label>標題</label><input type="text" id="annTitle" value="'+esc(a.title)+'"></div>'+
-    '<div class="form-group"><label>類型</label><select id="annType">'+
-      '<option value="general"'+(a.type==='general'?' selected':'')+'>一般公告</option>'+
-      '<option value="notice"'+(a.type==='notice'?' selected':'')+'>重要提醒</option>'+
-      '<option value="event"'+(a.type==='event'?' selected':'')+'>活動通知</option>'+
-      '<option value="urgent"'+(a.type==='urgent'?' selected':'')+'>緊急公佈</option>'+
-    '</select></div>'+
+    '<div class="form-row" style="grid-template-columns:1fr auto">'+
+      '<div class="form-group" style="margin-bottom:0"><label>類型</label><select id="annType">'+
+        '<option value="general"'+(a.type==='general'?' selected':'')+'>一般公告</option>'+
+        '<option value="notice"'+(a.type==='notice'?' selected':'')+'>重要提醒</option>'+
+        '<option value="event"'+(a.type==='event'?' selected':'')+'>活動通知</option>'+
+        '<option value="urgent"'+(a.type==='urgent'?' selected':'')+'>緊急公佈</option>'+
+      '</select></div>'+
+      '<div class="form-group" style="margin-bottom:0"><label>顯示秒數</label>'+
+        '<div style="display:flex;align-items:center;gap:8px">'+
+          '<input type="number" id="annDuration" min="3" max="120" value="'+(a.duration||7)+'" style="width:90px;text-align:center">'+
+          '<span style="color:var(--text2);font-size:13px;white-space:nowrap">秒後切換</span>'+
+        '</div>'+
+      '</div>'+
+    '</div>'+
     '<div class="form-group"><label>內容</label>'+
       '<div class="rich-toolbar">'+
         '<button onclick="fmt(\'bold\')" title="粗體"><b>B</b></button>'+
@@ -523,6 +532,7 @@ function saveAnn(id) {
   var updated={
     id:id||new Date().getTime(),
     title:$('annTitle').value, type:$('annType').value,
+    duration: Math.max(3, parseInt(($('annDuration')||{}).value)||7),
     content: editor ? editor.innerHTML : '',
     imageUrl: ($('annImageUrl')||{}).value ? $('annImageUrl').value.trim() : '',
     alwaysValid:$('annAlwaysValid').checked,
