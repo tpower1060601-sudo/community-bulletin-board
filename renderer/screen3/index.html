@@ -11,15 +11,12 @@ body {
   height: 100vh; overflow: hidden; user-select: none;
 }
 
-#bg { position:fixed; inset:0; z-index:0; transition:background 90s ease; }
-#bg-overlay { position:fixed; inset:0; z-index:1; background:linear-gradient(to bottom,rgba(0,0,0,.35) 0%,rgba(0,0,0,.5) 100%); pointer-events:none; }
-
-.layout { position:relative; z-index:10; height:100vh; display:flex; flex-direction:column; }
+.layout { height:100vh; display:flex; flex-direction:column; }
 
 /* ── 世界時鐘列 ── */
 .clock-bar {
   flex-shrink:0; display:flex;
-  background:rgba(0,0,0,.45); border-bottom:1px solid rgba(255,255,255,.07);
+  background:rgba(0,0,0,.55); border-bottom:1px solid rgba(255,255,255,.08);
   backdrop-filter:blur(20px);
 }
 .wc {
@@ -38,115 +35,201 @@ body {
 }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
 
-/* ── 市場時段 ── */
-.session-bar {
-  flex-shrink:0; display:flex; align-items:center; gap:12px;
-  padding:6px 28px; background:rgba(0,0,0,.3); border-bottom:1px solid rgba(255,255,255,.04);
+/* ── 4欄市場區 ── */
+.market-grid {
+  flex:1; min-height:0;
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
 }
-.session-lbl { font-size:10px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.25); flex-shrink:0; }
-.session-track { flex:1; height:18px; position:relative; background:rgba(255,255,255,.04); border-radius:4px; overflow:visible; }
-.seg {
-  position:absolute; top:0; bottom:0; border-radius:3px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:9px; font-weight:800; letter-spacing:1px; overflow:hidden; white-space:nowrap;
-  opacity:.75;
+.market-col {
+  border-right:1px solid rgba(255,255,255,.07);
+  display:flex; flex-direction:column; overflow:hidden;
 }
-.seg.active { opacity:1; box-shadow:0 0 6px currentColor; }
-.now-line {
-  position:absolute; top:-3px; bottom:-3px; width:2px;
-  background:#fff; border-radius:2px; box-shadow:0 0 8px rgba(255,255,255,.8);
-  z-index:5;
+.market-col:last-child { border-right:none; }
+
+.col-header {
+  flex-shrink:0;
+  padding:9px 16px 7px;
+  background:rgba(0,0,0,.35);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  display:flex; align-items:center; gap:8px;
 }
+.col-icon  { font-size:15px; }
+.col-title { font-size:11px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.38); text-transform:uppercase; }
 
-/* ── 主三欄 ── */
-.main { flex:1; min-height:0; display:grid; grid-template-columns:220px 1fr 300px; }
-.panel {
-  border-right:1px solid rgba(255,255,255,.06); overflow:hidden;
-  display:flex; flex-direction:column; padding:14px 16px; transition:background 2s ease;
-}
-.panel:last-child { border-right:none; }
-.panel-title { font-size:13px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.35); text-transform:uppercase; margin-bottom:12px; flex-shrink:0; }
-
-/* 股市兩欄 */
-.stock-cols { flex:1; display:flex; gap:8px; min-height:0; overflow:hidden; }
-.panel-scroll { flex:1; overflow-y:auto; overflow-x:hidden; }
-.panel-scroll::-webkit-scrollbar { width:3px; }
-.panel-scroll::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
-
-/* ── 共用行 ── */
-.row {
-  display:flex; align-items:center; padding:11px 12px; border-radius:10px;
-  margin-bottom:7px; background:rgba(255,255,255,.04); transition:background .4s, box-shadow .4s;
-}
-.row.open { background:rgba(255,255,255,.07); }
-.lbl { font-size:14px; font-weight:700; color:rgba(255,255,255,.55); flex-shrink:0; letter-spacing:.5px; }
-.val { flex:1; font-size:24px; font-weight:900; font-variant-numeric:tabular-nums; padding:0 10px; }
-.chg { font-size:14px; font-weight:700; text-align:right; flex-shrink:0; }
-.up { color:#ef4444; }
-.dn { color:#22c55e; }
-.nc { color:rgba(255,255,255,.3); }
-
-/* ── 外匯 ── */
-.fx-lbl { width:70px; font-size:13px; }
-.fx-val { font-size:24px; }
-.fx-unit { font-size:12px; opacity:.4; margin-left:3px; font-weight:600; }
-#forexList .row { padding:8px 10px; margin-bottom:5px; }
-
-/* ── 股市 ── */
-.stock-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; margin-right:8px; }
-.stock-lbl { width:68px; }
-.stock-name { font-size:11px; color:rgba(255,255,255,.35); letter-spacing:.5px; }
-.closed-tag { font-size:11px; letter-spacing:1px; color:rgba(255,255,255,.25); margin-left:4px; flex-shrink:0; }
-.stock-cols .row { padding:9px 10px; margin-bottom:6px; }
-.stock-cols .val { font-size:19px; padding:0 5px; }
-.stock-cols .chg { font-size:12px; }
-
-/* ── 商品/加密 ── */
-.asset-sep { font-size:10px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.22); margin:10px 0 7px 2px; text-transform:uppercase; }
-.crypto-icon { font-size:20px; width:30px; flex-shrink:0; }
-.crypto-lbl { width:52px; }
-#cryptoList .row { padding:9px 12px; margin-bottom:6px; }
-#cryptoList .val { font-size:21px; }
-
-.placeholder { color:rgba(255,255,255,.2); font-size:13px; letter-spacing:3px; text-align:center; padding:20px 0; }
+.col-widget { flex:1; min-height:0; position:relative; }
+.col-widget .tradingview-widget-container,
+.col-widget .tradingview-widget-container__widget { height:100% !important; width:100% !important; }
 </style>
 </head>
 <body>
-<div id="bg"></div>
-<div id="bg-overlay"></div>
-
 <div class="layout">
+
+  <!-- ── 世界時鐘 ── -->
   <div class="clock-bar" id="clockBar"></div>
-  <div class="session-bar">
-    <div class="session-lbl">市場時段 UTC</div>
-    <div class="session-track" id="sessionTrack"></div>
-  </div>
-  <div class="main">
-    <div class="panel" id="pForex">
-      <div class="panel-title">💱 外匯匯率</div>
-      <div class="panel-scroll" id="forexList"><div class="placeholder">連線中…</div></div>
-    </div>
-    <div class="panel" id="pStocks">
-      <div class="panel-title">📈 全球龍頭股</div>
-      <div class="stock-cols">
-        <div class="panel-scroll" id="stockCol0"><div class="placeholder">連線中…</div></div>
-        <div class="panel-scroll" id="stockCol1"><div class="placeholder">連線中…</div></div>
+
+  <!-- ── 4欄市場 ── -->
+  <div class="market-grid">
+
+    <!-- 欄 1：亞太股市 -->
+    <div class="market-col">
+      <div class="col-header">
+        <span class="col-icon">🌏</span>
+        <span class="col-title">亞太股市</span>
+      </div>
+      <div class="col-widget">
+        <div class="tradingview-widget-container" style="height:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+          {
+            "colorTheme":        "dark",
+            "dateRange":         "1D",
+            "showChart":         false,
+            "locale":            "zh_TW",
+            "isTransparent":     true,
+            "showSymbolLogo":    true,
+            "showFloatingTooltip": false,
+            "width":  "100%",
+            "height": "100%",
+            "tabs": [{
+              "title": "亞太",
+              "symbols": [
+                {"s": "INDEX:TWII",  "d": "台灣加權指數"},
+                {"s": "TVC:NI225",   "d": "日經 225"},
+                {"s": "TVC:HSI",     "d": "恆生指數"},
+                {"s": "SSE:000001",  "d": "上證綜指"},
+                {"s": "KRX:KOSPI",   "d": "KOSPI"},
+                {"s": "SGX:STI",     "d": "新加坡 STI"},
+                {"s": "ASX:XJO",     "d": "澳洲 ASX 200"}
+              ]
+            }]
+          }
+          </script>
+        </div>
       </div>
     </div>
-    <div class="panel" id="pCrypto">
-      <div class="panel-title">₿ 貨幣 · 商品</div>
-      <div class="panel-scroll" id="cryptoList"><div class="placeholder">連線中…</div></div>
+
+    <!-- 欄 2：歐美股市 -->
+    <div class="market-col">
+      <div class="col-header">
+        <span class="col-icon">🌍</span>
+        <span class="col-title">歐美股市</span>
+      </div>
+      <div class="col-widget">
+        <div class="tradingview-widget-container" style="height:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+          {
+            "colorTheme":        "dark",
+            "dateRange":         "1D",
+            "showChart":         false,
+            "locale":            "zh_TW",
+            "isTransparent":     true,
+            "showSymbolLogo":    true,
+            "showFloatingTooltip": false,
+            "width":  "100%",
+            "height": "100%",
+            "tabs": [{
+              "title": "歐美",
+              "symbols": [
+                {"s": "SP:SPX",         "d": "S&P 500"},
+                {"s": "NASDAQ:COMP",    "d": "NASDAQ 綜合"},
+                {"s": "TVC:DJI",        "d": "道瓊工業"},
+                {"s": "XETR:DAX",       "d": "德國 DAX"},
+                {"s": "TVC:UKX",        "d": "英國 FTSE 100"},
+                {"s": "EURONEXT:CAC40", "d": "法國 CAC 40"},
+                {"s": "TVC:SX5E",       "d": "歐元 STOXX 50"}
+              ]
+            }]
+          }
+          </script>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
+
+    <!-- 欄 3：台股精選 -->
+    <div class="market-col">
+      <div class="col-header">
+        <span class="col-icon">🇹🇼</span>
+        <span class="col-title">台股精選</span>
+      </div>
+      <div class="col-widget">
+        <div class="tradingview-widget-container" style="height:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+          {
+            "colorTheme":        "dark",
+            "dateRange":         "1D",
+            "showChart":         false,
+            "locale":            "zh_TW",
+            "isTransparent":     true,
+            "showSymbolLogo":    true,
+            "showFloatingTooltip": false,
+            "width":  "100%",
+            "height": "100%",
+            "tabs": [{
+              "title": "台股",
+              "symbols": [
+                {"s": "TWSE:2330", "d": "台積電"},
+                {"s": "TWSE:2454", "d": "聯發科"},
+                {"s": "TWSE:2317", "d": "鴻海"},
+                {"s": "TWSE:2308", "d": "台達電"},
+                {"s": "TWSE:2881", "d": "富邦金"},
+                {"s": "TWSE:2412", "d": "中華電"},
+                {"s": "TWSE:2002", "d": "中鋼"}
+              ]
+            }]
+          }
+          </script>
+        </div>
+      </div>
+    </div>
+
+    <!-- 欄 4：外匯 / 商品 -->
+    <div class="market-col">
+      <div class="col-header">
+        <span class="col-icon">💱</span>
+        <span class="col-title">外匯．商品</span>
+      </div>
+      <div class="col-widget">
+        <div class="tradingview-widget-container" style="height:100%">
+          <div class="tradingview-widget-container__widget" style="height:100%"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+          {
+            "colorTheme":        "dark",
+            "dateRange":         "1D",
+            "showChart":         false,
+            "locale":            "zh_TW",
+            "isTransparent":     true,
+            "showSymbolLogo":    true,
+            "showFloatingTooltip": false,
+            "width":  "100%",
+            "height": "100%",
+            "tabs": [{
+              "title": "外匯商品",
+              "symbols": [
+                {"s": "FX_IDC:USDTWD", "d": "美元 / 台幣"},
+                {"s": "FX:EURUSD",     "d": "歐元 / 美元"},
+                {"s": "FX:USDJPY",     "d": "美元 / 日圓"},
+                {"s": "TVC:GOLD",      "d": "黃金"},
+                {"s": "TVC:USOIL",     "d": "WTI 原油"},
+                {"s": "CRYPTOCAP:BTC", "d": "比特幣"},
+                {"s": "CRYPTOCAP:ETH", "d": "以太幣"}
+              ]
+            }]
+          }
+          </script>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /market-grid -->
+</div><!-- /layout -->
 
 <script src="../../shared/api.js"></script>
 <script>
 'use strict';
 
-/* ══════════════════════════════════════════
-   設定
-══════════════════════════════════════════ */
 const CITIES = [
   { city:'台北',     tz:'Asia/Taipei',       mkt:'TWSE' },
   { city:'東京',     tz:'Asia/Tokyo',         mkt:'TSE'  },
@@ -168,317 +251,41 @@ const MARKETS = [
   { id:'NYSE', tz:'America/New_York', oh:9,  om:30, ch:16, cm:0  },
 ];
 
-const SEG_UTC = [
-  { name:'東京',    start:0,    end:6,    color:'#f59e0b', mkt:'asia'   },
-  { name:'滬港',    start:1.5,  end:8,    color:'#fb923c', mkt:'asia'   },
-  { name:'台灣',    start:1,    end:5.5,  color:'#a78bfa', mkt:'asia'   },
-  { name:'倫敦/歐', start:7,    end:15.5, color:'#38bdf8', mkt:'europe' },
-  { name:'紐約',    start:13.5, end:20,   color:'#4ade80', mkt:'us'     },
-];
-
-// col 0 = 亞洲欄, col 1 = 歐美欄  sym = Twelve Data symbol
-const STOCKS = [
-  { sym:'2330.TW',   name:'台積電',   sub:'TWSE',   mkt:'TWSE', color:'#a78bfa', col:0 },
-  { sym:'TSM',       name:'台積電ADR',sub:'NYSE',   mkt:'NYSE', color:'#c4b5fd', col:0 },
-  { sym:'2454.TW',   name:'聯發科',   sub:'TWSE',   mkt:'TWSE', color:'#818cf8', col:0 },
-  { sym:'2308.TW',   name:'台達電',   sub:'TWSE',   mkt:'TWSE', color:'#6366f1', col:0 },
-  { sym:'TM',        name:'豐田',     sub:'NYSE',   mkt:'TSE',  color:'#f59e0b', col:0 },
-  { sym:'0700.HK',   name:'騰訊',     sub:'HKEX',   mkt:'HKEX', color:'#fb923c', col:0 },
-  { sym:'BABA',      name:'阿里巴巴', sub:'NYSE',   mkt:'SSE',  color:'#ff6b6b', col:0 },
-  { sym:'005930.KS', name:'三星',     sub:'KSE',    mkt:'KSE',  color:'#e879f9', col:0 },
-  { sym:'ASML',      name:'ASML',     sub:'NASDAQ', mkt:'LSE',  color:'#38bdf8', col:1 },
-  { sym:'NVDA',      name:'輝達',     sub:'NASDAQ', mkt:'NYSE', color:'#60a5fa', col:1 },
-  { sym:'AAPL',      name:'蘋果',     sub:'NASDAQ', mkt:'NYSE', color:'#4ade80', col:1 },
-  { sym:'MSFT',      name:'微軟',     sub:'NASDAQ', mkt:'NYSE', color:'#34d399', col:1 },
-  { sym:'AMZN',      name:'亞馬遜',   sub:'NASDAQ', mkt:'NYSE', color:'#6ee7b7', col:1 },
-  { sym:'GOOGL',     name:'Google',   sub:'NASDAQ', mkt:'NYSE', color:'#facc15', col:1 },
-  { sym:'INTC',      name:'Intel',    sub:'NASDAQ', mkt:'NYSE', color:'#94a3b8', col:1 },
-];
-
-const COMMODITIES = [
-  { sym:'XAU/USD', name:'黃金',    icon:'🥇', dec:0 },
-  { sym:'WTI',     name:'WTI原油', icon:'🛢', dec:2 },
-];
-
-const FX_PAIRS = [
-  { pair:'USD/TWD', from:'USD', to:'TWD', dec:2 },
-  { pair:'USD/JPY', from:'USD', to:'JPY', dec:2 },
-  { pair:'USD/CNY', from:'USD', to:'CNY', dec:4 },
-  { pair:'USD/KRW', from:'USD', to:'KRW', dec:0 },
-  { pair:'USD/HKD', from:'USD', to:'HKD', dec:4 },
-  { pair:'USD/AUD', from:'USD', to:'AUD', dec:4 },
-  { pair:'EUR/USD', from:'EUR', to:'USD', dec:4 },
-  { pair:'GBP/USD', from:'GBP', to:'USD', dec:4 },
-];
-
-const CRYPTO = [
-  { id:'bitcoin',     sym:'BTC',  icon:'₿' },
-  { id:'ethereum',    sym:'ETH',  icon:'Ξ' },
-  { id:'solana',      sym:'SOL',  icon:'◎' },
-  { id:'ripple',      sym:'XRP',  icon:'✕' },
-  { id:'binancecoin', sym:'BNB',  icon:'◈' },
-  { id:'dogecoin',    sym:'DOGE', icon:'Ð' },
-];
-
-/* ══════════════════════════════════════════
-   工具
-══════════════════════════════════════════ */
-function localDate(tz) {
-  return new Date(new Date().toLocaleString('en-US', { timeZone: tz }));
-}
-function isOpen(mkt) {
-  const m = MARKETS.find(x => x.id === mkt); if (!m) return false;
-  const d = localDate(m.tz);
-  if (d.getDay() === 0 || d.getDay() === 6) return false;
-  const mins = d.getHours() * 60 + d.getMinutes();
-  return mins >= m.oh * 60 + m.om && mins < m.ch * 60 + m.cm;
-}
-function openSet() {
-  const s = new Set(); MARKETS.forEach(m => { if (isOpen(m.id)) s.add(m.id); }); return s;
-}
-function fmtNum(n, dec) {
-  if (n == null || isNaN(n)) return '—';
-  if (dec === 0) return Math.round(n).toLocaleString();
-  return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-}
-function chgClass(v) { return v > 0 ? 'up' : v < 0 ? 'dn' : 'nc'; }
-function chgTxt(v)   { if (v == null) return '—'; if (v === 0) return '0.00%'; return (v > 0 ? '▲' : '▼') + Math.abs(v).toFixed(2) + '%'; }
-
-/* ══════════════════════════════════════════
-   世界時鐘
-══════════════════════════════════════════ */
-function renderClocks() {
-  const open = openSet();
-  document.getElementById('clockBar').innerHTML = CITIES.map(c => {
-    const d = localDate(c.tz);
-    const hh = String(d.getHours()).padStart(2,'0');
-    const mm = String(d.getMinutes()).padStart(2,'0');
-    const ss = String(d.getSeconds()).padStart(2,'0');
-    const dayN = ['日','一','二','三','四','五','六'][d.getDay()];
-    const on = open.has(c.mkt);
-    return `<div class="wc">
-      ${on ? '<div class="wc-open"></div>' : ''}
-      <div class="wc-city">${c.city}</div>
-      <div class="wc-time">${hh}:${mm}<span style="opacity:.45;font-size:.65em">:${ss}</span></div>
-      <div class="wc-date">${d.getMonth()+1}/${d.getDate()} 週${dayN}</div>
-    </div>`;
-  }).join('');
-}
-
-/* ══════════════════════════════════════════
-   市場時段 Timeline
-══════════════════════════════════════════ */
-function renderSession() {
+function isMarketOpen(mkt) {
+  const m = MARKETS.find(x => x.id === mkt);
+  if (!m) return false;
   const now = new Date();
-  const utcH = now.getUTCHours() + now.getUTCMinutes()/60;
-  const pct = h => (h / 24 * 100).toFixed(2) + '%';
-  const open = openSet();
-  const asiaOn = ['TWSE','TSE','HKEX','SSE','KSE'].some(m => open.has(m));
-  const euOn   = ['LSE','FSE'].some(m => open.has(m));
-  const usOn   = open.has('NYSE');
-  let bg;
-  if (asiaOn && euOn && usOn)  bg = 'linear-gradient(155deg,#0d1a0d,#0d0d2a,#020b14)';
-  else if (asiaOn && euOn)     bg = 'linear-gradient(155deg,#1a1000,#0a0a28,#020b14)';
-  else if (euOn && usOn)       bg = 'linear-gradient(155deg,#001a0a,#0a0a28,#020b14)';
-  else if (asiaOn)             bg = 'linear-gradient(155deg,#1a0e00,#04101a,#020b14)';
-  else if (euOn)               bg = 'linear-gradient(155deg,#020b14,#0a0a28,#030616)';
-  else if (usOn)               bg = 'linear-gradient(155deg,#001a08,#04101a,#020b14)';
-  else                         bg = 'linear-gradient(155deg,#020b14,#030a10,#020b14)';
-  document.getElementById('bg').style.background = bg;
-  const segs = SEG_UTC.map(s => {
-    const on = s.mkt==='asia'?asiaOn:s.mkt==='europe'?euOn:usOn;
-    return `<div class="seg${on?' active':''}" style="left:${pct(s.start)};width:${pct(s.end-s.start)};background:${s.color}22;color:${s.color};border:1px solid ${s.color}44">${s.name}</div>`;
-  }).join('');
-  document.getElementById('sessionTrack').innerHTML =
-    segs + `<div class="now-line" style="left:${(utcH/24*100).toFixed(2)}%"></div>`;
+  const loc = new Date(now.toLocaleString('en-US', { timeZone: m.tz }));
+  const dow = loc.getDay();
+  if (dow === 0 || dow === 6) return false;
+  const min = loc.getHours() * 60 + loc.getMinutes();
+  return min >= m.oh * 60 + m.om && min < m.ch * 60 + m.cm;
 }
 
-/* ══════════════════════════════════════════
-   外匯（ExchangeRate-API）
-══════════════════════════════════════════ */
-let fxRates = null;
-async function fetchForex() {
-  try {
-    const r = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
-    if (!r.ok) throw new Error();
-    fxRates = (await r.json()).rates;
-    renderForex();
-  } catch(e) {
-    document.getElementById('forexList').innerHTML = '<div class="placeholder">外匯資料無法取得</div>';
-  }
-}
-function renderForex() {
-  if (!fxRates) return;
-  document.getElementById('forexList').innerHTML = FX_PAIRS.map(fp => {
-    const rate = fp.from === 'USD' ? fxRates[fp.to] : fxRates[fp.to] / fxRates[fp.from];
-    return `<div class="row">
-      <div class="lbl fx-lbl">${fp.pair}</div>
-      <div class="val fx-val">${fmtNum(rate, fp.dec)}<span class="fx-unit">${fp.to}</span></div>
+function tickClocks() {
+  const bar = document.getElementById('clockBar');
+  if (!bar) return;
+  const now = new Date();
+  bar.innerHTML = CITIES.map(c => {
+    const t = now.toLocaleTimeString('zh-TW', { timeZone:c.tz, hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false });
+    const d = now.toLocaleDateString('zh-TW', { timeZone:c.tz, month:'2-digit', day:'2-digit', weekday:'short' });
+    const open = isMarketOpen(c.mkt);
+    return `<div class="wc">
+      ${open ? '<div class="wc-open"></div>' : ''}
+      <div class="wc-city">${c.city}</div>
+      <div class="wc-time">${t}</div>
+      <div class="wc-date">${d}</div>
     </div>`;
   }).join('');
 }
 
-/* ══════════════════════════════════════════
-   龍頭股 + 大宗商品（Twelve Data）
-   免費：800 credits/day / key，12 symbols / 請求
-   3 組輪流：每 key 60 req/day → 720 credits/key ✅
-   刷新間隔：8 分鐘
-══════════════════════════════════════════ */
-let stockData = {};
-let commodityData = {};
-let tdKeys = [];
-let tdKeyIdx = 0;
+tickClocks();
+setInterval(tickClocks, 1000);
 
-async function loadTdKeys() {
-  const s = await window.api.get('settings');
-  tdKeys = [s.tdKey1, s.tdKey2, s.tdKey3].filter(Boolean);
+async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
 }
-
-function nextTdKey() {
-  if (!tdKeys.length) return '';
-  const key = tdKeys[tdKeyIdx % tdKeys.length];
-  tdKeyIdx++;
-  return key;
-}
-
-async function fetchTD() {
-  if (!tdKeys.length) await loadTdKeys();
-  if (!tdKeys.length) {
-    const msg = '<div class="placeholder" style="font-size:12px;line-height:2">請至管理後台<br>「系統設定」填入<br>Twelve Data API Key</div>';
-    document.getElementById('stockCol0').innerHTML = msg;
-    document.getElementById('stockCol1').innerHTML = '';
-    return;
-  }
-
-  // 把所有 symbol 依 key 數量均分，每批同時送出
-  const allSyms = [...STOCKS.map(s => s.sym), ...COMMODITIES.map(c => c.sym)];
-  const n = tdKeys.length;
-  const batches = tdKeys.map((key, i) => ({
-    key,
-    syms: allSyms.slice(
-      Math.floor(i * allSyms.length / n),
-      Math.floor((i + 1) * allSyms.length / n)
-    ),
-  })).filter(b => b.syms.length);
-
-  try {
-    const results = await Promise.all(batches.map(({ key, syms }) =>
-      fetch(`https://api.twelvedata.com/quote?symbol=${syms.join(',')}&apikey=${key}`)
-        .then(r => r.json())
-        .then(data => ({ data, syms }))
-    ));
-
-    stockData = {}; commodityData = {};
-    results.forEach(({ data, syms }) => {
-      if (data.code) return;
-      const isMulti = !data.symbol;
-      syms.forEach(sym => {
-        const q = isMulti ? data[sym] : (data.symbol === sym ? data : null);
-        if (!q || q.code || q.close == null) return;
-        const entry = { price: parseFloat(q.close), chg: parseFloat(q.percent_change) };
-        if (STOCKS.find(s => s.sym === sym))      stockData[sym]     = entry;
-        if (COMMODITIES.find(c => c.sym === sym)) commodityData[sym] = entry;
-      });
-    });
-    renderStocks(); renderAssets();
-  } catch(e) {
-    document.getElementById('stockCol0').innerHTML =
-      `<div class="placeholder" style="font-size:11px">TD Error: ${e.message}</div>`;
-    document.getElementById('stockCol1').innerHTML = '';
-  }
-}
-
-function renderStocks() {
-  const open = openSet();
-  function makeRow(s) {
-    const on    = open.has(s.mkt);
-    const d     = stockData[s.sym];
-    const price = d ? fmtNum(d.price, d.price > 999 ? 0 : 2) : '—';
-    const pct   = d ? d.chg : null;
-    const cls   = chgClass(pct);
-    const glow  = on && d ? `box-shadow:0 0 10px ${s.color}55;border:1px solid ${s.color}33` : '';
-    return `<div class="row${on?' open':''}" style="${glow}">
-      <div class="stock-dot" style="background:${on?s.color:'rgba(255,255,255,.15)'}${on?';box-shadow:0 0 5px '+s.color:''}"></div>
-      <div class="lbl stock-lbl"><div>${s.name}</div><div class="stock-name">${s.sub}</div></div>
-      <div class="val">${price}</div>
-      <div class="chg ${cls}">${chgTxt(pct)}</div>
-      ${!on ? '<div class="closed-tag">休市</div>' : ''}
-    </div>`;
-  }
-  const ph = '<div class="placeholder">連線中…</div>';
-  const c0 = STOCKS.filter(s => s.col === 0).map(makeRow).join('');
-  const c1 = STOCKS.filter(s => s.col === 1).map(makeRow).join('');
-  document.getElementById('stockCol0').innerHTML = c0 || ph;
-  document.getElementById('stockCol1').innerHTML = c1 || ph;
-}
-
-/* ══════════════════════════════════════════
-   虛擬貨幣（CoinGecko）+ 大宗商品合併渲染
-══════════════════════════════════════════ */
-let cryptoData = {};
-
-async function fetchCrypto() {
-  const ids = CRYPTO.map(c => c.id).join(',');
-  try {
-    const r = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
-    if (!r.ok) throw new Error();
-    cryptoData = await r.json();
-  } catch(e) {}
-  renderAssets();
-}
-
-function renderAssets() {
-  let html = '';
-
-  // 大宗商品
-  const commHtml = COMMODITIES.map(c => {
-    const d   = commodityData[c.sym];
-    const pct = d ? d.chg : null;
-    const cls = chgClass(pct);
-    const price = d ? '$' + fmtNum(d.price, c.dec) : '—';
-    return `<div class="row">
-      <div class="crypto-icon">${c.icon}</div>
-      <div class="lbl crypto-lbl">${c.name}</div>
-      <div class="val">${price}</div>
-      <div class="chg ${cls}">${chgTxt(pct)}</div>
-    </div>`;
-  }).join('');
-  if (commHtml) html += '<div class="asset-sep">大宗商品</div>' + commHtml;
-
-  // 虛擬貨幣
-  const cryptoHtml = CRYPTO.map(c => {
-    const d   = cryptoData[c.id];
-    const usd = d?.usd;
-    const chg = d?.usd_24h_change;
-    const cls = chgClass(chg);
-    let disp = usd == null ? '—' : usd >= 1000 ? '$'+fmtNum(usd,0) : usd >= 1 ? '$'+fmtNum(usd,2) : '$'+usd.toFixed(5);
-    return `<div class="row">
-      <div class="crypto-icon">${c.icon}</div>
-      <div class="lbl crypto-lbl">${c.sym}</div>
-      <div class="val">${disp}</div>
-      <div class="chg ${cls}">${chgTxt(chg)}</div>
-    </div>`;
-  }).join('');
-  if (cryptoHtml) html += '<div class="asset-sep">虛擬貨幣</div>' + cryptoHtml;
-
-  document.getElementById('cryptoList').innerHTML = html || '<div class="placeholder">連線中…</div>';
-}
-
-/* ══════════════════════════════════════════
-   初始化
-══════════════════════════════════════════ */
-setInterval(renderClocks, 1000); renderClocks();
-setInterval(() => { renderSession(); renderStocks(); }, 60000); renderSession();
-setInterval(fetchForex,  10*60*1000); fetchForex();
-setInterval(fetchTD, 8*60*1000); fetchTD();
-setInterval(fetchCrypto,  3*60*1000); fetchCrypto();
-
-// 管理後台儲存 settings 後立即重載 key 並更新
-if (window.api) {
-  window.api.on('settings:updated', async () => {
-    await loadTdKeys(); tdKeyIdx = 0; fetchTD();
-  });
-}
+init();
 </script>
 </body>
 </html>
