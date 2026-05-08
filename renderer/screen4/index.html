@@ -185,7 +185,6 @@ function applyBg(m) {
   clearFx();
   document.getElementById('bg').style.background = BG[m] || BG.default;
   if (m==='clear') startSun();
-  else if (m==='clouds') startClouds();
   else if (m==='rain') startRain(true);
   else if (m==='drizzle') startRain(false);
   else if (m==='snow') startSnow();
