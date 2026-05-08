@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
@@ -17,19 +17,6 @@ body {
   user-select: none;
 }
 
-/* Header */
-.header {
-  background: linear-gradient(135deg,#04111f 0%,#072340 100%);
-  border-bottom: 3px solid var(--accent);
-  padding: 18px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-.logo { font-size:40px; font-weight:900; letter-spacing:8px; color:#fff; }
-.logo span { color:var(--accent); }
-
 /* Slide area */
 .slides { flex:1; position:relative; overflow:hidden; }
 .slide {
@@ -44,7 +31,7 @@ body {
 }
 .slide.active { opacity:1; }
 
-.slide-inner { max-width: 1200px; text-align: center; }
+.slide-inner { max-width: 1200px; text-align: center; width: 100%; }
 .slide-badge {
   display: inline-block;
   padding: 10px 24px;
@@ -74,6 +61,20 @@ body {
   color: rgba(255,255,255,.8);
 }
 .slide-date { margin-top: 40px; font-size:24px; color:rgba(255,255,255,.35); }
+
+/* 圖片區塊 */
+.slide-img-wrap {
+  margin-top: 28px;
+  display: flex;
+  justify-content: center;
+}
+.slide-img-wrap img {
+  max-width: 80%;
+  max-height: 35vh;
+  border-radius: 16px;
+  object-fit: contain;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
 
 /* Dots */
 .dots {
@@ -123,10 +124,6 @@ body {
 </style>
 </head>
 <body>
-
-<header class="header">
-  <div class="logo" id="communityName"><span>幸福</span>社區公告</div>
-</header>
 
 <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
 <div class="slides" id="slides"></div>
@@ -180,11 +177,15 @@ function render() {
 
   slidesEl.innerHTML = active.map((a,i) => {
     const type = a.type||'general';
+    const imgHtml = a.imageUrl
+      ? `<div class="slide-img-wrap"><img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.parentNode.style.display='none'"></div>`
+      : '';
     return `<div class="slide${i===0?' active':''}" data-i="${i}">
       <div class="slide-inner">
         <div class="slide-badge badge-${type}">${TYPE_LABEL[type]||'公告'}</div>
         <div class="slide-title">${esc(a.title)}</div>
-        <div class="slide-body">${esc(a.content)}</div>
+        <div class="slide-body">${a.content||''}</div>
+        ${imgHtml}
         <div class="slide-date">${a.date||''}</div>
       </div>
     </div>`;
@@ -225,14 +226,12 @@ function renderMarquee() {
 
 async function init() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
-  const [ann, sett] = await Promise.all([window.api.get('announcements'), window.api.get('settings')]);
+  const [ann] = await Promise.all([window.api.get('announcements')]);
   data = ann;
-  if (sett.communityName) document.getElementById('communityName').innerHTML = `<span>${sett.communityName.slice(0,2)}</span>${sett.communityName.slice(2)}公告`;
   render(); renderMarquee();
 }
 
 window.api.on('announcements:updated', d=>{ data=d; render(); renderMarquee(); });
-window.api.on('settings:updated', s=>{ if(s.communityName) document.getElementById('communityName').innerHTML=`<span>${s.communityName.slice(0,2)}</span>${s.communityName.slice(2)}公告`; });
 
 init();
 </script>
