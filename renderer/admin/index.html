@@ -438,8 +438,27 @@ function clearAnnImage() {
   if (fileInput) fileInput.value = '';
 }
 
+/* fontSize 用 em 對應表，讓 admin 編輯和 screen2 顯示比例一致 */
+var FONT_SIZE_MAP = { '2':'0.65em', '3':'1em', '4':'1.45em', '5':'1.95em', '6':'2.6em' };
+
 function fmt(cmd, val) {
-  document.getElementById('annContent').focus();
+  var editor = document.getElementById('annContent');
+  editor.focus();
+
+  if (cmd === 'fontSize') {
+    /* 用 size="7" 當暫存標記（不太可能已存在），之後立刻換成 span+em */
+    document.execCommand('fontSize', false, '7');
+    var fonts = editor.querySelectorAll('font[size="7"]');
+    var emSize = FONT_SIZE_MAP[val] || '1em';
+    fonts.forEach(function(font) {
+      var span = document.createElement('span');
+      span.style.fontSize = emSize;
+      while (font.firstChild) span.appendChild(font.firstChild);
+      font.parentNode.replaceChild(span, font);
+    });
+    return;
+  }
+
   document.execCommand(cmd, false, val || null);
 }
 
@@ -469,12 +488,12 @@ function openAnnModal(id) {
         '<button onclick="fmt(\'italic\')" title="斜體"><i>I</i></button>'+
         '<div class="tb-sep"></div>'+
         '<select onchange="fmt(\'fontSize\',this.value);this.selectedIndex=0" title="字體大小">'+
-          '<option value="">大小</option>'+
-          '<option value="2">小</option>'+
-          '<option value="3">中</option>'+
-          '<option value="4">大</option>'+
-          '<option value="5">特大</option>'+
-          '<option value="6">超大</option>'+
+          '<option value="">字級</option>'+
+          '<option value="2">小（0.65×）</option>'+
+          '<option value="3">中（預設）</option>'+
+          '<option value="4">大（1.45×）</option>'+
+          '<option value="5">特大（1.95×）</option>'+
+          '<option value="6">超大（2.6×）</option>'+
         '</select>'+
         '<div class="tb-sep"></div>'+
         '<input type="color" id="txtColor" value="#ffffff" title="文字顏色" onchange="fmt(\'foreColor\',this.value)">'+
