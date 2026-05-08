@@ -20,8 +20,8 @@ body {
 .layout { position: relative; z-index: 10; height: 100vh; display: flex; flex-direction: column; padding: 24px 52px 16px; gap: 10px; }
 
 /* 頂列 */
-.topbar { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.city { font-size: 54px; font-weight: 900; letter-spacing: 8px; text-shadow: 0 4px 24px rgba(0,0,0,.7); }
+.topbar { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; position: relative; }
+.city { position: absolute; left: 50%; transform: translateX(-50%); font-size: 54px; font-weight: 900; letter-spacing: 8px; text-shadow: 0 4px 24px rgba(0,0,0,.7); white-space: nowrap; }
 .live-badge { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,.45); padding: 8px 22px; border-radius: 30px; border: 1px solid rgba(255,255,255,.12); font-size: 14px; letter-spacing: 2px; }
 .live-dot { width: 9px; height: 9px; border-radius: 50%; background: #00d4ff; box-shadow: 0 0 10px #00d4ff; animation: pulse 2s infinite; }
 @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.5)} }
@@ -86,6 +86,18 @@ function tick() {
     String(n.getMinutes()).padStart(2,'0') + ':' + String(n.getSeconds()).padStart(2,'0');
 }
 setInterval(tick, 1000);
+
+/* ── 城市中文對照 ── */
+const CITY_ZH = {
+  'Taichung':'台中','Taipei':'台北','Kaohsiung':'高雄','Tainan':'台南',
+  'Hsinchu':'新竹','Keelung':'基隆','Taoyuan':'桃園','Hualien':'花蓮',
+  'Yilan':'宜蘭','Pingtung':'屏東','Chiayi':'嘉義','Changhua':'彰化',
+  'Nantou':'南投','Miaoli':'苗栗','Yunlin':'雲林','Taitung':'台東',
+  'Tokyo':'東京','Osaka':'大阪','Kyoto':'京都','Seoul':'首爾',
+  'Beijing':'北京','Shanghai':'上海','Hong Kong':'香港',
+  'Singapore':'新加坡','New York':'紐約','London':'倫敦',
+  'Paris':'巴黎','Sydney':'雪梨','Los Angeles':'洛杉磯',
+};
 
 /* ── 常數 ── */
 const ICONS = {
@@ -342,8 +354,8 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
 
   document.getElementById('layout').innerHTML = `
     <div class="topbar">
-      <div class="city">${cur.name}</div>
       <div class="live-badge"><span class="live-dot"></span>&nbsp;LIVE WEATHER</div>
+      <div class="city">${CITY_ZH[cur.name] || cur.name}</div>
       <div class="clock" id="clockEl">--:--:--</div>
     </div>
     <div class="current">
@@ -402,10 +414,17 @@ async function fetchWeather() {
     if (!cRes.ok) throw new Error(cur.message || 'API error');
     const fc  = await fRes.json();
     const now = Date.now() / 1000;
-    const pts = (fc.list||[]).filter(d=>d.dt>=now-1800).slice(0,9).map(d=>{
+    const nowH = new Date();
+    const currentPt = {
+      time: String(nowH.getHours()).padStart(2,'0') + ':' + String(nowH.getMinutes()).padStart(2,'0'),
+      temp: cur.main.temp,
+      pop: 0
+    };
+    const futurePts = (fc.list||[]).filter(d=>d.dt>now).slice(0,8).map(d=>{
       const h=new Date(d.dt*1000);
       return { time:String(h.getHours()).padStart(2,'0')+':00', temp:d.main.temp, pop:d.pop||0 };
     });
+    const pts = [currentPt, ...futurePts];
     const fcTemps = pts.map(d=>d.temp);
     const dayHigh = fcTemps.length ? Math.round(Math.max(...fcTemps)) : Math.round(cur.main.temp_max);
     const dayLow  = fcTemps.length ? Math.round(Math.min(...fcTemps)) : Math.round(cur.main.temp_min);
