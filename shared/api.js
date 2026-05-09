@@ -16,7 +16,7 @@
       meetingsUrl: '', meetingsZoom: 1.0,
       adminPassword: 'admin', adminPort: 8080,
       windows: [
-        { id: 'screen1', title: '公告欄 A',      enabled: true  },
+        { id: 'screen1', title: '大廳公佈欄',      enabled: true  },
         { id: 'screen2', title: '公告欄 B',       enabled: true  },
         { id: 'screen3', title: '全球市場儀表板',   enabled: true  },
         { id: 'screen4', title: '即時天氣',       enabled: true  },
