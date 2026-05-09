@@ -763,7 +763,7 @@ function saveMarquee() {
 /* ── GitHub 備份 ─────────────────────────────────────────────────────── */
 function setGhStatus(state, msg) {
   var el=$('ghStatus'); if(!el) return;
-  var colors={idle:'var(--text2)', ok:'var(--green)', err:'var(--red)', busy:'var(--orange)'};
+  var colors={idle:'var(--text2)', ok:'var(--green)', err:'var(--red)', busy:'var(--orange)', warn:'#f59e0b'};
   el.style.color = colors[state]||colors.idle;
   el.textContent = msg||'';
 }
@@ -807,7 +807,11 @@ function doForceRestore() {
 }
 
 function triggerBackup() {
-  if(!window.ghBackup.token()) return;
+  if(!window.ghBackup.token()){
+    setGhStatus('warn','⚠️ 未設定 GitHub Token，資料僅存本機');
+    toast('⚠️ 未設定 GitHub Token，公告只存在這台電腦','warning');
+    return;
+  }
   window.ghBackup.save().then(function(r){
     if(r.ok) setGhStatus('ok','✅ 自動備份：'+new Date().toLocaleTimeString('zh-TW'));
     else      setGhStatus('err','❌ 自動備份失敗');
