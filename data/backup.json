@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-08T04:02:24.992Z",
+  "_savedAt": "2026-05-09T00:37:03.733Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -103,6 +103,16 @@
       {
         "id": "screen9",
         "title": "YouTube 頻道 2",
+        "enabled": true
+      },
+      {
+        "id": "screen10",
+        "title": "樓層告示牌 A",
+        "enabled": true
+      },
+      {
+        "id": "screen11",
+        "title": "樓層告示牌 B",
         "enabled": true
       }
     ],
