@@ -1,54 +1,11 @@
 {
-  "_savedAt": "2026-05-08T04:02:24.992Z",
+  "_savedAt": "2026-05-09T00:31:59.850Z",
   "announcements": {
-    "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
-    "list": [
-      {
-        "id": 1778209754072,
-        "title": "電梯宣導公告",
-        "type": "notice",
-        "duration": 10,
-        "content": "為提升電梯運輸效率，發揮空間效益，請業戶多加配合:\n1.<b><font color=\"#ff0000\">尖峰時段</font></b>請將後背包改為手拿。\n2.請依樓層<b><font color=\"#f90101\">正向搭乘</font></b>，勿反向提早佔位。\n3.使用手推車時請搭乘貨梯，以免磕碰電梯內鏡面及裝潢。",
-        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778212393540_1141219_______1.jpg",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
-        "date": "2026-05-08"
-      },
-      {
-        "id": 1778209574853,
-        "title": "大樓公共管道重要公告",
-        "type": "notice",
-        "duration": 10,
-        "content": "近日大樓發生污水管堵塞回冒之情事，造成部分業戶財務損失，敬請各位業戶發揮公德心，請勿將<span style=\"font-size: 1.45em;\"><b style=\"\"><font color=\"#fb0404\">非衛生紙外之所有物品(面紙、濕紙巾、衛生棉...等)</font></b></span>丟入馬桶，以維護大樓公共管路暢通。",
-        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778212433162_1141104_______1.jpg",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
-        "date": "2026-05-08"
-      },
-      {
-        "id": 1778209379729,
-        "title": "梯間禁丟雜物",
-        "type": "notice",
-        "duration": 10,
-        "content": "各位業戶若有需要丟棄的辦公桌椅、行李箱、木製品、傢俱、保麗龍...等不可回收之廢棄物，請與櫃檯聯繫，櫃檯將請清運廠商報價，確認後方可於約定時間放置於貨梯間。<b><font color=\"#fc0303\">(裝潢廢棄物需自行處理)</font></b>。\n請勿擅自丟棄於公共空間，以免影響大樓整體品質。造成您的不便，敬請見諒。",
-        "imageUrl": "",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
-        "date": "2026-05-08"
-      }
-    ]
+    "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔，祝您工作愉快",
+    "list": []
   },
   "settings": {
-    "communityName": "親家市政廣場管理委員會",
+    "communityName": "親家市政廣場",
     "weatherApiKey": "607d88654e58cfcf43fd1727e364342e",
     "weatherCity": "Taichung",
     "newsEnabled": false,
@@ -103,6 +60,16 @@
       {
         "id": "screen9",
         "title": "YouTube 頻道 2",
+        "enabled": true
+      },
+      {
+        "id": "screen10",
+        "title": "樓層告示牌 A",
+        "enabled": true
+      },
+      {
+        "id": "screen11",
+        "title": "樓層告示牌 B",
         "enabled": true
       }
     ],
