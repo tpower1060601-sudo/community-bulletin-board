@@ -2,388 +2,328 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>親家市政廣場｜大廳主看板</title>
+<title>親家市政廣場｜大廳公佈欄</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
   --gold:  #f59e0b;
   --gold2: #fcd34d;
   --bg:    #020617;
-  --card:  rgba(15,25,50,0.85);
-  --border:rgba(245,158,11,0.18);
-  --text:  #f1f5f9;
-  --dim:   rgba(241,245,249,0.55);
-  --red:   #ef4444;
+  --white: #ffffff;
+  --dim:   rgba(255,255,255,0.75);
 }
 
 html, body {
-  width: 1920px; height: 1080px;
-  overflow: hidden;
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif;
-  user-select: none;
+  width:1920px; height:1080px;
+  overflow:hidden;
+  background:var(--bg);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif;
+  user-select:none;
 }
 
-/* ── 動態背景 ── */
-body::before {
-  content:'';
+/* ══════════════════════════════
+   全螢幕照片輪播背景
+══════════════════════════════ */
+#bg-container {
   position:fixed; inset:0; z-index:0;
+}
+.bg-slide {
+  position:absolute; inset:0;
+  background-size:cover;
+  background-position:center;
+  opacity:0;
+  transition:opacity 1.8s ease;
+}
+.bg-slide.active { opacity:1; }
+
+/* Ken Burns 動畫 */
+.bg-slide.active .bg-img {
+  animation: kenburns 18s ease-in-out forwards;
+}
+@keyframes kenburns {
+  0%   { transform:scale(1.0) translate(0,0); }
+  100% { transform:scale(1.12) translate(-2%,-1%); }
+}
+.bg-slide.alt.active .bg-img {
+  animation: kenburns2 18s ease-in-out forwards;
+}
+@keyframes kenburns2 {
+  0%   { transform:scale(1.0) translate(0,0); }
+  100% { transform:scale(1.12) translate(2%,1%); }
+}
+.bg-img {
+  width:100%; height:100%;
+  object-fit:cover; display:block;
+}
+
+/* 暗色遮罩層 */
+#overlay {
+  position:fixed; inset:0; z-index:1;
   background:
-    radial-gradient(ellipse 60% 80% at 0% 50%, rgba(30,58,138,0.22) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 60% at 100% 0%, rgba(245,158,11,0.06) 0%, transparent 55%);
+    linear-gradient(to bottom,
+      rgba(0,0,0,0.70) 0%,
+      rgba(0,0,0,0.15) 25%,
+      rgba(0,0,0,0.10) 60%,
+      rgba(0,0,0,0.75) 100%
+    );
+}
+
+/* ══════════════════════════════
+   頂部欄  (高度 120px)
+══════════════════════════════ */
+#topbar {
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  height:120px;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 60px;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.80) 0%, transparent 100%);
+}
+
+.brand { display:flex; align-items:center; gap:22px; }
+.brand-icon {
+  width:72px; height:72px;
+  background:linear-gradient(135deg,var(--gold),#92400e);
+  border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:36px;
+  box-shadow:0 0 24px rgba(245,158,11,0.4);
+  flex-shrink:0;
+}
+.brand-name {
+  font-size:46px; font-weight:900;
+  letter-spacing:8px; color:#fff;
+  text-shadow:0 2px 20px rgba(0,0,0,0.8), 0 0 30px rgba(245,158,11,0.3);
+  line-height:1;
+}
+.brand-sub {
+  font-size:18px; letter-spacing:5px;
+  color:var(--gold); margin-top:6px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.8);
+}
+
+.clock-area { text-align:right; }
+.clock {
+  font-size:80px; font-weight:900;
+  font-variant-numeric:tabular-nums;
+  color:var(--gold);
+  text-shadow:0 0 30px rgba(245,158,11,0.5), 0 2px 12px rgba(0,0,0,0.9);
+  line-height:1;
+}
+.date-str {
+  font-size:22px; color:rgba(255,255,255,0.8);
+  letter-spacing:4px; margin-top:4px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.8);
+}
+
+/* ══════════════════════════════
+   中央公告區
+══════════════════════════════ */
+#ann-area {
+  position:fixed; z-index:15;
+  top:140px; left:80px; right:80px; bottom:160px;
+  display:flex; align-items:center; justify-content:center;
   pointer-events:none;
 }
 
-/* ══════════════════════════
-   HEADER  (110px)
-══════════════════════════ */
-.header {
-  position: relative; z-index: 10;
-  height: 110px;
-  background: rgba(2,6,23,0.92);
-  backdrop-filter: blur(20px);
-  border-bottom: 2px solid var(--gold);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 48px;
-  box-shadow: 0 4px 40px rgba(0,0,0,0.6);
-  flex-shrink: 0;
+/* 公告卡片 */
+.ann-card {
+  position:absolute; inset:0;
+  display:flex; gap:0;
+  opacity:0; transition:opacity 1.2s ease;
+  pointer-events:none;
+}
+.ann-card.active { opacity:1; }
+
+/* 有圖版：左圖右文 */
+.ac-img {
+  width:780px; flex-shrink:0; border-radius:20px 0 0 20px; overflow:hidden;
+  box-shadow:0 0 60px rgba(0,0,0,0.7);
+}
+.ac-img img {
+  width:100%; height:100%; object-fit:cover;
+  transition:transform 12s ease-in-out;
+}
+.ann-card.active .ac-img img { transform:scale(1.07); }
+
+.ac-body {
+  flex:1;
+  background:rgba(2,6,23,0.88);
+  backdrop-filter:blur(16px);
+  border:1px solid rgba(245,158,11,0.25);
+  border-left:none;
+  border-radius:0 20px 20px 0;
+  padding:60px 70px;
+  display:flex; flex-direction:column; justify-content:center;
+  box-shadow:0 0 60px rgba(0,0,0,0.7);
 }
 
-.brand { display:flex; align-items:center; gap:18px; }
-.brand-icon {
-  width: 68px; height: 68px;
-  background: linear-gradient(135deg,var(--gold),#b45309);
-  border-radius: 18px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 34px;
-  box-shadow: 0 0 22px rgba(245,158,11,0.35);
-  flex-shrink: 0;
-}
-.brand-text {}
-.brand-name {
-  font-size: 38px; font-weight: 900;
-  letter-spacing: 6px; color: #fff;
-  text-shadow: 0 0 20px rgba(245,158,11,0.4);
-  line-height: 1.1;
-}
-.brand-sub {
-  font-size: 14px; letter-spacing: 5px;
-  color: var(--gold); margin-top: 4px;
+/* 無圖版：純文字寬卡 */
+.ac-body-full {
+  width:1400px;
+  background:rgba(2,6,23,0.88);
+  backdrop-filter:blur(16px);
+  border:1px solid rgba(245,158,11,0.25);
+  border-radius:20px;
+  padding:70px 100px;
+  display:flex; flex-direction:column; justify-content:center;
+  box-shadow:0 0 60px rgba(0,0,0,0.7);
 }
 
-.clock-area { text-align: right; }
-.clock {
-  font-size: 62px; font-weight: 900;
-  font-variant-numeric: tabular-nums;
-  color: var(--gold);
-  text-shadow: 0 0 28px rgba(245,158,11,0.5);
-  line-height: 1;
+.ac-tag {
+  display:inline-flex; align-items:center; gap:10px;
+  background:rgba(245,158,11,0.12);
+  border:1px solid rgba(245,158,11,0.35);
+  border-radius:6px; padding:6px 20px;
+  font-size:18px; letter-spacing:5px; color:var(--gold);
+  margin-bottom:28px; width:fit-content;
 }
-.date-str {
-  font-size: 18px; color: var(--dim);
-  letter-spacing: 3px; margin-top: 5px;
+.ac-title {
+  font-size:64px; font-weight:900; color:#fff;
+  letter-spacing:4px; line-height:1.25;
+  margin-bottom:30px;
+  text-shadow:0 2px 10px rgba(0,0,0,0.5);
 }
+.ac-content {
+  font-size:34px; color:rgba(255,255,255,0.85);
+  letter-spacing:2px; line-height:1.9;
+  overflow:hidden;
+}
+.ac-dots {
+  display:flex; gap:12px; margin-top:40px;
+}
+.ac-dot {
+  width:10px; height:10px; border-radius:50%;
+  background:rgba(255,255,255,0.2); transition:all .4s;
+}
+.ac-dot.active { width:32px; border-radius:5px; background:var(--gold); }
 
-/* ══════════════════════════
-   MAIN AREA  (898px)
-══════════════════════════ */
-.main-area {
-  position: relative; z-index: 5;
-  height: 898px;
-  display: flex;
-  flex-shrink: 0;
+/* ══════════════════════════════
+   建案大字（無公告時）
+══════════════════════════════ */
+#identity-area {
+  position:fixed; z-index:14;
+  bottom:180px; left:0; right:0;
+  text-align:center;
+  pointer-events:none;
 }
+.id-main {
+  font-size:100px; font-weight:900;
+  letter-spacing:16px; color:#fff;
+  text-shadow:0 4px 30px rgba(0,0,0,0.8), 0 0 60px rgba(245,158,11,0.3);
+  line-height:1.1;
+  opacity:0; transition:opacity 1s ease;
+}
+.id-sub {
+  font-size:32px; letter-spacing:10px;
+  color:var(--gold);
+  text-shadow:0 2px 12px rgba(0,0,0,0.8);
+  margin-top:14px;
+  opacity:0; transition:opacity 1s ease 0.3s;
+}
+#identity-area.show .id-main,
+#identity-area.show .id-sub { opacity:1; }
 
-/* ── 左側資訊面板 (380px) ── */
-.left-panel {
-  width: 380px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 32px 28px;
-  gap: 0;
-  background: rgba(2,6,23,0.5);
-}
-
-.lp-logo {
-  text-align: center;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--border);
-}
-.lp-logo-icon { font-size: 52px; filter: drop-shadow(0 0 12px rgba(245,158,11,0.4)); }
-.lp-logo-name {
-  font-size: 22px; font-weight: 900; letter-spacing: 4px;
-  color: var(--gold); margin-top: 8px;
-}
-.lp-logo-en {
-  font-size: 11px; letter-spacing: 4px; color: var(--dim);
-  margin-top: 3px; text-transform: uppercase;
-}
-
-.lp-stats {
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 14px; padding: 22px 0;
-  border-bottom: 1px solid var(--border);
-}
-.stat-item { text-align: center; }
-.stat-val {
-  font-size: 30px; font-weight: 900;
-  color: var(--gold2); line-height: 1;
-}
-.stat-unit { font-size: 13px; color: var(--dim); margin-left: 2px; }
-.stat-key  { font-size: 12px; color: var(--dim); letter-spacing: 2px; margin-top: 3px; }
-
-.lp-address {
-  padding: 18px 0;
-  border-bottom: 1px solid var(--border);
-}
-.lp-section-title {
-  font-size: 11px; letter-spacing: 4px; color: var(--gold);
-  text-transform: uppercase; margin-bottom: 8px;
-}
-.lp-addr-text {
-  font-size: 15px; color: var(--text); letter-spacing: 1px; line-height: 1.8;
-}
-
-.lp-features {
-  padding: 18px 0;
-  flex: 1;
-}
-.feature-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 6px 0;
-  font-size: 14px; color: var(--dim);
-  border-bottom: 1px solid rgba(255,255,255,0.04);
-}
-.feature-item:last-child { border-bottom: none; }
-.fi-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--gold); flex-shrink: 0;
-  box-shadow: 0 0 6px rgba(245,158,11,0.6);
-}
-
-.lp-complete {
-  margin-top: auto;
-  text-align: center;
-  font-size: 12px; color: rgba(255,255,255,0.2);
-  letter-spacing: 3px; padding-top: 12px;
-}
-
-/* ── 中央公告區 (flex 1) ── */
-.center-panel {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
-}
-
-/* 公告投影片 */
-.ann-slide {
-  position: absolute; inset: 0;
-  display: flex;
-  opacity: 0;
-  transition: opacity 1s ease;
-  pointer-events: none;
-}
-.ann-slide.active { opacity: 1; }
-
-/* 有圖片版型 */
-.ann-img-wrap {
-  width: 560px; flex-shrink: 0;
-  overflow: hidden;
-}
-.ann-img-wrap img {
-  width: 100%; height: 100%; object-fit: cover;
-  transition: transform 12s ease-in-out;
-}
-.ann-slide.active .ann-img-wrap img { transform: scale(1.06); }
-
-.ann-content {
-  flex: 1;
-  display: flex; flex-direction: column; justify-content: center;
-  padding: 60px 64px;
-}
-.ann-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: rgba(245,158,11,0.1);
-  border: 1px solid rgba(245,158,11,0.3);
-  border-radius: 4px; padding: 4px 14px;
-  font-size: 12px; letter-spacing: 3px; color: var(--gold);
-  margin-bottom: 20px; width: fit-content;
-}
-.ann-title {
-  font-size: 36px; font-weight: 900;
-  color: #fff; letter-spacing: 3px;
-  line-height: 1.35; margin-bottom: 24px;
-}
-.ann-body {
-  font-size: 18px; color: var(--dim);
-  line-height: 2; letter-spacing: 1px;
-  max-height: 400px; overflow: hidden;
-}
-.ann-index {
-  margin-top: auto; padding-top: 32px;
-  display: flex; align-items: center; gap: 12px;
-}
-.ann-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  transition: all .4s;
-}
-.ann-dot.active { width: 24px; border-radius: 4px; background: var(--gold); }
-
-/* 純文字版型 (無圖) */
-.ann-noimg {
-  flex: 1; display: flex;
-  flex-direction: column; justify-content: center;
-  padding: 80px 100px;
-}
-
-/* 建案介紹備用投影片 */
-.intro-slide {
-  position: absolute; inset: 0;
-  display: flex; flex-direction: column;
-  justify-content: center; align-items: center;
-  padding: 60px 80px;
-  opacity: 0; transition: opacity 1s ease;
-  pointer-events: none;
-}
-.intro-slide.active { opacity: 1; }
-
-.intro-tag {
-  font-size: 12px; letter-spacing: 6px; color: var(--gold);
-  text-transform: uppercase; margin-bottom: 12px;
-}
-.intro-title {
-  font-size: 48px; font-weight: 900; color: #fff;
-  letter-spacing: 6px; text-align: center;
-  text-shadow: 0 0 30px rgba(245,158,11,0.25);
-  line-height: 1.25;
-}
-.intro-divider {
-  width: 80px; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 28px auto;
-}
-.intro-body {
-  font-size: 20px; color: var(--dim);
-  letter-spacing: 2px; text-align: center;
-  line-height: 2; max-width: 820px;
-}
-.intro-stats {
-  display: flex; gap: 80px; margin-top: 48px;
-}
-.istat { text-align: center; }
-.istat-num {
-  font-size: 60px; font-weight: 900; color: var(--gold);
-  text-shadow: 0 0 20px rgba(245,158,11,0.35);
-  line-height: 1;
-}
-.istat-label { font-size: 14px; color: var(--dim); letter-spacing: 3px; margin-top: 6px; }
-
-.intro-chips {
-  display: flex; flex-wrap: wrap; gap: 14px;
-  justify-content: center; margin-top: 36px;
-}
-.intro-chip {
-  background: rgba(245,158,11,0.08);
-  border: 1px solid rgba(245,158,11,0.22);
-  border-radius: 50px; padding: 10px 24px;
-  font-size: 16px; color: var(--gold2); letter-spacing: 2px;
-}
-
-/* 進度條 (在中央底部) */
-.ann-progress {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 3px; background: rgba(255,255,255,0.06); z-index: 20;
-}
-.ann-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, var(--gold), var(--gold2));
-  width: 0%;
-}
-
-/* ══════════════════════════
-   BOTTOM BAR  (72px)
-══════════════════════════ */
-.bottom-bar {
-  position: relative; z-index: 10;
-  height: 72px; flex-shrink: 0;
-  background: rgba(2,6,23,0.95);
-  border-top: 1px solid rgba(245,158,11,0.2);
-  display: flex; align-items: center;
-  gap: 0;
+/* ══════════════════════════════
+   底部欄  (高度 130px)
+══════════════════════════════ */
+#bottombar {
+  position:fixed; bottom:0; left:0; right:0; z-index:20;
+  height:130px;
+  background:linear-gradient(to top, rgba(0,0,0,0.92) 0%, rgba(0,0,0,0.75) 70%, transparent 100%);
+  display:flex; align-items:center;
+  padding:0 60px; gap:0;
 }
 
 /* 快訊區 */
-.news-section {
-  display: flex; align-items: center;
-  height: 100%; flex-shrink: 0;
-  padding: 0 24px 0 40px; gap: 18px;
-  border-right: 1px solid rgba(255,255,255,0.06);
+.news-zone {
+  display:flex; align-items:center; gap:22px;
+  flex-shrink:0; padding-right:40px;
+  border-right:2px solid rgba(255,255,255,0.12);
 }
 .news-badge {
-  background: var(--red);
-  color: #fff; font-size: 15px; font-weight: 900;
-  letter-spacing: 3px; padding: 5px 16px;
-  border-radius: 4px; flex-shrink: 0;
+  background:#dc2626; color:#fff;
+  font-size:22px; font-weight:900; letter-spacing:4px;
+  padding:8px 22px; border-radius:6px;
+  flex-shrink:0; white-space:nowrap;
 }
 .news-wrap {
-  width: 560px; height: 100%; overflow: hidden;
-  position: relative;
+  width:700px; height:70px; overflow:hidden; position:relative;
 }
 .news-item {
-  position: absolute; inset: 0;
-  display: flex; align-items: center;
-  font-size: 18px; font-weight: 600;
-  color: #fff; letter-spacing: 1px;
-  opacity: 0; transform: translateY(16px);
-  transition: opacity .5s ease, transform .5s ease;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  position:absolute; inset:0;
+  display:flex; align-items:center;
+  font-size:30px; font-weight:700;
+  color:#fff; letter-spacing:2px;
+  opacity:0; transform:translateY(18px);
+  transition:opacity .6s ease, transform .6s ease;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  text-shadow:0 2px 8px rgba(0,0,0,0.8);
 }
 .news-item::before {
-  content: '●'; color: #60a5fa; font-size: 10px;
-  margin-right: 12px; flex-shrink: 0;
+  content:'●'; color:#60a5fa; font-size:14px;
+  margin-right:16px; flex-shrink:0;
 }
 .news-item.active { opacity:1; transform:translateY(0); }
-.news-item.exit   { opacity:0; transform:translateY(-16px); }
+.news-item.exit   { opacity:0; transform:translateY(-18px); }
 
-/* 跑馬燈 */
-.marquee-section {
-  flex: 1; height: 100%; overflow: hidden;
-  display: flex; align-items: center;
-  padding: 0 32px;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 4%, #000 96%, transparent 100%);
+/* 跑馬燈區 */
+.marquee-zone {
+  flex:1; height:70px; overflow:hidden;
+  display:flex; align-items:center;
+  padding:0 40px;
+  mask-image:linear-gradient(90deg,transparent 0%,#000 3%,#000 97%,transparent 100%);
+  -webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 3%,#000 97%,transparent 100%);
 }
 .marquee-track {
-  display: flex; white-space: nowrap;
-  animation: marqueeScroll linear infinite;
+  display:flex; white-space:nowrap;
+  animation:mrun linear infinite;
 }
-@keyframes marqueeScroll {
-  from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+@keyframes mrun { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.m-seg {
+  font-size:30px; font-weight:800;
+  letter-spacing:4px; padding:0 70px;
+  color:var(--gold2);
+  text-shadow:0 2px 8px rgba(0,0,0,0.8);
 }
-.marquee-seg {
-  color: var(--gold2); font-size: 22px; font-weight: 800;
-  letter-spacing: 3px; padding: 0 60px;
+.m-diamond { color:var(--gold); font-size:18px; align-self:center; }
+
+/* ══════════════════════════════
+   進度條
+══════════════════════════════ */
+#pbar-wrap {
+  position:fixed; bottom:130px; left:0; right:0; z-index:21;
+  height:4px; background:rgba(255,255,255,0.08);
 }
-.marquee-diamond {
-  color: var(--gold); font-size: 14px;
-  align-self: center; flex-shrink: 0;
+#pbar {
+  height:100%;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  width:0%;
+  box-shadow:0 0 8px var(--gold);
 }
+
+/* 圖片點指示 */
+#slide-dots {
+  position:fixed; bottom:148px; left:50%; transform:translateX(-50%);
+  display:flex; gap:10px; z-index:21;
+}
+.sdot {
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,0.25); transition:all .4s;
+}
+.sdot.active { width:28px; border-radius:4px; background:var(--gold); }
 </style>
 </head>
 <body>
 
-<!-- ══ HEADER ══ -->
-<header class="header">
+<!-- 背景照片輪播 -->
+<div id="bg-container"></div>
+<div id="overlay"></div>
+
+<!-- 頂部欄 -->
+<div id="topbar">
   <div class="brand">
     <div class="brand-icon">🏢</div>
-    <div class="brand-text">
+    <div>
       <div class="brand-name" id="communityName">親家市政廣場</div>
       <div class="brand-sub">亞太新核心・七期智慧商辦</div>
     </div>
@@ -392,346 +332,275 @@ body::before {
     <div class="clock" id="clock">00:00:00</div>
     <div class="date-str" id="dateStr"></div>
   </div>
-</header>
+</div>
 
-<!-- ══ MAIN ══ -->
-<div class="main-area">
+<!-- 公告區 -->
+<div id="ann-area"></div>
 
-  <!-- 左側：建案資訊 -->
-  <aside class="left-panel">
-    <div class="lp-logo">
-      <div class="lp-logo-icon">🏛</div>
-      <div class="lp-logo-name">親家市政廣場</div>
-      <div class="lp-logo-en">Qinjia City Hall Plaza</div>
-    </div>
+<!-- 無公告時：建案大字 -->
+<div id="identity-area">
+  <div class="id-main" id="communityName2">親家市政廣場</div>
+  <div class="id-sub">台中市西屯區・亞太新核心・七期智慧商辦</div>
+</div>
 
-    <div class="lp-stats">
-      <div class="stat-item">
-        <div class="stat-val">28<span class="stat-unit">F</span></div>
-        <div class="stat-key">樓層規劃</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-val">199<span class="stat-unit">戶</span></div>
-        <div class="stat-key">總　戶　數</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-val">15,899</div>
-        <div class="stat-key">總坪數 (坪)</div>
-      </div>
-      <div class="stat-item">
-        <div class="stat-val">2017</div>
-        <div class="stat-key">完工年份</div>
-      </div>
-    </div>
+<!-- 進度條 & 圖片點 -->
+<div id="pbar-wrap"><div id="pbar"></div></div>
+<div id="slide-dots"></div>
 
-    <div class="lp-address">
-      <div class="lp-section-title">地址</div>
-      <div class="lp-addr-text">
-        台中市西屯區<br>市政北七路 186 號
-      </div>
-    </div>
-
-    <div class="lp-features">
-      <div class="lp-section-title">周邊環境</div>
-      <div class="feature-item"><span class="fi-dot"></span>台中市政府・市議會</div>
-      <div class="feature-item"><span class="fi-dot"></span>藍線・綠線雙捷運</div>
-      <div class="feature-item"><span class="fi-dot"></span>新光三越・大遠百</div>
-      <div class="feature-item"><span class="fi-dot"></span>秋紅谷公園</div>
-      <div class="feature-item"><span class="fi-dot"></span>大都會歌劇院</div>
-      <div class="feature-item"><span class="fi-dot"></span>國道・74號快速道路</div>
-    </div>
-
-    <div class="lp-complete">B7 — 28F　全商辦規劃　2017.03 完工</div>
-  </aside>
-
-  <!-- 中央：公告 / 建案介紹 -->
-  <div class="center-panel" id="centerPanel">
-
-    <!-- 公告投影片（動態填入） -->
-    <div id="annContainer"></div>
-
-    <!-- 建案介紹備用（無公告時顯示） -->
-    <div id="introContainer">
-      <!-- Intro 0: 主標語 -->
-      <div class="intro-slide active" id="intro0">
-        <div class="intro-tag">台中市政府特區・七期重劃區</div>
-        <div class="intro-title">亞太新核心<br>七期智慧商辦</div>
-        <div class="intro-divider"></div>
-        <div class="intro-body">
-          市政北七路直抵權力核心<br>
-          政商雲集・新光三越・大遠百近在咫尺
-        </div>
-        <div class="intro-stats">
-          <div class="istat">
-            <div class="istat-num">28</div>
-            <div class="istat-label">層　樓</div>
-          </div>
-          <div class="istat">
-            <div class="istat-num">199</div>
-            <div class="istat-label">進駐戶數</div>
-          </div>
-          <div class="istat">
-            <div class="istat-num">15,899</div>
-            <div class="istat-label">總坪數</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Intro 1: 地段優勢 -->
-      <div class="intro-slide" id="intro1">
-        <div class="intro-tag">絕佳地段</div>
-        <div class="intro-title">台中六都最具潛力<br>直轄市商辦核心</div>
-        <div class="intro-divider"></div>
-        <div class="intro-body">
-          入主台灣六都最具潛力直轄市<br>
-          台中市政經中心帶動企業遷移<br>
-          形成新的辦公商圈
-        </div>
-        <div class="intro-chips">
-          <div class="intro-chip">🏛 市政府・市議會</div>
-          <div class="intro-chip">🚇 藍綠雙捷</div>
-          <div class="intro-chip">🛣 國道・74快速</div>
-          <div class="intro-chip">✈ 機場・台中港</div>
-        </div>
-      </div>
-
-      <!-- Intro 2: 生活機能 -->
-      <div class="intro-slide" id="intro2">
-        <div class="intro-tag">豐富生活機能</div>
-        <div class="intro-title">工作之餘<br>盡享都市繁華</div>
-        <div class="intro-divider"></div>
-        <div class="intro-chips" style="margin-top:0">
-          <div class="intro-chip">🛍 新光三越</div>
-          <div class="intro-chip">🛍 大遠百</div>
-          <div class="intro-chip">🌳 秋紅谷公園</div>
-          <div class="intro-chip">🎭 大都會歌劇院</div>
-          <div class="intro-chip">🏦 多家銀行進駐</div>
-          <div class="intro-chip">🍽 美食商圈</div>
-        </div>
-        <div class="intro-body" style="margin-top:32px">
-          台中市政府特區生活機能一應俱全<br>
-          讓每一個工作天，都值得期待
-        </div>
-      </div>
-    </div>
-
-    <!-- 進度條 -->
-    <div class="ann-progress"><div class="ann-progress-bar" id="annPbar"></div></div>
-
-  </div><!-- /center-panel -->
-
-</div><!-- /main-area -->
-
-<!-- ══ BOTTOM BAR ══ -->
-<div class="bottom-bar">
-  <div class="news-section">
+<!-- 底部欄 -->
+<div id="bottombar">
+  <div class="news-zone">
     <div class="news-badge">快 訊</div>
     <div class="news-wrap" id="newsWrap"></div>
   </div>
-  <div class="marquee-section">
-    <div class="marquee-track" id="marqueeTrack" style="animation-duration:20s">
-      <span class="marquee-seg" id="mseg1"></span><span class="marquee-diamond">◆</span>
-      <span class="marquee-seg" id="mseg2"></span><span class="marquee-diamond">◆</span>
+  <div class="marquee-zone">
+    <div class="marquee-track" id="mtrack" style="animation-duration:22s">
+      <span class="m-seg" id="mseg1"></span><span class="m-diamond">◆</span>
+      <span class="m-seg" id="mseg2"></span><span class="m-diamond">◆</span>
     </div>
   </div>
 </div>
 
 <script src="../../shared/api.js"></script>
 <script>
+/* ────────────────────────────────────────────────────
+   建案高清照片（chingjia.com 原圖）
+──────────────────────────────────────────────────── */
+const BASE = 'https://www.chingjia.com/';
+const BUILDING_PHOTOS = [
+  'upload/project_more_b/98469d8d5c82e63758e8e382bbfa2db9-20220517160647.jpg',
+  'upload/project_more_b/0f24079666b9e5e934987cf77caa81de-20220517160648.jpg',
+  'upload/project_more_b/f576654784e58dc57f11b80a11325d5f-20220517160649.jpg',
+  'upload/project_more_b/68bc4b6c27c737be9abfb42107b7961a-20220517160650.jpg',
+  'upload/project_more_b/4a20d0d4c5fbf105b10a3c7ffe1b0db7-20220517160651.jpg',
+  'upload/project_more_b/e4960667c83efa20f87111083571a0fe-20220517160652.jpg',
+  'upload/project_more_b/9e523dfebe23b2b8341ecd313cf16361-20220517160653.jpg',
+  'upload/project_more_b/fd82dbb26c7028e0bd6402bc1d4fd257-20220517160654.jpg',
+  'upload/project_more_b/d4d1d529ea10e398af6d8d13ecae3ba4-20220517160654.jpg',
+  'upload/project_more_b/7616900d73568fe05f4ee8dd0931b552-20220517160655.jpg',
+  'upload/project_more_b/263c70f4c291fbcf394e857e2ef9ff94-20220517160656.jpg',
+  'upload/project_more_b/827d34444a1f0014ff0dce2960ffa385-20220517160657.jpg',
+].map(p => BASE + p);
+
 const DAYS = ['日','一','二','三','四','五','六'];
 
-/* ── 時鐘 ── */
-function tick() {
-  const n = new Date();
-  document.getElementById('clock').textContent =
+/* ────────────────────────────────────────────────────
+   時鐘
+──────────────────────────────────────────────────── */
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
     [n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');
-  document.getElementById('dateStr').textContent =
+  document.getElementById('dateStr').textContent=
     `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日　星期${DAYS[n.getDay()]}`;
 }
 setInterval(tick,1000); tick();
 
-/* ── 跑馬燈 ── */
-function setMarquee(text) {
-  const t = text || '歡迎光臨親家市政廣場';
-  document.getElementById('mseg1').textContent = t;
-  document.getElementById('mseg2').textContent = t;
-  const dur = Math.max(18, t.length * 0.45);
-  document.getElementById('marqueeTrack').style.animationDuration = dur + 's';
+/* ────────────────────────────────────────────────────
+   背景照片輪播
+──────────────────────────────────────────────────── */
+let bgIdx=0, bgTimer=null, bgSlides=[], bgInterval=12000;
+const bgContainer = document.getElementById('bg-container');
+const dotsEl = document.getElementById('slide-dots');
+
+function buildBgSlides(photos){
+  bgSlides = photos;
+  bgContainer.innerHTML = photos.map((src,i)=>`
+    <div class="bg-slide${i===0?' active':''}${i%2?' alt':''}" id="bg${i}">
+      <img class="bg-img" src="${src}" alt="" loading="${i<3?'eager':'lazy'}" draggable="false">
+    </div>`).join('');
+  dotsEl.innerHTML = photos.map((_,i)=>`<div class="sdot${i===0?' active':''}"></div>`).join('');
+  bgIdx=0;
+  startBgTimer();
 }
 
-/* ── 快訊 ── */
-let newsTimer=null, newsIdx=0;
-function renderNews(list) {
-  const wrap = document.getElementById('newsWrap');
-  if (!list || !list.length) {
-    wrap.innerHTML = '<div class="news-item active" style="white-space:normal">歡迎蒞臨親家市政廣場，祝您工作愉快！</div>';
-    return;
-  }
-  wrap.innerHTML = list.map((n,i)=>`<div class="news-item${i===0?' active':''}" id="ni${i}">${escHtml(n.title||n)}</div>`).join('');
-  if (newsTimer) clearInterval(newsTimer);
-  newsIdx = 0;
-  newsTimer = setInterval(() => {
-    const prev = document.getElementById('ni'+newsIdx);
-    if(prev){prev.classList.remove('active');prev.classList.add('exit');}
-    newsIdx = (newsIdx+1) % list.length;
-    setTimeout(()=>{
-      if(prev)prev.classList.remove('exit');
-      const next = document.getElementById('ni'+newsIdx);
-      if(next)next.classList.add('active');
-    }, 520);
-  }, 7000);
+function goBg(idx){
+  document.getElementById('bg'+bgIdx)?.classList.remove('active');
+  dotsEl.children[bgIdx]?.classList.remove('active');
+  bgIdx=((idx%bgSlides.length)+bgSlides.length)%bgSlides.length;
+  document.getElementById('bg'+bgIdx)?.classList.add('active');
+  dotsEl.children[bgIdx]?.classList.add('active');
 }
 
-/* ── 公告輪播 ── */
-let annTimer=null, annCurrent=0, annSlides=[], annInterval=10000;
-let useIntro = false;
+function startBgTimer(){
+  if(bgTimer)clearInterval(bgTimer);
+  bgTimer=setInterval(()=>goBg(bgIdx+1), bgInterval);
+}
 
-function buildAnnSlides(list) {
-  const container = document.getElementById('annContainer');
-  if (!list || !list.length) {
-    container.innerHTML = '';
-    useIntro = true;
-    runIntroSlides();
-    return;
-  }
-  useIntro = false;
-  if (annTimer) clearInterval(annTimer);
+/* ────────────────────────────────────────────────────
+   進度條
+──────────────────────────────────────────────────── */
+let pbarDur=12000;
+function resetPbar(dur){
+  pbarDur=dur||pbarDur;
+  const b=document.getElementById('pbar');
+  b.style.transition='none'; b.style.width='0%';
+  requestAnimationFrame(()=>{
+    b.style.transition=`width ${pbarDur}ms linear`;
+    b.style.width='100%';
+  });
+}
 
-  // 停止備用
-  document.querySelectorAll('.intro-slide').forEach(s=>s.classList.remove('active'));
+/* ────────────────────────────────────────────────────
+   公告輪播
+──────────────────────────────────────────────────── */
+let annList=[], annIdx=0, annTimer=null, annInterval=12000;
+let hasAnn=false;
 
-  annSlides = list;
-  container.innerHTML = list.map((ann, i) => {
-    const hasImg = ann.imageUrl || ann.image;
-    const img = hasImg ? (ann.imageUrl || ann.image) : '';
-    if (hasImg) {
-      return `
-        <div class="ann-slide${i===0?' active':''}" id="ann${i}">
-          <div class="ann-img-wrap"><img src="${escAttr(img)}" alt="" loading="lazy"></div>
-          <div class="ann-content">
-            <div class="ann-badge">◆ 社區公告</div>
-            <div class="ann-title">${escHtml(ann.title||'')}</div>
-            <div class="ann-body">${escHtml(ann.content||'').replace(/\n/g,'<br>')}</div>
-            <div class="ann-index" id="annDots${i}"></div>
-          </div>
-        </div>`;
+function renderAnnouncements(list){
+  hasAnn = list && list.length > 0;
+  document.getElementById('ann-area').innerHTML='';
+  document.getElementById('identity-area').classList.toggle('show',!hasAnn);
+
+  if(!hasAnn){ resetPbar(bgInterval); return; }
+
+  annList=list; annIdx=0;
+  document.getElementById('ann-area').innerHTML = list.map((ann,i)=>{
+    const img=ann.imageUrl||ann.image||'';
+    const title=escHtml(ann.title||'');
+    const body=escHtml(ann.content||'').replace(/\n/g,'<br>');
+    const dots=list.map((_,j)=>`<div class="ac-dot${j===0?' active':''}" id="acd_${i}_${j}"></div>`).join('');
+    if(img){
+      return `<div class="ann-card${i===0?' active':''}" id="ac${i}">
+        <div class="ac-img"><img src="${escAttr(img)}" alt="" loading="lazy"></div>
+        <div class="ac-body">
+          <div class="ac-tag">◆ 社區公告</div>
+          <div class="ac-title">${title}</div>
+          <div class="ac-content">${body}</div>
+          <div class="ac-dots">${dots}</div>
+        </div>
+      </div>`;
     } else {
-      return `
-        <div class="ann-slide${i===0?' active':''}" id="ann${i}">
-          <div class="ann-noimg">
-            <div class="ann-badge">◆ 社區公告</div>
-            <div class="ann-title">${escHtml(ann.title||'')}</div>
-            <div class="ann-body">${escHtml(ann.content||'').replace(/\n/g,'<br>')}</div>
-            <div class="ann-index" id="annDots${i}"></div>
-          </div>
-        </div>`;
+      return `<div class="ann-card${i===0?' active':''}" id="ac${i}">
+        <div class="ac-body-full">
+          <div class="ac-tag">◆ 社區公告</div>
+          <div class="ac-title">${title}</div>
+          <div class="ac-content">${body}</div>
+          <div class="ac-dots">${dots}</div>
+        </div>
+      </div>`;
     }
   }).join('');
 
-  // 建立指示點
-  list.forEach((_,i) => {
-    list.forEach((_2, j) => {
-      const d = document.createElement('div');
-      d.className = 'ann-dot' + (j===0?' active':'');
-      d.id = `adot_${i}_${j}`;
-      const dotsEl = document.getElementById('annDots'+i);
-      if(dotsEl) dotsEl.appendChild(d);
-    });
-  });
-
-  annCurrent = 0;
-  startAnnTimer();
+  annIdx=0;
+  resetPbar(annInterval);
+  if(annTimer)clearInterval(annTimer);
+  annTimer=setInterval(nextAnn, annInterval);
 }
 
-function goAnn(idx) {
-  const slides = document.querySelectorAll('.ann-slide');
-  if (!slides.length) return;
-  slides[annCurrent].classList.remove('active');
-  annCurrent = ((idx % annSlides.length) + annSlides.length) % annSlides.length;
-  slides[annCurrent].classList.add('active');
+function nextAnn(){
+  document.getElementById('ac'+annIdx)?.classList.remove('active');
+  const prevIdx=annIdx;
+  annIdx=(annIdx+1)%annList.length;
+  document.getElementById('ac'+annIdx)?.classList.add('active');
   // 更新指示點
-  annSlides.forEach((_,i) => {
-    annSlides.forEach((_2,j) => {
-      const d = document.getElementById(`adot_${i}_${j}`);
-      if(d) d.classList.toggle('active', j === annCurrent);
+  annList.forEach((_,i)=>{
+    annList.forEach((_2,j)=>{
+      const d=document.getElementById(`acd_${i}_${j}`);
+      if(d)d.classList.toggle('active',j===annIdx);
     });
   });
-  resetPbar();
+  resetPbar(annInterval);
 }
 
-function startAnnTimer() {
-  if (annTimer) clearInterval(annTimer);
-  resetPbar();
-  annTimer = setInterval(() => goAnn(annCurrent+1), annInterval);
+/* ────────────────────────────────────────────────────
+   快訊
+──────────────────────────────────────────────────── */
+let newsIdx=0, newsTimer=null;
+function renderNews(list){
+  const wrap=document.getElementById('newsWrap');
+  if(!list||!list.length){
+    wrap.innerHTML='<div class="news-item active">歡迎蒞臨親家市政廣場，祝您工作愉快！</div>';
+    return;
+  }
+  wrap.innerHTML=list.map((n,i)=>`<div class="news-item${i===0?' active':''}" id="ni${i}">${escHtml(n.title||n)}</div>`).join('');
+  if(newsTimer)clearInterval(newsTimer);
+  newsIdx=0;
+  newsTimer=setInterval(()=>{
+    const p=document.getElementById('ni'+newsIdx);
+    if(p){p.classList.remove('active');p.classList.add('exit');}
+    newsIdx=(newsIdx+1)%list.length;
+    setTimeout(()=>{
+      if(p)p.classList.remove('exit');
+      document.getElementById('ni'+newsIdx)?.classList.add('active');
+    },620);
+  },7000);
 }
 
-function resetPbar() {
-  const bar = document.getElementById('annPbar');
-  if (!bar) return;
-  bar.style.transition = 'none'; bar.style.width = '0%';
-  requestAnimationFrame(() => {
-    bar.style.transition = `width ${annInterval}ms linear`;
-    bar.style.width = '100%';
-  });
+/* ────────────────────────────────────────────────────
+   跑馬燈
+──────────────────────────────────────────────────── */
+function setMarquee(text){
+  const t=text||'歡迎光臨親家市政廣場';
+  document.getElementById('mseg1').textContent=t;
+  document.getElementById('mseg2').textContent=t;
+  const dur=Math.max(20,t.length*0.5);
+  document.getElementById('mtrack').style.animationDuration=dur+'s';
 }
 
-/* ── 備用建案介紹輪播 ── */
-let introTimer=null, introCurrent=0;
-const INTRO_IDS = ['intro0','intro1','intro2'];
-function runIntroSlides() {
-  INTRO_IDS.forEach((id,i) => {
-    document.getElementById(id)?.classList.toggle('active', i===0);
-  });
-  introCurrent = 0;
-  resetPbar();
-  if (introTimer) clearInterval(introTimer);
-  introTimer = setInterval(() => {
-    const prev = document.getElementById(INTRO_IDS[introCurrent]);
-    if(prev) prev.classList.remove('active');
-    introCurrent = (introCurrent+1) % INTRO_IDS.length;
-    const next = document.getElementById(INTRO_IDS[introCurrent]);
-    if(next) next.classList.add('active');
-    resetPbar();
-  }, annInterval);
-}
+/* ────────────────────────────────────────────────────
+   工具
+──────────────────────────────────────────────────── */
+function escHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
+function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
 
-/* ── 工具 ── */
-function escHtml(s) {
-  return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
-}
-function escAttr(s){ return String(s||'').replace(/"/g,'&quot;'); }
-
-/* ── 初始化 ── */
-async function init() {
-  if (window.ghBackup) await window.ghBackup.autoRestore();
-  const [ann, sett, news] = await Promise.all([
+/* ────────────────────────────────────────────────────
+   初始化
+──────────────────────────────────────────────────── */
+async function init(){
+  if(window.ghBackup) await window.ghBackup.autoRestore();
+  const [ann,sett,news]=await Promise.all([
     window.api.get('announcements'),
     window.api.get('settings'),
     window.api.get('news')
   ]);
 
-  if (sett.communityName) document.getElementById('communityName').textContent = sett.communityName;
-  annInterval = ((sett.slideInterval || 10) * 1000);
+  if(sett.communityName){
+    document.getElementById('communityName').textContent=sett.communityName;
+    document.getElementById('communityName2').textContent=sett.communityName;
+  }
+
+  annInterval=(sett.slideInterval||12)*1000;
+  bgInterval=annInterval;
+
+  // 合併：建案照片 + 管理後台上傳的圖片
+  const extra=(sett.imageUrls||[]).filter(Boolean);
+  const allPhotos=[...BUILDING_PHOTOS,...extra];
+  buildBgSlides(allPhotos);
 
   setMarquee(ann.marquee);
   renderNews(news);
-  buildAnnSlides(ann.list || []);
+  renderAnnouncements(ann.list||[]);
+
+  // 無公告時顯示身份文字
+  if(!ann.list||!ann.list.length){
+    document.getElementById('identity-area').classList.add('show');
+  }
 }
 
-/* ── 即時更新監聽 ── */
-window.api.on('announcements:updated', ann => {
+/* ────────────────────────────────────────────────────
+   即時更新
+──────────────────────────────────────────────────── */
+window.api.on('announcements:updated',ann=>{
   setMarquee(ann.marquee);
-  buildAnnSlides(ann.list || []);
+  renderAnnouncements(ann.list||[]);
 });
-window.api.on('settings:updated', s => {
-  if (s.communityName) document.getElementById('communityName').textContent = s.communityName;
-  if (s.slideInterval) {
-    annInterval = s.slideInterval * 1000;
-    if (!useIntro) startAnnTimer();
-    else { if(introTimer)clearInterval(introTimer); runIntroSlides(); }
+window.api.on('settings:updated',s=>{
+  if(s.communityName){
+    document.getElementById('communityName').textContent=s.communityName;
+    document.getElementById('communityName2').textContent=s.communityName;
+  }
+  if(s.slideInterval){
+    annInterval=s.slideInterval*1000;
+    bgInterval=annInterval;
+    startBgTimer();
+  }
+  if(s.imageUrls){
+    const extra=(s.imageUrls||[]).filter(Boolean);
+    buildBgSlides([...BUILDING_PHOTOS,...extra]);
   }
 });
-window.api.on('news:updated', n => renderNews(n));
+window.api.on('news:updated',n=>renderNews(n));
 
 init();
 </script>
