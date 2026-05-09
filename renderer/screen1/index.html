@@ -442,6 +442,17 @@ function resetPbar(dur){
 ──────────────────────────────────────────────────── */
 let annList=[], annIdx=0, annTimer=null, annInterval=12000;
 let hasAnn=false;
+let _rawAnnList=[];   // 完整清單（含未到期、已結束），用於排程重新檢查
+
+/* ── 排程過濾 ── */
+function isAnnActive(a){
+  if(a.alwaysValid!==false) return true;
+  const now=Date.now();
+  const start=a.startDate?new Date(a.startDate+'T'+(a.startTime||'00:00')).getTime():0;
+  const end  =a.endDate  ?new Date(a.endDate  +'T'+(a.endTime  ||'23:59:59')).getTime():Infinity;
+  return now>=start && now<=end;
+}
+function filterActive(list){ return (list||[]).filter(isAnnActive); }
 
 function renderAnnouncements(list){
   hasAnn = list && list.length > 0;
@@ -566,12 +577,11 @@ async function init(){
 
   setMarquee(ann.marquee);
   renderNews(news);
-  renderAnnouncements(ann.list||[]);
+  _rawAnnList = ann.list||[];
+  renderAnnouncements(filterActive(_rawAnnList));
 
-  // 無公告時顯示身份文字
-  if(!ann.list||!ann.list.length){
-    document.getElementById('identity-area').classList.add('show');
-  }
+  // 每分鐘重新過濾（自動上下架）
+  setInterval(()=> renderAnnouncements(filterActive(_rawAnnList)), 60000);
 }
 
 /* ────────────────────────────────────────────────────
@@ -579,7 +589,8 @@ async function init(){
 ──────────────────────────────────────────────────── */
 window.api.on('announcements:updated',ann=>{
   setMarquee(ann.marquee);
-  renderAnnouncements(ann.list||[]);
+  _rawAnnList = ann.list||[];
+  renderAnnouncements(filterActive(_rawAnnList));
 });
 window.api.on('settings:updated',s=>{
   if(s.communityName){

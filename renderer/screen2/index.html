@@ -293,6 +293,7 @@ async function init() {
   const [ann] = await Promise.all([window.api.get('announcements')]);
   data = ann;
   render(); renderMarquee();
+  setInterval(render, 60000); // 每分鐘重新過濾排程公告（上架/下架）
 }
 
 window.api.on('announcements:updated', d=>{ data=d; render(); renderMarquee(); });
