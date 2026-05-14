@@ -18,16 +18,16 @@ body {
   flex-shrink:0; display:flex;
   background:rgba(10,9,7,.7); border-bottom:1px solid rgba(245,158,11,.12);
   backdrop-filter:blur(20px);
-  height: 240px;
+  height: 185px;
 }
 .wc {
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:10px 6px 8px; border-right:1px solid rgba(245,158,11,.08); position:relative;
-  gap:7px;
+  padding:6px 6px 4px; border-right:1px solid rgba(245,158,11,.08); position:relative;
+  gap:4px;
 }
 .wc:last-child { border-right:none; }
-.wc-city { font-size:22px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.45); text-transform:uppercase; }
-.wc-date { font-size:20px; color:rgba(255,255,255,.28); letter-spacing:.5px; }
+.wc-city { font-size:18px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.45); text-transform:uppercase; }
+.wc-date { font-size:16px; color:rgba(255,255,255,.28); letter-spacing:.5px; }
 .wc-open {
   position:absolute; top:7px; right:8px;
   width:6px; height:6px; border-radius:50%;
@@ -422,7 +422,7 @@ function buildClockBar() {
     <div class="wc">
       <div class="wc-open" id="wc-dot-${i}" style="display:none"></div>
       <div class="wc-city">${c.city}</div>
-      <canvas id="wc-cvs-${i}" width="150" height="150"></canvas>
+      <canvas id="wc-cvs-${i}" width="120" height="120"></canvas>
       <div class="wc-date" id="wc-date-${i}"></div>
     </div>`).join('');
 }
