@@ -17,8 +17,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#050505;font-fam
 .th .in,.bf .in{position:absolute;left:0;right:0;height:200%;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;padding:0 20px;background:#101010}
 .th .in{top:0}.bf .in{bottom:0}
 .dv{position:absolute;left:0;right:0;top:50%;height:2px;background:#050505;z-index:10}
-.fl{-ms-flex-negative:0;flex-shrink:0;width:155px;text-align:center;font-size:60px;font-weight:900;color:#c87010;letter-spacing:2px}
-.co{-webkit-box-flex:1;-ms-flex:1 1 auto;flex:1;font-size:54px;font-weight:400;color:#d4b050;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:1px}
+.fl{-ms-flex-negative:0;flex-shrink:0;width:180px;text-align:center;font-size:76px;font-weight:900;color:#c87010;letter-spacing:2px}
+.co{-webkit-box-flex:1;-ms-flex:1 1 auto;flex:1;font-size:68px;font-weight:400;color:#d4b050;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:1px}
 </style>
 </head>
 <body>
@@ -320,7 +320,7 @@ var STAGGER  = 180;   // 每列翻牌間隔毫秒
 // ──────────────────────────────────────────────────────
 // 系統程式碼，請勿修改以下內容
 // ──────────────────────────────────────────────────────
-var PG=16,bd=document.getElementById('bd'),pgs=[],sl=[];
+var PG=12,bd=document.getElementById('bd'),pgs=[],sl=[];
 for(var j=0;j<DATA.length;j+=PG)pgs.push(DATA.slice(j,j+PG));
 if(!pgs.length)pgs.push([]);
 while(pgs[pgs.length-1].length<PG)pgs[pgs.length-1].push({floor:'',company:''});
