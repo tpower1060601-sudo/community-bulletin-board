@@ -58,9 +58,10 @@ body {
 .col-icon  { font-size:15px; }
 .col-title { font-size:11px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.38); text-transform:uppercase; }
 
-.col-widget { flex:1; min-height:0; position:relative; }
+.col-widget { flex:1; min-height:0; position:relative; overflow:hidden; }
 .col-widget .tradingview-widget-container,
 .col-widget .tradingview-widget-container__widget { height:100% !important; width:100% !important; }
+.col-widget iframe { zoom: 1.5; width: calc(100% / 1.5) !important; height: calc(100% / 1.5) !important; transform-origin: top left; }
 </style>
 </head>
 <body>
