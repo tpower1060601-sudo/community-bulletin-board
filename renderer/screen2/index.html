@@ -72,6 +72,22 @@ body {
   flex: 1;
   min-width: 0;
 }
+
+/* 純圖片全螢幕版型 */
+.slide-fullimg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.slide-fullimg img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
 .slide-badge {
   display: inline-block;
   padding: 10px 24px;
@@ -216,19 +232,30 @@ function render() {
   slidesEl.innerHTML = active.map((a,i) => {
     const type = a.type||'general';
     const hasImg = !!a.imageUrl;
+    const hasText = !!(a.title || a.content);
     const textBlock = `
         <div class="slide-badge badge-${type}">${TYPE_LABEL[type]||'公告'}</div>
         <div class="slide-title">${esc(a.title)}</div>
         <div class="slide-body">${a.content||''}</div>
         <div class="slide-date">${a.date||''}</div>`;
-    const inner = hasImg
-      ? `<div class="slide-inner slide-with-img">
+    let inner;
+    if (hasImg && !hasText) {
+      // 純圖片：全螢幕顯示
+      inner = `<div class="slide-fullimg">
+          <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.style.display='none'">
+        </div>`;
+    } else if (hasImg) {
+      // 圖文並排
+      inner = `<div class="slide-inner slide-with-img">
           <div class="slide-img-col">
             <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.parentNode.style.display='none'">
           </div>
           <div class="slide-text-col">${textBlock}</div>
-        </div>`
-      : `<div class="slide-inner">${textBlock}</div>`;
+        </div>`;
+    } else {
+      // 純文字
+      inner = `<div class="slide-inner">${textBlock}</div>`;
+    }
     return `<div class="slide${i===0?' active':''}" data-i="${i}">${inner}</div>`;
   }).join('');
 
