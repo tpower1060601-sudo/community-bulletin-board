@@ -4,20 +4,21 @@
 <meta charset="UTF-8">
 <title>樓層告示牌 螢幕一 1F–14F</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
+*{margin:0;padding:0;-webkit-box-sizing:border-box;box-sizing:border-box}
 html,body{width:1080px;height:1920px;overflow:hidden;background:#050505;font-family:'Microsoft JhengHei','PingFang TC','Hiragino Sans TC','Noto Sans TC',sans-serif}
-#bd{position:absolute;inset:18px;display:flex;flex-direction:column;gap:3px;border:1px solid #1c1005;border-radius:6px;padding:5px}
-.sl{position:relative;flex:1}
-.bg,.bc{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:0 20px;background:#101010}
+#bd{position:absolute;top:18px;left:18px;right:18px;bottom:18px;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;border:1px solid #1c1005;border-radius:6px;padding:5px}
+.sl{position:relative;-webkit-box-flex:1;-ms-flex:1 1 auto;flex:1;margin-bottom:3px}
+.sl:last-child{margin-bottom:0}
+.bg,.bc{position:absolute;top:0;left:0;right:0;bottom:0;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;padding:0 20px;background:#101010}
 .bg{z-index:1}.bc{z-index:2}
 .th,.bf{position:absolute;left:0;right:0;height:50%;overflow:hidden}
-.th{top:0;z-index:3;transform-origin:50% 100%}
-.bf{bottom:0;z-index:4;transform-origin:50% 0%}
-.th .in,.bf .in{position:absolute;left:0;right:0;height:200%;display:flex;align-items:center;justify-content:center;padding:0 20px;background:#101010}
+.th{top:0;z-index:3;-webkit-transform-origin:50% 100%;transform-origin:50% 100%}
+.bf{bottom:0;z-index:4;-webkit-transform-origin:50% 0%;transform-origin:50% 0%}
+.th .in,.bf .in{position:absolute;left:0;right:0;height:200%;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-align:center;-ms-flex-align:center;align-items:center;-webkit-box-pack:center;-ms-flex-pack:center;justify-content:center;padding:0 20px;background:#101010}
 .th .in{top:0}.bf .in{bottom:0}
 .dv{position:absolute;left:0;right:0;top:50%;height:2px;background:#050505;z-index:10}
-.fl{flex-shrink:0;width:155px;text-align:center;font-size:60px;font-weight:900;color:#c87010;letter-spacing:2px}
-.co{flex:1;font-size:44px;font-weight:400;color:#d4b050;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:1px}
+.fl{-ms-flex-negative:0;flex-shrink:0;width:155px;text-align:center;font-size:60px;font-weight:900;color:#c87010;letter-spacing:2px}
+.co{-webkit-box-flex:1;-ms-flex:1 1 auto;flex:1;font-size:44px;font-weight:400;color:#d4b050;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;letter-spacing:1px}
 </style>
 </head>
 <body>
