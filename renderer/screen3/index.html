@@ -6,7 +6,7 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body {
-  background: #020b14; color: #fff;
+  background: #0c0b09; color: #fff;
   font-family: 'Inter','Microsoft JhengHei','PingFang TC',sans-serif;
   height: 100vh; overflow: hidden; user-select: none;
 }
@@ -16,13 +16,13 @@ body {
 /* ── 世界時鐘列（指針式）── */
 .clock-bar {
   flex-shrink:0; display:flex;
-  background:rgba(0,0,0,.55); border-bottom:1px solid rgba(255,255,255,.08);
+  background:rgba(10,9,7,.7); border-bottom:1px solid rgba(245,158,11,.12);
   backdrop-filter:blur(20px);
   height: 158px;
 }
 .wc {
   flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-  padding:8px 6px 6px; border-right:1px solid rgba(255,255,255,.06); position:relative;
+  padding:8px 6px 6px; border-right:1px solid rgba(245,158,11,.08); position:relative;
   gap:5px;
 }
 .wc:last-child { border-right:none; }
@@ -43,7 +43,7 @@ body {
   grid-template-columns: repeat(4, 1fr);
 }
 .market-col {
-  border-right:1px solid rgba(255,255,255,.07);
+  border-right:1px solid rgba(245,158,11,.08);
   display:flex; flex-direction:column; overflow:hidden;
 }
 .market-col:last-child { border-right:none; }
@@ -51,8 +51,8 @@ body {
 .col-header {
   flex-shrink:0;
   padding:9px 16px 7px;
-  background:rgba(0,0,0,.35);
-  border-bottom:1px solid rgba(255,255,255,.06);
+  background:rgba(10,9,7,.6);
+  border-bottom:1px solid rgba(245,158,11,.1);
   display:flex; align-items:center; gap:8px;
 }
 .col-icon  { font-size:15px; }
@@ -386,7 +386,7 @@ function drawClock(canvas, h, m, s) {
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(sAng);
-  ctx.strokeStyle = '#e05020';
+  ctx.strokeStyle = '#f59e0b';
   ctx.lineWidth = 1.1;
   ctx.lineCap  = 'round';
   ctx.beginPath();
@@ -394,7 +394,7 @@ function drawClock(canvas, h, m, s) {
   ctx.lineTo(0, -r * 0.80);
   ctx.stroke();
   /* 配重矩形 */
-  ctx.fillStyle = '#e05020';
+  ctx.fillStyle = '#f59e0b';
   ctx.fillRect(-3, r * 0.09, 6, r * 0.22);
   ctx.restore();
 
