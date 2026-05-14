@@ -30,9 +30,14 @@ body {
 /* 目前天氣 — 三欄：左(日照) 中(溫度) 右(統計) */
 .current { flex: 1; min-height: 0; display: flex; align-items: stretch; gap: 20px; }
 
-/* 左欄：半圓日照弧 */
-.sun-panel { flex-shrink: 0; width: 480px; background: rgba(15,10,5,.5); border: 1px solid rgba(245,158,11,.15); border-radius: 20px; padding: 18px 20px 14px; backdrop-filter: blur(24px); display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.sun-label { font-size: 12px; font-weight: 800; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; margin-bottom: 10px; align-self: flex-start; }
+/* 左欄：日夜符號 */
+.sun-panel { flex-shrink: 0; width: 480px; background: rgba(15,10,5,.5); border: 1px solid rgba(245,158,11,.15); border-radius: 20px; padding: 18px 20px 14px; backdrop-filter: blur(24px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+.sun-symbol { font-size: 130px; line-height: 1; filter: drop-shadow(0 0 32px rgba(251,191,36,.5)); animation: floatIcon 6s ease-in-out infinite; }
+.sun-symbol.night { filter: drop-shadow(0 0 24px rgba(148,163,220,.4)); }
+.sun-times { display: flex; justify-content: space-around; width: 100%; margin-top: 28px; }
+.sun-time-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.sun-time-lbl { font-size: 13px; font-weight: 800; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; }
+.sun-time-val { font-size: 28px; font-weight: 900; color: rgba(251,191,36,.95); letter-spacing: 2px; }
 
 /* 中欄：天氣主資訊 */
 .center-block { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
@@ -126,11 +131,13 @@ function injectStyle(id, css) {
 function mkEl(tag, styles) { const el = document.createElement(tag); Object.assign(el.style, styles); return el; }
 
 function startRain(heavy) {
-  injectStyle('kf-rain','@keyframes rDrop{0%{transform:translateY(-8px) skewX(-4deg);opacity:0}4%{opacity:1}96%{opacity:1}100%{transform:translateY(101vh) skewX(-4deg);opacity:0}}');
+  injectStyle('kf-rain','@keyframes rDrop{0%{transform:translateY(-8px) skewX(-4deg);opacity:0}6%{opacity:1}93%{opacity:1}100%{transform:translateY(101vh) skewX(-4deg);opacity:0}}');
   const c = document.getElementById('bg-fx');
-  for (let i = 0; i < (heavy?90:50); i++) {
-    const opa = heavy ? .08+Math.random()*.1 : .04+Math.random()*.07;
-    c.appendChild(mkEl('div',{position:'absolute',left:Math.random()*100+'%',top:'-6px',width:'1px',height:(heavy?20:13)+'px',background:'rgba(180,215,255,'+opa+')',animation:'rDrop '+(0.45+Math.random()*0.45)+'s '+(Math.random()*2.5)+'s linear infinite'}));
+  for (let i = 0; i < (heavy?120:70); i++) {
+    const opa = heavy ? .25+Math.random()*.35 : .15+Math.random()*.2;
+    const w   = heavy ? (Math.random()<.3?2:1.5) : 1;
+    const h   = heavy ? 28+Math.random()*18 : 16+Math.random()*10;
+    c.appendChild(mkEl('div',{position:'absolute',left:Math.random()*100+'%',top:'-8px',width:w+'px',height:h+'px',background:'rgba(200,225,255,'+opa+')',borderRadius:'1px',animation:'rDrop '+(0.35+Math.random()*0.4)+'s '+(Math.random()*2.5)+'s linear infinite'}));
   }
 }
 function startSnow() {
@@ -210,70 +217,22 @@ function degToCompass(deg) {
   return d[Math.round((deg||0) / 22.5) % 16];
 }
 
-/* ── 日照弧 SVG（半圓形）── */
-function buildSunArc(sunriseTs, sunsetTs, nowTs) {
+/* ── 日夜符號面板 ── */
+function buildDayNight(sunriseTs, sunsetTs, nowTs) {
   const fmt = ts => { const d=new Date(ts*1000); return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
   const isDay = nowTs >= sunriseTs && nowTs <= sunsetTs;
-  const pct = Math.max(0, Math.min(1, (nowTs - sunriseTs) / (sunsetTs - sunriseTs)));
-
-  const cx=110, cy=100, r=86;
-  const lx=cx-r, rx2=cx+r;  // 24, 196
-  const angle = Math.PI * (1 - pct);
-  const sunX = (cx + r * Math.cos(angle)).toFixed(1);
-  const sunY = (cy - r * Math.sin(angle)).toFixed(1);
-  const large = pct > 0.5 ? 1 : 0;
-
-  let compPath = '';
-  if (pct > 0.002 && pct < 0.998) {
-    compPath = `M ${lx},${cy} A ${r},${r} 0 ${large},1 ${sunX},${sunY}`;
-  }
-
-  return `<svg viewBox="0 0 220 138" style="width:100%;height:auto;display:block" preserveAspectRatio="xMidYMid meet">
-    <defs>
-      <radialGradient id="skyFill" cx="50%" cy="100%" r="90%">
-        <stop offset="0%"   stop-color="${isDay?'rgba(56,189,248,.55)':'rgba(30,60,120,.35)'}"/>
-        <stop offset="55%"  stop-color="${isDay?'rgba(30,100,200,.18)':'rgba(10,20,60,.15)'}"/>
-        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-      </radialGradient>
-      <radialGradient id="horizGlow" cx="50%" cy="100%" r="55%">
-        <stop offset="0%"   stop-color="${isDay?'rgba(251,191,36,.28)':'rgba(100,130,200,.12)'}"/>
-        <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
-      </radialGradient>
-      <filter id="sunBlur"><feGaussianBlur stdDeviation="4"/></filter>
-    </defs>
-
-    <!-- 天空填充 -->
-    <path d="M ${lx},${cy} A ${r},${r} 0 0,1 ${rx2},${cy} Z" fill="url(#skyFill)"/>
-    <!-- 地平線暖光 -->
-    <path d="M ${lx},${cy} A ${r},${r} 0 0,1 ${rx2},${cy} Z" fill="url(#horizGlow)"/>
-
-    <!-- 軌跡虛線 -->
-    <path d="M ${lx},${cy} A ${r},${r} 0 0,1 ${rx2},${cy}" fill="none"
-          stroke="rgba(255,255,255,.18)" stroke-width="1.8" stroke-dasharray="5,5" stroke-linecap="round"/>
-
-    <!-- 已走弧線 -->
-    ${compPath ? `<path d="${compPath}" fill="none"
-          stroke="${isDay?'rgba(251,191,36,1)':'rgba(148,163,184,.6)'}"
-          stroke-width="3.5" stroke-linecap="round"/>` : ''}
-
-    <!-- 太陽 / 月亮 -->
-    ${isDay
-      ? `<circle cx="${sunX}" cy="${sunY}" r="26" fill="rgba(251,191,36,.10)" filter="url(#sunBlur)"/>
-         <circle cx="${sunX}" cy="${sunY}" r="16" fill="rgba(251,191,36,.20)"/>
-         <circle cx="${sunX}" cy="${sunY}" r="9"  fill="rgba(255,225,60,.98)" stroke="rgba(255,255,255,.6)" stroke-width="1.8"/>`
-      : `<circle cx="${sunX}" cy="${sunY}" r="12" fill="rgba(148,163,184,.12)"/>
-         <text x="${sunX}" y="${parseFloat(sunY)+8}" text-anchor="middle" font-size="20" fill="rgba(180,200,230,.7)">☾</text>`
-    }
-
-    <!-- 地平線 -->
-    <line x1="${lx-6}" y1="${cy}" x2="${rx2+6}" y2="${cy}" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
-
-    <!-- 日出 / 日落標籤 -->
-    <text x="${lx}" y="${cy+16}" text-anchor="middle" font-size="10" font-family="Inter,sans-serif" fill="rgba(251,146,60,.75)">日出</text>
-    <text x="${lx}" y="${cy+30}" text-anchor="middle" font-size="13" font-family="Inter,sans-serif" fill="rgba(251,191,36,.95)" font-weight="700">${fmt(sunriseTs)}</text>
-    <text x="${rx2}" y="${cy+16}" text-anchor="middle" font-size="10" font-family="Inter,sans-serif" fill="rgba(251,100,60,.75)">日落</text>
-    <text x="${rx2}" y="${cy+30}" text-anchor="middle" font-size="13" font-family="Inter,sans-serif" fill="rgba(251,130,60,.95)" font-weight="700">${fmt(sunsetTs)}</text>
-  </svg>`;
+  return `
+    <div class="sun-symbol${isDay ? '' : ' night'}">${isDay ? '☀️' : '🌙'}</div>
+    <div class="sun-times">
+      <div class="sun-time-item">
+        <div class="sun-time-lbl">🌅 日出</div>
+        <div class="sun-time-val">${fmt(sunriseTs)}</div>
+      </div>
+      <div class="sun-time-item">
+        <div class="sun-time-lbl">🌇 日落</div>
+        <div class="sun-time-val">${fmt(sunsetTs)}</div>
+      </div>
+    </div>`;
 }
 
 /* ── 圖表（Canvas）── */
@@ -348,7 +307,7 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
   const main    = cur.weather[0].main;
   const desc    = cur.weather[0].description;
   const compass = degToCompass(extra.windDeg);
-  const sunArc  = buildSunArc(extra.sunrise, extra.sunset, Date.now() / 1000);
+  const sunArc  = buildDayNight(extra.sunrise, extra.sunset, Date.now() / 1000);
 
   applyBg(main.toLowerCase());
 
@@ -360,7 +319,6 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
     </div>
     <div class="current">
       <div class="sun-panel">
-        <div class="sun-label">☀ 日照進度</div>
         ${sunArc}
       </div>
       <div class="center-block">
