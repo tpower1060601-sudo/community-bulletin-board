@@ -26,8 +26,6 @@ body {
   flex: 1;
   display: flex;
   align-items: center;
-  padding: 0 48px;
-  gap: 36px;
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid rgba(255,255,255,0.06);
@@ -36,104 +34,106 @@ body {
 /* ── 左側標籤 ── */
 .row-label {
   flex-shrink: 0;
-  width: 210px;
+  width: 220px;
+  padding: 0 20px 0 28px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 7px;
+  z-index: 2;
 }
 
 .label-badge {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  padding: 8px 18px;
+  padding: 8px 16px;
   border-radius: 10px;
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 900;
-  letter-spacing: 2px;
+  letter-spacing: 1px;
   border: 1px solid;
   white-space: nowrap;
 }
 
 .label-sub {
-  font-size: 12px;
-  color: rgba(255,255,255,0.3);
+  font-size: 11px;
+  color: rgba(255,255,255,0.28);
   letter-spacing: 3px;
   padding-left: 4px;
   text-transform: uppercase;
 }
 
-/* ── 分隔線 ── */
-.divider {
-  width: 1px;
-  height: 55%;
-  background: rgba(255,255,255,0.12);
-  flex-shrink: 0;
+/* ── 漸層遮罩（左邊標籤右側淡出）── */
+.row-label::after {
+  content: '';
+  position: absolute;
+  left: 220px;
+  top: 0; bottom: 0;
+  width: 60px;
+  z-index: 1;
+  pointer-events: none;
 }
 
-/* ── 新聞顯示區 ── */
-.news-display {
+/* ── 流動區 ── */
+.ticker-wrap {
   flex: 1;
-  position: relative;
   overflow: hidden;
   height: 100%;
   display: flex;
   align-items: center;
+  position: relative;
 }
 
-/* 進出動畫 slot */
-.slot {
+/* 左右遮罩 */
+.ticker-wrap::before,
+.ticker-wrap::after {
+  content: '';
   position: absolute;
-  width: 100%;
+  top: 0; bottom: 0;
+  width: 80px;
+  z-index: 2;
+  pointer-events: none;
+}
+.ticker-wrap::before { left: 0; }
+.ticker-wrap::after  { right: 0; }
+
+.ticker-track {
   display: flex;
   align-items: center;
-  will-change: transform, opacity;
-}
-
-.slot.state-current {
-  transform: translateY(0%);
-  opacity: 1;
-  transition: transform 1.2s cubic-bezier(0.22, 1, 0.36, 1),
-              opacity   1.2s ease;
-}
-.slot.state-enter {
-  transform: translateY(105%);
-  opacity: 0;
-}
-.slot.state-exit {
-  transform: translateY(-105%);
-  opacity: 0;
-  transition: transform 1.0s cubic-bezier(0.55, 0, 0.78, 0),
-              opacity   1.0s ease;
-}
-
-/* 新聞文字 */
-.news-text {
-  font-size: 46px;
-  font-weight: 700;
-  line-height: 1.2;
   white-space: nowrap;
-  letter-spacing: 1px;
+  will-change: transform;
+  /* 動畫由 JS 依內容長度設定 */
 }
 
-/* 長文字滾動 */
-.news-text.is-long {
-  animation: ticker linear 1 forwards;
-  animation-play-state: running;
-}
-
-@keyframes ticker {
+@keyframes tickerScroll {
   0%   { transform: translateX(0); }
-  12%  { transform: translateX(0); }
-  88%  { transform: translateX(var(--tx)); }
-  100% { transform: translateX(var(--tx)); }
+  100% { transform: translateX(-50%); }
 }
 
-/* 載入/錯誤 */
-.news-loading {
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.ticker-sep {
+  display: inline-block;
+  font-size: 22px;
+  opacity: .35;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+/* 載入提示 */
+.ticker-loading {
   font-size: 28px;
   color: rgba(255,255,255,0.25);
   letter-spacing: 4px;
+  padding: 0 40px;
 }
 
 /* 即時指示燈 */
@@ -145,46 +145,51 @@ body {
 }
 @keyframes blink { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(1.4)} }
 
-/* 右下角計數器 */
-.row-counter {
-  position: absolute;
-  right: 0;
-  bottom: 10px;
-  font-size: 13px;
-  color: rgba(255,255,255,0.15);
-  letter-spacing: 1px;
-  padding-right: 4px;
-}
-
 /* ── 各列色彩主題 ── */
 .row-1 {
-  background: linear-gradient(90deg, rgba(239,68,68,0.07) 0%, transparent 35%);
+  background: linear-gradient(90deg, rgba(239,68,68,0.08) 0%, transparent 30%);
   border-left: 5px solid #ef4444;
 }
 .row-1 .label-badge { color:#ef4444; border-color:rgba(239,68,68,0.35); background:rgba(239,68,68,0.1); }
-.row-1 .live-dot { background:#ef4444; box-shadow:0 0 8px #ef4444; }
+.row-1 .live-dot    { background:#ef4444; box-shadow:0 0 8px #ef4444; }
+.row-1 .ticker-item { color: rgba(255,255,255,.92); }
+.row-1 .ticker-sep  { color: #ef4444; }
+.row-1 .ticker-wrap::before { background: linear-gradient(90deg, #04080f, transparent); }
+.row-1 .ticker-wrap::after  { background: linear-gradient(270deg, #04080f, transparent); }
 
 .row-2 {
-  background: linear-gradient(90deg, rgba(16,185,129,0.07) 0%, transparent 35%);
+  background: linear-gradient(90deg, rgba(16,185,129,0.08) 0%, transparent 30%);
   border-left: 5px solid #10b981;
 }
 .row-2 .label-badge { color:#10b981; border-color:rgba(16,185,129,0.35); background:rgba(16,185,129,0.1); }
-.row-2 .live-dot { background:#10b981; box-shadow:0 0 8px #10b981; }
+.row-2 .live-dot    { background:#10b981; box-shadow:0 0 8px #10b981; }
+.row-2 .ticker-item { color: rgba(255,255,255,.92); }
+.row-2 .ticker-sep  { color: #10b981; }
+.row-2 .ticker-wrap::before { background: linear-gradient(90deg, #04080f, transparent); }
+.row-2 .ticker-wrap::after  { background: linear-gradient(270deg, #04080f, transparent); }
 
 .row-3 {
-  background: linear-gradient(90deg, rgba(56,189,248,0.07) 0%, transparent 35%);
+  background: linear-gradient(90deg, rgba(56,189,248,0.08) 0%, transparent 30%);
   border-left: 5px solid #38bdf8;
 }
 .row-3 .label-badge { color:#38bdf8; border-color:rgba(56,189,248,0.35); background:rgba(56,189,248,0.1); }
-.row-3 .live-dot { background:#38bdf8; box-shadow:0 0 8px #38bdf8; }
+.row-3 .live-dot    { background:#38bdf8; box-shadow:0 0 8px #38bdf8; }
+.row-3 .ticker-item { color: rgba(255,255,255,.92); }
+.row-3 .ticker-sep  { color: #38bdf8; }
+.row-3 .ticker-wrap::before { background: linear-gradient(90deg, #04080f, transparent); }
+.row-3 .ticker-wrap::after  { background: linear-gradient(270deg, #04080f, transparent); }
 
 .row-4 {
-  background: linear-gradient(90deg, rgba(251,191,36,0.07) 0%, transparent 35%);
+  background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, transparent 30%);
   border-left: 5px solid #fbbf24;
   border-bottom: none;
 }
 .row-4 .label-badge { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.1); }
-.row-4 .live-dot { background:#fbbf24; box-shadow:0 0 8px #fbbf24; }
+.row-4 .live-dot    { background:#fbbf24; box-shadow:0 0 8px #fbbf24; }
+.row-4 .ticker-item { color: rgba(255,255,255,.92); }
+.row-4 .ticker-sep  { color: #fbbf24; }
+.row-4 .ticker-wrap::before { background: linear-gradient(90deg, #04080f, transparent); }
+.row-4 .ticker-wrap::after  { background: linear-gradient(270deg, #04080f, transparent); }
 </style>
 </head>
 <body>
@@ -195,11 +200,11 @@ body {
       <div class="label-badge"><span class="live-dot"></span>公視即時新聞</div>
       <div class="label-sub">PTS LIVE NEWS</div>
     </div>
-    <div class="divider"></div>
-    <div class="news-display" id="d0">
-      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    <div class="ticker-wrap" id="w0">
+      <div class="ticker-track" id="t0">
+        <span class="ticker-loading">連線中…</span>
+      </div>
     </div>
-    <div class="row-counter" id="c0"></div>
   </div>
 
   <div class="news-row row-2">
@@ -207,11 +212,11 @@ body {
       <div class="label-badge"><span class="live-dot"></span>台灣財經新聞</div>
       <div class="label-sub">TW FINANCE</div>
     </div>
-    <div class="divider"></div>
-    <div class="news-display" id="d1">
-      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    <div class="ticker-wrap" id="w1">
+      <div class="ticker-track" id="t1">
+        <span class="ticker-loading">連線中…</span>
+      </div>
     </div>
-    <div class="row-counter" id="c1"></div>
   </div>
 
   <div class="news-row row-3">
@@ -219,11 +224,11 @@ body {
       <div class="label-badge"><span class="live-dot"></span>國際即時新聞</div>
       <div class="label-sub">WORLD NEWS</div>
     </div>
-    <div class="divider"></div>
-    <div class="news-display" id="d2">
-      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    <div class="ticker-wrap" id="w2">
+      <div class="ticker-track" id="t2">
+        <span class="ticker-loading">連線中…</span>
+      </div>
     </div>
-    <div class="row-counter" id="c2"></div>
   </div>
 
   <div class="news-row row-4">
@@ -231,65 +236,52 @@ body {
       <div class="label-badge"><span class="live-dot"></span>國際財經新聞</div>
       <div class="label-sub">GLOBAL FINANCE</div>
     </div>
-    <div class="divider"></div>
-    <div class="news-display" id="d3">
-      <div class="slot state-current"><span class="news-text news-loading">連線中…</span></div>
+    <div class="ticker-wrap" id="w3">
+      <div class="ticker-track" id="t3">
+        <span class="ticker-loading">連線中…</span>
+      </div>
     </div>
-    <div class="row-counter" id="c3"></div>
   </div>
 </div>
 
 <script>
 'use strict';
 
-/* ────────────────────────────────────────────
-   RSS 來源設定（依可靠度排序，第一個優先）
-──────────────────────────────────────────── */
+/* ── RSS 來源 ── */
 const FEEDS = [
   [
-    // 公視即時 — 嘗試多個備援
     'https://news.pts.org.tw/xml/newsfeed.xml',
     'https://about.pts.org.tw/rss/XML/newsfeed.xml',
     'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml'
   ],
   [
-    // 台灣財經 — Yahoo財經(已驗證可用)、中央社財經、自由財經
     'https://tw.news.yahoo.com/rss/finance',
     'https://www.cna.com.tw/rss/afe.aspx',
     'https://ec.ltn.com.tw/rss/news.xml'
   ],
   [
-    // 國際即時 — BBC 中文、BBC World、中央社國際
     'https://feeds.bbci.co.uk/zhongwen/trad/rss.xml',
     'https://feeds.bbci.co.uk/news/world/rss.xml',
     'https://www.cna.com.tw/rss/aopl.aspx'
   ],
   [
-    // 國際財經 — BBC Business
     'https://feeds.bbci.co.uk/news/business/rss.xml',
     'https://feeds.bbci.co.uk/news/world/rss.xml',
     'https://feeds.bbci.co.uk/news/rss.xml'
   ]
 ];
 
-/* ────────────────────────────────────────────
-   CORS Proxy 清單（依序嘗試）
-──────────────────────────────────────────── */
 const PROXIES = [
   url => `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`,
   url => `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
   url => `https://corsproxy.io/?url=${encodeURIComponent(url)}`
 ];
 
-const INTERVAL = 10000;
 const REFETCH  = 5 * 60 * 1000;
+const PX_PER_S = 120;   /* 滾動速度（像素/秒），可調整 */
+const SEP      = '　◆　';
 
-/* 狀態 */
-const rows = FEEDS.map(() => ({ items: [], idx: 0, timer: null }));
-
-/* ────────────────────────────────────────────
-   XML → titles（DOMParser 解析 RSS/Atom）
-──────────────────────────────────────────── */
+/* ── XML 解析 ── */
 function parseXmlTitles(xmlText) {
   try {
     const doc = new DOMParser().parseFromString(xmlText, 'text/xml');
@@ -303,125 +295,89 @@ function parseXmlTitles(xmlText) {
   } catch(e) { return []; }
 }
 
-/* ────────────────────────────────────────────
-   單一 Proxy × 單一 Feed URL 嘗試
-──────────────────────────────────────────── */
+/* ── 單次請求 ── */
 async function tryOne(proxyIdx, feedUrl) {
-  const proxyUrl = PROXIES[proxyIdx](feedUrl);
-  const res = await fetch(proxyUrl, { cache: 'no-cache' });
+  const res = await fetch(PROXIES[proxyIdx](feedUrl), { cache: 'no-cache' });
   if (!res.ok) throw new Error('HTTP ' + res.status);
-
   const text = await res.text();
-
-  /* rss2json 回傳 JSON */
   if (proxyIdx === 0) {
     const data = JSON.parse(text);
-    if (data.status === 'ok' && data.items && data.items.length) {
+    if (data.status === 'ok' && data.items && data.items.length)
       return data.items.map(i => i.title || '').filter(t => t.length > 2);
-    }
-    throw new Error('rss2json bad status: ' + data.status);
+    throw new Error('rss2json: ' + data.status);
   }
-
-  /* allorigins 把內容包在 contents 欄位 */
   if (proxyIdx === 1) {
     const json = JSON.parse(text);
-    const xml  = json.contents || '';
-    const titles = parseXmlTitles(xml);
+    const titles = parseXmlTitles(json.contents || '');
     if (titles.length) return titles;
     throw new Error('allorigins no titles');
   }
-
-  /* corsproxy.io 直接回傳 XML */
   const titles = parseXmlTitles(text);
   if (titles.length) return titles;
   throw new Error('corsproxy no titles');
 }
 
-/* ────────────────────────────────────────────
-   對一個列嘗試所有 Proxy × 所有 Feed URL
-──────────────────────────────────────────── */
+/* ── 拉取並更新 ── */
 async function fetchRow(ri) {
-  const feedList = FEEDS[ri];
-  for (let fi = 0; fi < feedList.length; fi++) {
+  for (const feedUrl of FEEDS[ri]) {
     for (let pi = 0; pi < PROXIES.length; pi++) {
       try {
-        const titles = await tryOne(pi, feedList[fi]);
-        if (titles.length) {
-          rows[ri].items = titles;
-          rows[ri].idx   = 0;
-          if (!rows[ri].timer) startTicker(ri);
-          return; // 成功，結束
-        }
-      } catch(e) {
-        /* 繼續嘗試下一個組合 */
-      }
+        const titles = await tryOne(pi, feedUrl);
+        if (titles.length) { renderTicker(ri, titles); return; }
+      } catch(e) { /* 繼續 */ }
     }
   }
-  /* 所有組合都失敗 */
-  showError(ri, '無法取得新聞');
+  /* 全部失敗：保留現有內容，30 秒後重試 */
   setTimeout(() => fetchRow(ri), 30000);
 }
 
-/* ────────────────────────────────────────────
-   UI 函式
-──────────────────────────────────────────── */
-function showError(ri, msg) {
-  const el = document.getElementById('d' + ri);
-  el.innerHTML = '<div class="slot state-current"><span class="news-text news-loading">' + msg + '</span></div>';
-}
+/* ── 渲染跑馬燈 ── */
+function renderTicker(ri, titles) {
+  const track = document.getElementById('t' + ri);
+  const wrap  = document.getElementById('w' + ri);
 
-function showNext(ri) {
-  const row   = rows[ri];
-  const el    = document.getElementById('d' + ri);
-  const cntEl = document.getElementById('c' + ri);
-  if (!row.items.length) return;
+  /* 停止舊動畫 */
+  track.style.animation = 'none';
+  track.style.transform = 'translateX(0)';
 
-  const title    = row.items[row.idx];
-  const displayW = el.offsetWidth;
+  /* 產生一組內容 */
+  const frag = document.createDocumentFragment();
+  titles.forEach((title, i) => {
+    const span = document.createElement('span');
+    span.className = 'ticker-item';
+    span.textContent = title;
+    frag.appendChild(span);
+    const sep = document.createElement('span');
+    sep.className = 'ticker-sep';
+    sep.textContent = SEP;
+    frag.appendChild(sep);
+  });
 
-  cntEl.textContent = (row.idx + 1) + ' / ' + row.items.length;
+  /* 清空並填入內容×2（無縫銜接用）*/
+  track.innerHTML = '';
+  const half1 = document.createElement('span');
+  half1.style.display = 'contents';
+  const half2 = document.createElement('span');
+  half2.style.display = 'contents';
+  const nodes1 = frag.cloneNode(true);
+  half1.appendChild(nodes1);
+  const nodes2 = frag.cloneNode(true);
+  half2.appendChild(nodes2);
+  track.appendChild(half1);
+  track.appendChild(half2);
 
-  const newSlot = document.createElement('div');
-  newSlot.className = 'slot state-enter';
-
-  const span = document.createElement('span');
-  span.className = 'news-text';
-  span.textContent = title;
-  newSlot.appendChild(span);
-  el.appendChild(newSlot);
-
+  /* 下一幀量測寬度後設定動畫 */
   requestAnimationFrame(() => {
-    const tw = span.scrollWidth;
-    if (tw > displayW - 20) {
-      const tx  = -(tw - displayW + 40);
-      const dur = (Math.abs(tx) / 70 + 2).toFixed(1);
-      span.style.setProperty('--tx', tx + 'px');
-      span.style.animationDuration = dur + 's';
-      span.style.animationDelay = '0.6s';
-      span.classList.add('is-long');
-    }
-
-    const old = el.querySelector('.slot.state-current');
-    if (old) old.className = 'slot state-exit';
-
-    requestAnimationFrame(() => { newSlot.className = 'slot state-current'; });
-
-    setTimeout(() => { if (old && old.parentNode) old.parentNode.removeChild(old); }, 1200);
+    requestAnimationFrame(() => {
+      const fullW = track.scrollWidth / 2;   /* 單組寬度 */
+      if (fullW < 10) return;
+      const dur = (fullW / PX_PER_S).toFixed(2);
+      track.style.animation = `tickerScroll ${dur}s linear infinite`;
+    });
   });
 }
 
-function startTicker(ri) {
-  showNext(ri);
-  rows[ri].timer = setInterval(() => {
-    if (!rows[ri].items.length) return;
-    rows[ri].idx = (rows[ri].idx + 1) % rows[ri].items.length;
-    showNext(ri);
-  }, INTERVAL);
-}
-
-/* ────────────────────────────────────────────
-   初始化
-──────────────────────────────────────────── */
+/* ── 初始化 ── */
 FEEDS.forEach((_, i) => fetchRow(i));
 setInterval(() => FEEDS.forEach((_, i) => fetchRow(i)), REFETCH);
 </script>
