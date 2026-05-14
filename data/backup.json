@@ -1,8 +1,22 @@
 {
-  "_savedAt": "2026-05-09T00:37:03.733Z",
+  "_savedAt": "2026-05-14T08:13:34.106Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
+      {
+        "id": 1778746414105,
+        "title": "17F 鼎京科技有限公司   [車位出租]",
+        "type": "general",
+        "duration": 20,
+        "content": "<span style=\"font-size: 1.45em;\">共有兩組車位要出租，<font color=\"#f70202\">第一組 B6機械車位7個</font>，租金20,900元。第二組 B7 機械車位共11個，租金30,500元。以組為單位出租，希望有公司行號能夠來申租。<br>詳請可洽櫃檯，或聯絡莊小姐。公司電話:(04)2258-0250。</span>",
+        "imageUrl": "",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
+        "date": "2026-05-14"
+      },
       {
         "id": 1778209754072,
         "title": "電梯宣導公告",
@@ -62,7 +76,7 @@
     "windows": [
       {
         "id": "screen1",
-        "title": "公告欄 A",
+        "title": "大廳公佈欄",
         "enabled": true
       },
       {
