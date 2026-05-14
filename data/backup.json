@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-14T10:51:44.529Z",
+  "_savedAt": "2026-05-14T10:56:34.791Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -51,13 +51,13 @@
         "type": "notice",
         "duration": 10,
         "content": "各位業戶若有需要丟棄的辦公桌椅、行李箱、木製品、傢俱、保麗龍...等不可回收之廢棄物，請與櫃檯聯繫，櫃檯將請清運廠商報價，確認後方可於約定時間放置於貨梯間。<b><font color=\"#fc0303\">(裝潢廢棄物需自行處理)</font></b>。\n請勿擅自丟棄於公共空間，以免影響大樓整體品質。造成您的不便，敬請見諒。",
-        "imageUrl": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778756190065_waste_notice_20260514_185514.png",
         "alwaysValid": true,
         "startDate": "",
         "startTime": "",
         "endDate": "",
         "endTime": "",
-        "date": "2026-05-08"
+        "date": "2026-05-14"
       }
     ]
   },
