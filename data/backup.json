@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-14T08:31:56.412Z",
+  "_savedAt": "2026-05-14T08:37:51.399Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -8,7 +8,7 @@
         "title": "17F 鼎京科技有限公司   [車位出租]",
         "type": "general",
         "duration": 20,
-        "content": "<span style=\"font-size: 1.45em;\">共有兩組車位要出租，<font color=\"#f70202\">第一組 B6機械車位7個</font>，租金20,900元。<font color=\"#02f7e7\">第二組 B7 機械車位共11個</font>，租金30,500元。<i><u>以組為單位出租</u></i>，對公司行號能夠更好有效運用。<br>詳請可洽櫃檯，或聯絡莊小姐。</span>",
+        "content": "<span style=\"font-size: 1em;\">共有兩組車位要出租，<font color=\"#f70202\" style=\"\">第一組 B6機械車位7個</font>，租金20,900元。<font color=\"#02f7e7\" style=\"\">第二組 B7 機械車位共11個</font>，租金30,500元。<i style=\"\"><u>以組為單位出租</u></i>，對公司行號能夠更好有效運用。<br>詳請可洽櫃檯，或聯絡莊小姐。</span>",
         "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778747179749_parking_rental_20260514_162401.png",
         "alwaysValid": false,
         "startDate": "2026-05-14",
