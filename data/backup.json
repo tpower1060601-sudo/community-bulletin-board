@@ -1,22 +1,8 @@
 {
-  "_savedAt": "2026-05-15T02:36:14.908Z",
+  "_savedAt": "2026-05-15T09:08:47.626Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
-      {
-        "id": 1778812574907,
-        "title": "TEST",
-        "type": "general",
-        "duration": 7,
-        "content": "TEST",
-        "imageUrl": "",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
-        "date": "2026-05-15"
-      },
       {
         "id": 1778757211587,
         "title": "",
@@ -155,6 +141,11 @@
       {
         "id": "screen11",
         "title": "樓層告示牌 B",
+        "enabled": true
+      },
+      {
+        "id": "screen12",
+        "title": "台股熱力圖",
         "enabled": true
       }
     ],
