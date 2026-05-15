@@ -1,8 +1,22 @@
 {
-  "_savedAt": "2026-05-14T11:13:31.587Z",
+  "_savedAt": "2026-05-15T02:36:14.908Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
+      {
+        "id": 1778812574907,
+        "title": "TEST",
+        "type": "general",
+        "duration": 7,
+        "content": "TEST",
+        "imageUrl": "",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
+        "date": "2026-05-15"
+      },
       {
         "id": 1778757211587,
         "title": "",
