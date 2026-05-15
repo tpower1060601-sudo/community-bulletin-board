@@ -85,8 +85,9 @@
   /* ── GitHub 備份模組 ──────────────────────────────────────────────────── */
   const GH_REPO = 'tpower1060601-sudo/community-bulletin-board';
   const GH_FILE = 'data/backup.json';
-  const GH_TOKEN_KEY = 'bbs_gh_token';
-  const GH_LAST_KEY  = 'bbs_gh_lastBackup';
+  const GH_TOKEN_KEY    = 'bbs_gh_token';
+  const GH_LAST_KEY     = 'bbs_gh_lastBackup';
+  const GH_KNOWN_AT_KEY = 'bbs_gh_knownAt';   // 遠端輪詢：上次已同步的 _savedAt
 
   window.ghBackup = {
     _api: 'https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE,
@@ -176,7 +177,46 @@
         return { restored: true, savedAt: backup._savedAt || '' };
       });
     },
+
+    /** 自動輪詢 GitHub，偵測新版本後自動還原並廣播更新 */
+    startAutoPoll: function (intervalMs) {
+      var self = this;
+      intervalMs = intervalMs || 60000;
+
+      function poll() {
+        self.load().then(function (backup) {
+          if (!backup || !backup._savedAt) return;
+          var known = localStorage.getItem(GH_KNOWN_AT_KEY) || '';
+          if (backup._savedAt === known) return;
+
+          // 有新版本，還原所有資料並廣播更新
+          console.log('[api] 偵測到 GitHub 新版本：' + backup._savedAt + '，自動同步…');
+          DATA_KEYS.forEach(function (k) {
+            if (backup[k] == null) return;
+            localStorage.setItem(PREFIX + k, JSON.stringify(backup[k]));
+            // 觸發 on() 監聽器
+            var cbs = listeners[k + ':updated'];
+            if (cbs) cbs.forEach(function (cb) { try { cb(backup[k]); } catch (e) {} });
+            // 觸發跨分頁 storage 事件（同頁分頁同步用）
+            try {
+              window.dispatchEvent(new StorageEvent('storage', {
+                key: PREFIX + k,
+                newValue: JSON.stringify(backup[k]),
+                storageArea: localStorage,
+              }));
+            } catch (e) {}
+          });
+          localStorage.setItem(GH_KNOWN_AT_KEY, backup._savedAt);
+        }).catch(function () {});
+      }
+
+      setInterval(poll, intervalMs);
+      poll(); // 頁面載入後立即執行一次
+    },
   };
+
+  // 自動啟動輪詢（所有畫面頁面載入時）
+  window.ghBackup.startAutoPoll(60000);
 
   /* ── Public API ───────────────────────────────────────────────────────── */
   window.api = {
