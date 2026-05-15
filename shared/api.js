@@ -27,6 +27,7 @@
         { id: 'screen9',  title: 'YouTube 頻道 2',  enabled: true  },
         { id: 'screen10', title: '樓層告示牌 A',     enabled: true  },
         { id: 'screen11', title: '樓層告示牌 B',     enabled: true  },
+        { id: 'screen12', title: '台股熱力圖',        enabled: true  },
       ],
     },
     meetings: { rooms: ['會議室A', '會議室B', '會議室C'], bookings: [] },
