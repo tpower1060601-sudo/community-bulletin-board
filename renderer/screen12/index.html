@@ -37,27 +37,49 @@ body {
 }
 .header-subtitle { font-size:13px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; }
 
-/* Market tabs */
-.market-tabs { display:flex; gap:8px; }
-.market-tab {
-  padding: 6px 20px;
+/* Market indicator */
+.market-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 18px;
   border-radius: 20px;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 1px;
+  background: rgba(245,158,11,0.12);
+  border: 1px solid rgba(245,158,11,0.35);
+  color: var(--accent);
+}
+.badge-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px #22c55e;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+.badge-dot.closed { background: #64748b; box-shadow: none; animation: none; }
+@keyframes pulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.5; transform:scale(0.8); }
+}
+
+/* Manual override tabs */
+.market-tabs { display:flex; gap:8px; }
+.market-tab {
+  padding: 5px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.05);
-  color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.04);
+  color: rgba(255,255,255,0.4);
   transition: all 0.2s;
 }
-.market-tab.active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #000;
-  box-shadow: 0 0 12px rgba(245,158,11,0.4);
-}
-.market-tab:hover:not(.active) { border-color:rgba(245,158,11,0.4); color:var(--accent); }
+.market-tab.active { background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.4); color:var(--accent); }
+.market-tab:hover:not(.active) { border-color:rgba(255,255,255,0.25); color:rgba(255,255,255,0.7); }
+.auto-label { font-size:11px; color:rgba(255,255,255,0.3); letter-spacing:1px; }
 
 .header-right { display:flex; align-items:center; gap:20px; }
 .clock {
@@ -67,25 +89,16 @@ body {
   text-shadow: 0 0 14px rgba(245,158,11,0.4);
   letter-spacing: 2px;
 }
-.market-status {
-  font-size:12px; padding:4px 12px; border-radius:20px; font-weight:700; letter-spacing:1px;
-}
-.market-status.open  { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
-.market-status.closed{ background:rgba(148,163,184,0.1); color:rgba(148,163,184,0.6); border:1px solid rgba(148,163,184,0.2); }
 
-/* Widget panels — all stacked, visibility toggled */
+/* Widget panels */
 .widget-wrap { flex:1; position:relative; overflow:hidden; }
-
 .widget-panel {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
   visibility: hidden;
   pointer-events: none;
 }
-.widget-panel.active {
-  visibility: visible;
-  pointer-events: auto;
-}
+.widget-panel.active { visibility:visible; pointer-events:auto; }
 .tradingview-widget-container,
 .tradingview-widget-container__widget {
   width: 100% !important;
@@ -103,25 +116,30 @@ body {
   <div class="header-left">
     <div class="header-icon">📊</div>
     <div>
-      <div class="header-title">股市熱力圖</div>
+      <div class="header-title" id="headerTitle">股市熱力圖</div>
       <div class="header-subtitle">STOCK MARKET HEATMAP</div>
     </div>
-    <div class="market-tabs">
-      <div class="market-tab active" data-panel="tw"  onclick="switchMarket(this)">台股</div>
-      <div class="market-tab"        data-panel="hk"  onclick="switchMarket(this)">港股</div>
-      <div class="market-tab"        data-panel="us"  onclick="switchMarket(this)">美股</div>
+    <div class="market-badge">
+      <div class="badge-dot" id="badgeDot"></div>
+      <span id="badgeText">載入中</span>
+    </div>
+    <div>
+      <div class="market-tabs">
+        <div class="market-tab" id="tab-tw" onclick="manualSwitch('tw')">台股</div>
+        <div class="market-tab" id="tab-us" onclick="manualSwitch('us')">美股</div>
+      </div>
+      <div class="auto-label" id="autoLabel" style="text-align:center;margin-top:3px">⏱ 自動切換</div>
     </div>
   </div>
   <div class="header-right">
-    <div class="market-status open" id="mStatus">盤中</div>
     <div class="clock" id="clock">--:--:--</div>
   </div>
 </div>
 
 <div class="widget-wrap">
 
-  <!-- ── 台股 ── -->
-  <div class="widget-panel active" id="panel-tw">
+  <!-- ── 台股（TradingView 台灣市場個股拼圖）── -->
+  <div class="widget-panel" id="panel-tw">
     <div class="tradingview-widget-container">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript"
@@ -145,32 +163,7 @@ body {
     </div>
   </div>
 
-  <!-- ── 港股 ── -->
-  <div class="widget-panel" id="panel-hk">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript"
-        src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
-      {
-        "exchanges": ["HKEX"],
-        "dataSource": "HKEX",
-        "grouping": "sector",
-        "blockColor": "change",
-        "locale": "zh_TW",
-        "colorTheme": "dark",
-        "hasTopBar": false,
-        "isDataSetEnabled": false,
-        "isZoomEnabled": true,
-        "hasSymbolTooltip": true,
-        "isMonoSize": false,
-        "width": "100%",
-        "height": "100%"
-      }
-      </script>
-    </div>
-  </div>
-
-  <!-- ── 美股 ── -->
+  <!-- ── 美股 S&P 500 ── -->
   <div class="widget-panel" id="panel-us">
     <div class="tradingview-widget-container">
       <div class="tradingview-widget-container__widget"></div>
@@ -199,29 +192,85 @@ body {
 
 <script src="../../shared/api.js"></script>
 <script>
+var manualOverride = null; // null = 自動模式
+
+/* ── 判斷目前應顯示哪個市場 ── */
+function getAutoMarket() {
+  var n = new Date();
+  var day = n.getDay();          // 0=日, 6=六
+  var mins = n.getHours() * 60 + n.getMinutes();
+
+  if (day === 0 || day === 6) return 'us'; // 週末固定美股（前日收盤資料）
+
+  // 台股開盤：09:00–13:30
+  if (mins >= 540 && mins < 810) return 'tw';
+
+  // 美股開盤（台灣時間）：
+  // 夏令（EDT, 約 3月~11月）: 21:30–04:00 → mins >= 1290 || mins < 240
+  // 冬令（EST, 約 11月~3月）: 22:30–05:00 → mins >= 1350 || mins < 300
+  // 保守取聯集：21:30 開始，次日 05:00 結束
+  if (mins >= 1290 || mins < 300) return 'us';
+
+  // 非交易時段 → 台股收盤後傍晚顯示台股（有今日收盤資料）
+  // 美股開盤前夜晚顯示美股（有昨日收盤資料）
+  if (mins >= 810 && mins < 1290) {
+    // 13:30–21:30 → 台股剛收盤，顯示台股當日結果
+    return 'tw';
+  }
+  return 'us';
+}
+
+/* ── 切換 panel ── */
+function showPanel(market) {
+  ['tw','us'].forEach(function(m) {
+    document.getElementById('panel-' + m).classList.toggle('active', m === market);
+    document.getElementById('tab-' + m).classList.toggle('active', m === market);
+  });
+
+  var isTW = market === 'tw';
+  var n = new Date();
+  var day = n.getDay();
+  var mins = n.getHours() * 60 + n.getMinutes();
+  var twOpen = day >= 1 && day <= 5 && mins >= 540 && mins < 810;
+  var usOpen = day >= 1 && day <= 5 && (mins >= 1290 || mins < 300);
+  var isOpen = isTW ? twOpen : usOpen;
+
+  document.getElementById('badgeDot').className = 'badge-dot' + (isOpen ? '' : ' closed');
+  document.getElementById('badgeText').textContent = (isTW ? '台股' : '美股 S&P 500') + (isOpen ? '　盤中' : '　收盤');
+  document.getElementById('autoLabel').textContent = manualOverride ? '👆 手動切換' : '⏱ 自動切換';
+}
+
+/* ── 手動覆蓋 ── */
+function manualSwitch(market) {
+  manualOverride = market;
+  showPanel(market);
+  document.getElementById('autoLabel').textContent = '👆 手動切換';
+  // 60 秒後恢復自動
+  clearTimeout(manualSwitch._timer);
+  manualSwitch._timer = setTimeout(function() {
+    manualOverride = null;
+    autoUpdate();
+  }, 60000);
+}
+
+/* ── 自動更新 ── */
+function autoUpdate() {
+  if (!manualOverride) showPanel(getAutoMarket());
+}
+
 /* ── 時鐘 ── */
 function tick() {
   var n = new Date();
   var h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
   document.getElementById('clock').textContent =
     [h,m,s].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
-  // 台股 09:00–13:30 平日
-  var day = n.getDay(), mins = h * 60 + m;
-  var isOpen = day >= 1 && day <= 5 && mins >= 540 && mins < 810;
-  var el = document.getElementById('mStatus');
-  el.textContent = isOpen ? '盤中' : '收盤';
-  el.className = 'market-status ' + (isOpen ? 'open' : 'closed');
+  // 每整分鐘檢查自動切換
+  if (s === 0) autoUpdate();
 }
 setInterval(tick, 1000); tick();
 
-/* ── 切換市場 ── */
-function switchMarket(el) {
-  document.querySelectorAll('.market-tab').forEach(function(t){ t.classList.remove('active'); });
-  el.classList.add('active');
-  var panelId = 'panel-' + el.getAttribute('data-panel');
-  document.querySelectorAll('.widget-panel').forEach(function(p){ p.classList.remove('active'); });
-  document.getElementById(panelId).classList.add('active');
-}
+// 初始化
+autoUpdate();
 </script>
 </body>
 </html>
