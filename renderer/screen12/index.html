@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>台股熱力圖</title>
+<title>股市熱力圖</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root { --accent:#f59e0b; --bg:#0a0e1a; }
@@ -27,37 +27,22 @@ body {
   padding: 0 36px;
   background: rgba(0,0,0,0.5);
   border-bottom: 2px solid var(--accent);
-  gap: 24px;
 }
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-}
-.header-icon { font-size: 30px; line-height: 1; }
+.header-left { display:flex; align-items:center; gap:20px; }
+.header-icon { font-size:30px; line-height:1; }
 .header-title {
-  font-size: 26px;
-  font-weight: 900;
-  letter-spacing: 3px;
+  font-size: 26px; font-weight: 900; letter-spacing: 3px;
   color: var(--accent);
   text-shadow: 0 0 16px rgba(245,158,11,0.5);
 }
-.header-subtitle {
-  font-size: 13px;
-  color: rgba(255,255,255,0.4);
-  letter-spacing: 2px;
-  margin-top: 2px;
-}
+.header-subtitle { font-size:13px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; }
 
 /* Market tabs */
-.market-tabs {
-  display: flex;
-  gap: 8px;
-}
+.market-tabs { display:flex; gap:8px; }
 .market-tab {
-  padding: 6px 18px;
+  padding: 6px 20px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   letter-spacing: 1px;
   cursor: pointer;
@@ -72,50 +57,35 @@ body {
   color: #000;
   box-shadow: 0 0 12px rgba(245,158,11,0.4);
 }
-.market-tab:hover:not(.active) {
-  border-color: rgba(245,158,11,0.4);
-  color: var(--accent);
-}
+.market-tab:hover:not(.active) { border-color:rgba(245,158,11,0.4); color:var(--accent); }
 
-/* Header right */
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 28px;
-}
+.header-right { display:flex; align-items:center; gap:20px; }
 .clock {
-  font-size: 26px;
-  font-weight: 900;
+  font-size: 26px; font-weight: 900;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
   text-shadow: 0 0 14px rgba(245,158,11,0.4);
   letter-spacing: 2px;
 }
 .market-status {
-  font-size: 12px;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-weight: 700;
-  letter-spacing: 1px;
+  font-size:12px; padding:4px 12px; border-radius:20px; font-weight:700; letter-spacing:1px;
 }
-.market-status.open {
-  background: rgba(34,197,94,0.15);
-  color: #22c55e;
-  border: 1px solid rgba(34,197,94,0.3);
-}
-.market-status.closed {
-  background: rgba(148,163,184,0.1);
-  color: rgba(148,163,184,0.6);
-  border: 1px solid rgba(148,163,184,0.2);
-}
+.market-status.open  { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
+.market-status.closed{ background:rgba(148,163,184,0.1); color:rgba(148,163,184,0.6); border:1px solid rgba(148,163,184,0.2); }
 
-/* Widget area */
-.widget-wrap {
-  flex: 1;
-  position: relative;
-  overflow: hidden;
+/* Widget panels — all stacked, visibility toggled */
+.widget-wrap { flex:1; position:relative; overflow:hidden; }
+
+.widget-panel {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
-.widget-wrap iframe,
+.widget-panel.active {
+  visibility: visible;
+  pointer-events: auto;
+}
 .tradingview-widget-container,
 .tradingview-widget-container__widget {
   width: 100% !important;
@@ -123,32 +93,8 @@ body {
 }
 .tradingview-widget-container {
   position: absolute;
-  inset: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
 }
-
-/* Loading overlay */
-.loading {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 16px;
-  background: var(--bg);
-  z-index: 10;
-  transition: opacity 0.5s;
-}
-.loading.hidden { opacity: 0; pointer-events: none; }
-.spinner {
-  width: 48px; height: 48px;
-  border: 4px solid rgba(245,158,11,0.2);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-.loading-text { font-size: 16px; color: rgba(255,255,255,0.4); letter-spacing: 2px; }
 </style>
 </head>
 <body>
@@ -157,13 +103,13 @@ body {
   <div class="header-left">
     <div class="header-icon">📊</div>
     <div>
-      <div class="header-title">台股熱力圖</div>
+      <div class="header-title">股市熱力圖</div>
       <div class="header-subtitle">STOCK MARKET HEATMAP</div>
     </div>
     <div class="market-tabs">
-      <div class="market-tab active" data-src="TWSE" onclick="switchMarket(this)">台股</div>
-      <div class="market-tab" data-src="HKEX" onclick="switchMarket(this)">港股</div>
-      <div class="market-tab" data-src="NYSE|NASDAQ|NYSE ARCA" onclick="switchMarket(this)">美股</div>
+      <div class="market-tab active" data-panel="tw"  onclick="switchMarket(this)">台股</div>
+      <div class="market-tab"        data-panel="hk"  onclick="switchMarket(this)">港股</div>
+      <div class="market-tab"        data-panel="us"  onclick="switchMarket(this)">美股</div>
     </div>
   </div>
   <div class="header-right">
@@ -172,14 +118,83 @@ body {
   </div>
 </div>
 
-<div class="widget-wrap" id="widgetWrap">
-  <div class="loading" id="loading">
-    <div class="spinner"></div>
-    <div class="loading-text">載入中…</div>
+<div class="widget-wrap">
+
+  <!-- ── 台股 ── -->
+  <div class="widget-panel active" id="panel-tw">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript"
+        src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+      {
+        "exchanges": ["TWSE","TPEX"],
+        "dataSource": "TWSE",
+        "grouping": "sector",
+        "blockColor": "change",
+        "locale": "zh_TW",
+        "colorTheme": "dark",
+        "hasTopBar": false,
+        "isDataSetEnabled": false,
+        "isZoomEnabled": true,
+        "hasSymbolTooltip": true,
+        "isMonoSize": false,
+        "width": "100%",
+        "height": "100%"
+      }
+      </script>
+    </div>
   </div>
-  <div class="tradingview-widget-container" id="tvContainer">
-    <div class="tradingview-widget-container__widget" id="tvWidget"></div>
+
+  <!-- ── 港股 ── -->
+  <div class="widget-panel" id="panel-hk">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript"
+        src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+      {
+        "exchanges": ["HKEX"],
+        "dataSource": "HKEX",
+        "grouping": "sector",
+        "blockColor": "change",
+        "locale": "zh_TW",
+        "colorTheme": "dark",
+        "hasTopBar": false,
+        "isDataSetEnabled": false,
+        "isZoomEnabled": true,
+        "hasSymbolTooltip": true,
+        "isMonoSize": false,
+        "width": "100%",
+        "height": "100%"
+      }
+      </script>
+    </div>
   </div>
+
+  <!-- ── 美股 ── -->
+  <div class="widget-panel" id="panel-us">
+    <div class="tradingview-widget-container">
+      <div class="tradingview-widget-container__widget"></div>
+      <script type="text/javascript"
+        src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+      {
+        "exchanges": ["NYSE","NASDAQ","NYSE ARCA"],
+        "dataSource": "SPX500",
+        "grouping": "sector",
+        "blockColor": "change",
+        "locale": "zh_TW",
+        "colorTheme": "dark",
+        "hasTopBar": false,
+        "isDataSetEnabled": false,
+        "isZoomEnabled": true,
+        "hasSymbolTooltip": true,
+        "isMonoSize": false,
+        "width": "100%",
+        "height": "100%"
+      }
+      </script>
+    </div>
+  </div>
+
 </div>
 
 <script src="../../shared/api.js"></script>
@@ -190,79 +205,23 @@ function tick() {
   var h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
   document.getElementById('clock').textContent =
     [h,m,s].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
-
-  // 台股交易時段 09:00–13:30 平日
-  var day = n.getDay();
-  var mins = h * 60 + m;
-  var isWeekday = day >= 1 && day <= 5;
-  var isOpen = isWeekday && mins >= 540 && mins < 810;
+  // 台股 09:00–13:30 平日
+  var day = n.getDay(), mins = h * 60 + m;
+  var isOpen = day >= 1 && day <= 5 && mins >= 540 && mins < 810;
   var el = document.getElementById('mStatus');
-  if (isOpen) {
-    el.textContent = '盤中'; el.className = 'market-status open';
-  } else {
-    el.textContent = '收盤'; el.className = 'market-status closed';
-  }
+  el.textContent = isOpen ? '盤中' : '收盤';
+  el.className = 'market-status ' + (isOpen ? 'open' : 'closed');
 }
 setInterval(tick, 1000); tick();
 
-/* ── TradingView Widget ── */
-var currentMarket = 'TWSE';
-
-function loadWidget(dataSource) {
-  var container = document.getElementById('tvContainer');
-  // 清除舊的 widget
-  container.innerHTML = '<div class="tradingview-widget-container__widget" id="tvWidget"></div>';
-
-  document.getElementById('loading').classList.remove('hidden');
-
-  var config = {
-    dataSource: dataSource,
-    grouping: 'sector',
-    blockColor: 'change',
-    locale: 'zh_TW',
-    colorTheme: 'dark',
-    hasTopBar: false,
-    isDataSetEnabled: false,
-    isZoomEnabled: true,
-    hasSymbolTooltip: true,
-    isMonoSize: false,
-    width: '100%',
-    height: '100%'
-  };
-
-  var script = document.createElement('script');
-  script.type = 'text/javascript';
-  script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js';
-  script.async = true;
-  script.innerHTML = JSON.stringify(config);
-
-  // 監聽 widget 載入完成
-  script.onload = function() {
-    setTimeout(function() {
-      document.getElementById('loading').classList.add('hidden');
-    }, 2000);
-  };
-  // 若 onload 不觸發，也在 3 秒後隱藏 loading
-  setTimeout(function() {
-    document.getElementById('loading').classList.add('hidden');
-  }, 4000);
-
-  container.appendChild(script);
-}
-
+/* ── 切換市場 ── */
 function switchMarket(el) {
-  document.querySelectorAll('.market-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.market-tab').forEach(function(t){ t.classList.remove('active'); });
   el.classList.add('active');
-
-  var src = el.getAttribute('data-src');
-  if (src !== currentMarket) {
-    currentMarket = src;
-    loadWidget(src);
-  }
+  var panelId = 'panel-' + el.getAttribute('data-panel');
+  document.querySelectorAll('.widget-panel').forEach(function(p){ p.classList.remove('active'); });
+  document.getElementById(panelId).classList.add('active');
 }
-
-// 初始載入
-loadWidget('TWSE');
 </script>
 </body>
 </html>
