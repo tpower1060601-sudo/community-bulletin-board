@@ -138,26 +138,75 @@ body {
 
 <div class="widget-wrap">
 
-  <!-- ── 台股（TradingView 台灣市場個股拼圖）── -->
+  <!-- ── 台股（Market Overview）── -->
   <div class="widget-panel" id="panel-tw">
     <div class="tradingview-widget-container">
       <div class="tradingview-widget-container__widget"></div>
       <script type="text/javascript"
-        src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
+        src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
       {
-        "exchanges": ["TWSE","TPEX"],
-        "dataSource": "TWSE",
-        "grouping": "sector",
-        "blockColor": "change",
-        "locale": "zh_TW",
         "colorTheme": "dark",
-        "hasTopBar": false,
-        "isDataSetEnabled": false,
-        "isZoomEnabled": true,
-        "hasSymbolTooltip": true,
-        "isMonoSize": false,
+        "dateRange": "1D",
+        "showChart": true,
+        "locale": "zh_TW",
+        "isTransparent": true,
+        "showSymbolLogo": true,
+        "showFloatingTooltip": true,
         "width": "100%",
-        "height": "100%"
+        "height": "100%",
+        "plotLineColorGrowing": "rgba(245,158,11,1)",
+        "plotLineColorFalling": "rgba(56,189,248,1)",
+        "gridLineColor": "rgba(255,255,255,0.05)",
+        "scaleFontColor": "rgba(255,255,255,0.5)",
+        "belowLineFillColorGrowing": "rgba(245,158,11,0.08)",
+        "belowLineFillColorFalling": "rgba(56,189,248,0.08)",
+        "belowLineFillColorGrowingBottom": "rgba(245,158,11,0)",
+        "belowLineFillColorFallingBottom": "rgba(56,189,248,0)",
+        "symbolActiveColor": "rgba(245,158,11,0.15)",
+        "tabs": [
+          {
+            "title": "大型權值股",
+            "symbols": [
+              { "s": "TWSE:2330", "d": "台積電" },
+              { "s": "TWSE:2454", "d": "聯發科" },
+              { "s": "TWSE:2317", "d": "鴻海" },
+              { "s": "TWSE:2382", "d": "廣達" },
+              { "s": "TWSE:2308", "d": "台達電" },
+              { "s": "TWSE:3711", "d": "日月光投控" },
+              { "s": "TWSE:2303", "d": "聯電" },
+              { "s": "TWSE:2412", "d": "中華電" },
+              { "s": "TWSE:2882", "d": "國泰金" },
+              { "s": "TWSE:2891", "d": "中信金" }
+            ],
+            "originalTitle": "大型權值股"
+          },
+          {
+            "title": "ETF",
+            "symbols": [
+              { "s": "TWSE:0050",  "d": "元大台灣50" },
+              { "s": "TWSE:0056",  "d": "元大高股息" },
+              { "s": "TWSE:00878", "d": "國泰永續高股息" },
+              { "s": "TWSE:00919", "d": "群益台灣精選高息" },
+              { "s": "TWSE:006208","d": "富邦台50" },
+              { "s": "TWSE:00881", "d": "國泰台灣5G+" }
+            ],
+            "originalTitle": "ETF"
+          },
+          {
+            "title": "半導體",
+            "symbols": [
+              { "s": "TWSE:2330", "d": "台積電" },
+              { "s": "TWSE:2303", "d": "聯電" },
+              { "s": "TWSE:2454", "d": "聯發科" },
+              { "s": "TWSE:3711", "d": "日月光投控" },
+              { "s": "TWSE:2379", "d": "瑞昱" },
+              { "s": "TWSE:2337", "d": "旺宏" },
+              { "s": "TWSE:3034", "d": "聯詠" },
+              { "s": "TWSE:2408", "d": "南亞科" }
+            ],
+            "originalTitle": "半導體"
+          }
+        ]
       }
       </script>
     </div>
@@ -238,6 +287,7 @@ function showPanel(market) {
   document.getElementById('badgeDot').className = 'badge-dot' + (isOpen ? '' : ' closed');
   document.getElementById('badgeText').textContent = (isTW ? '台股' : '美股 S&P 500') + (isOpen ? '　盤中' : '　收盤');
   document.getElementById('autoLabel').textContent = manualOverride ? '👆 手動切換' : '⏱ 自動切換';
+  document.getElementById('headerTitle').textContent = isTW ? '台股報價' : '美股熱力圖';
 }
 
 /* ── 手動覆蓋 ── */
