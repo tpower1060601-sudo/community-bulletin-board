@@ -182,7 +182,6 @@ body {
 .row-4 {
   background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, transparent 30%);
   border-left: 5px solid #fbbf24;
-  border-bottom: none;
 }
 .row-4 .label-badge { color:#fbbf24; border-color:rgba(251,191,36,0.35); background:rgba(251,191,36,0.1); }
 .row-4 .live-dot    { background:#fbbf24; box-shadow:0 0 8px #fbbf24; }
@@ -190,6 +189,18 @@ body {
 .row-4 .ticker-sep  { color: #fbbf24; }
 .row-4 .ticker-wrap::before { background: linear-gradient(90deg, #04080f, transparent); }
 .row-4 .ticker-wrap::after  { background: linear-gradient(270deg, #04080f, transparent); }
+
+.row-5 {
+  background: linear-gradient(90deg, rgba(168,85,247,0.10) 0%, transparent 30%);
+  border-left: 5px solid #a855f7;
+  border-bottom: none;
+}
+.row-5 .label-badge { color:#a855f7; border-color:rgba(168,85,247,0.4); background:rgba(168,85,247,0.12); }
+.row-5 .live-dot    { background:#a855f7; box-shadow:0 0 8px #a855f7; }
+.row-5 .ticker-item { color: rgba(255,255,255,.92); }
+.row-5 .ticker-sep  { color: #a855f7; }
+.row-5 .ticker-wrap::before { background: linear-gradient(90deg, #04080f, transparent); }
+.row-5 .ticker-wrap::after  { background: linear-gradient(270deg, #04080f, transparent); }
 </style>
 </head>
 <body>
@@ -242,6 +253,18 @@ body {
       </div>
     </div>
   </div>
+
+  <div class="news-row row-5">
+    <div class="row-label">
+      <div class="label-badge"><span class="live-dot"></span>股市即時</div>
+      <div class="label-sub">STOCK MARKET</div>
+    </div>
+    <div class="ticker-wrap" id="w4">
+      <div class="ticker-track" id="t4">
+        <span class="ticker-loading">連線中…</span>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -268,6 +291,11 @@ const FEEDS = [
     'https://feeds.bbci.co.uk/news/business/rss.xml',
     'https://feeds.bbci.co.uk/news/world/rss.xml',
     'https://feeds.bbci.co.uk/news/rss.xml'
+  ],
+  [
+    'https://tw.stock.yahoo.com/rss?category=tw-market',
+    'https://money.udn.com/rssfeed/news/1001/5590/5599?ch=money',
+    'https://www.moneydj.com/rss/rss.aspx?type=mainnews'
   ]
 ];
 
@@ -278,7 +306,8 @@ const PROXIES = [
 ];
 
 const REFETCH  = 5 * 60 * 1000;
-const PX_PER_S = 40;    /* 滾動速度（像素/秒），可調整 */
+/* 每列滾動速度（像素/秒）；股市那列調快 */
+const PX_PER_S = [40, 40, 40, 40, 90];
 const SEP      = '　◆　';
 
 /* ── XML 解析 ── */
@@ -371,7 +400,8 @@ function renderTicker(ri, titles) {
     requestAnimationFrame(() => {
       const fullW = track.scrollWidth / 2;   /* 單組寬度 */
       if (fullW < 10) return;
-      const dur = (fullW / PX_PER_S).toFixed(2);
+      const speed = Array.isArray(PX_PER_S) ? (PX_PER_S[ri] || 40) : PX_PER_S;
+      const dur = (fullW / speed).toFixed(2);
       track.style.animation = `tickerScroll ${dur}s linear infinite`;
     });
   });
