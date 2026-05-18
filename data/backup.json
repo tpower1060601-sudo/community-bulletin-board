@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-18T03:31:35.446Z",
+  "_savedAt": "2026-05-18T08:00:00.000Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -77,6 +77,7 @@
   },
   "settings": {
     "communityName": "親家市政廣場管理委員會",
+    "cwaKey": "CWA-FADE6959-7181-49F0-9497-9D9711554AAD",
     "weatherApiKey": "607d88654e58cfcf43fd1727e364342e",
     "weatherCity": "Taichung",
     "newsEnabled": false,

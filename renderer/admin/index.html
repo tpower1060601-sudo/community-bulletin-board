@@ -230,9 +230,10 @@ input:checked + .slider:before{transform:translateX(20px);}
       <div class="page-header"><div class="page-title">系統<span>設定</span></div><button class="btn btn-success" onclick="saveSettings()">儲存設定</button></div>
       <div class="card">
         <div class="form-group"><label>社區名稱</label><input type="text" id="sCommunityName"></div>
+        <div class="form-group"><label>中央氣象局授權碼（CWA）<small style="color:var(--text2);font-size:11px;margin-left:8px">opendata.cwa.gov.tw — 優先使用</small></label><input type="text" id="sCwaKey" placeholder="CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"></div>
         <div class="form-row">
-          <div class="form-group"><label>天氣 API Key（OpenWeather）</label><input type="text" id="sWeatherApiKey"></div>
-          <div class="form-group"><label>城市（英文）</label><input type="text" id="sWeatherCity"></div>
+          <div class="form-group"><label>天氣 API Key（OpenWeather，備用）</label><input type="text" id="sWeatherApiKey"></div>
+          <div class="form-group"><label>城市（英文，OpenWeather 備用）</label><input type="text" id="sWeatherCity"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>FMP Key 1（<a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="color:var(--accent)">Financial Modeling Prep</a>）</label><input type="text" id="sFmpKey1" placeholder="第 1 組 FMP API Key"></div>
@@ -652,6 +653,7 @@ function renderYtSlots(ch) {
 
 function loadSettingsForm() {
   if($('sCommunityName')) $('sCommunityName').value=settings.communityName||'';
+  if($('sCwaKey'))        $('sCwaKey').value=settings.cwaKey||'';
   if($('sWeatherApiKey'))    $('sWeatherApiKey').value=settings.weatherApiKey||'';
   if($('sFmpKey1'))  $('sFmpKey1').value=settings.fmpKey1||'';
   if($('sFmpKey2'))  $('sFmpKey2').value=settings.fmpKey2||'';
@@ -718,6 +720,7 @@ function loadAll() {
 
 function saveSettings() {
   settings.communityName=($('sCommunityName')||{}).value||settings.communityName;
+  settings.cwaKey=($('sCwaKey')||{}).value||'';
   settings.weatherApiKey=($('sWeatherApiKey')||{}).value||'';
   settings.fmpKey1=($('sFmpKey1')||{}).value||'';
   settings.fmpKey2=($('sFmpKey2')||{}).value||'';
