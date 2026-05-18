@@ -120,23 +120,23 @@ const CITY_ZH = {
 };
 
 /* ── CWA 天氣代碼對照 ── */
+/* CWA WeatherCode：字串 "01"–"42" */
 const CWA_ICON = {
-  1:'01',2:'02',3:'02',4:'03',5:'03',6:'03',7:'04',
-  8:'50',9:'10',10:'10',11:'10',12:'10',13:'10',
-  14:'11',15:'11',16:'11',17:'11',
-  18:'50',19:'50',20:'50',
-  21:'10',22:'11',23:'11',24:'10',
-  25:'09',26:'11',27:'11',28:'11',29:'11',30:'11',
-  31:'50',32:'50',33:'50'
+  '01':'01','02':'02','03':'02','04':'03','05':'03','06':'04',
+  '07':'09','08':'10','09':'10','10':'10','11':'10','12':'10','13':'10','14':'10',
+  '15':'11','16':'11','17':'11','18':'11','19':'11','20':'11','21':'11','22':'11',
+  '23':'10','24':'50','25':'50','26':'50','27':'50','28':'50',
+  '29':'10','30':'10','31':'10','32':'10','33':'11',
+  '34':'13','35':'13','36':'13','37':'13','38':'13','39':'13','40':'13','41':'13','42':'13'
 };
 const CWA_BG = {
-  1:'clear',2:'clouds',3:'clouds',4:'clouds',5:'clouds',6:'clouds',7:'clouds',
-  8:'mist',9:'drizzle',10:'drizzle',11:'drizzle',12:'drizzle',13:'drizzle',
-  14:'thunderstorm',15:'thunderstorm',16:'thunderstorm',17:'thunderstorm',
-  18:'mist',19:'mist',20:'mist',
-  21:'rain',22:'thunderstorm',23:'thunderstorm',24:'drizzle',
-  25:'rain',26:'thunderstorm',27:'thunderstorm',28:'thunderstorm',
-  29:'thunderstorm',30:'thunderstorm',31:'mist',32:'mist',33:'mist'
+  '01':'clear','02':'clouds','03':'clouds','04':'clouds','05':'clouds','06':'clouds',
+  '07':'rain','08':'rain','09':'rain','10':'rain','11':'rain','12':'rain','13':'rain','14':'rain',
+  '15':'thunderstorm','16':'thunderstorm','17':'thunderstorm','18':'thunderstorm',
+  '19':'thunderstorm','20':'thunderstorm','21':'thunderstorm','22':'thunderstorm',
+  '23':'rain','24':'mist','25':'mist','26':'mist','27':'mist','28':'mist',
+  '29':'rain','30':'rain','31':'rain','32':'rain','33':'thunderstorm',
+  '34':'snow','35':'snow','36':'snow','37':'snow','38':'snow','39':'snow','40':'snow','41':'snow','42':'snow'
 };
 
 /* ── 日出日落計算（台中 24.15°N, 120.67°E）── */
@@ -434,12 +434,13 @@ async function fetchWeatherCWA() {
   try {
     const [obsRes, fcRes] = await Promise.all([
       fetch(BASE + '/O-A0003-001?Authorization=' + key + '&StationId=467490&format=JSON'),
-      fetch(BASE + '/F-D0047-075?Authorization=' + key + '&locationName=' + encodeURIComponent('西屯區') + '&elementName=Wx,T,PoP6h,AT&format=JSON')
+      fetch(BASE + '/F-D0047-075?Authorization=' + key + '&LocationName=' + encodeURIComponent('西屯區') + '&format=JSON')
     ]);
     const obsData = await obsRes.json();
     const fcData  = await fcRes.json();
     if (obsData.success !== 'true') throw new Error('觀測站資料異常');
 
+    /* ── 觀測站（PascalCase）── */
     const we       = obsData.records.Station[0].WeatherElement;
     const temp     = parseFloat(we.AirTemperature);
     const humidity = parseFloat(we.RelativeHumidity);
@@ -447,43 +448,58 @@ async function fetchWeatherCWA() {
     const windDir  = parseFloat(we.WindDirection);
     const pressure = parseFloat(we.AirPressure);
     const desc     = we.Weather || '—';
-    const dailyHigh= we.DailyHigh?.TemperatureMax ? parseFloat(we.DailyHigh.TemperatureMax) : temp;
-    const dailyLow = we.DailyLow?.TemperatureMin  ? parseFloat(we.DailyLow.TemperatureMin)  : temp;
-    const visRaw   = String(we.Visibility || '');
-    const visibility = visRaw.includes('以上') ? 10000 : (parseFloat(visRaw) || 10) * 1000;
+    const dHigh    = we.DailyExtreme?.DailyHigh?.TemperatureInfo?.AirTemperature;
+    const dLow     = we.DailyExtreme?.DailyLow?.TemperatureInfo?.AirTemperature;
+    const dailyHigh= dHigh != null ? parseFloat(dHigh) : temp;
+    const dailyLow = dLow  != null ? parseFloat(dLow)  : temp;
+    const visRaw   = String(we.VisibilityDescription || '');
+    const visibility = visRaw.includes('>') ? 30000 : (parseFloat(visRaw) || 10) * 1000;
+    const gust     = parseFloat(we.GustInfo?.PeakGustSpeed || '') || null;
 
-    const loc = fcData.records?.locations?.[0]?.location?.[0];
-    let wxCode = 4, forecastPts = [], feelsLike = calcFeelsLike(temp, humidity, windSpeed);
+    /* ── 預報（PascalCase + 中文 ElementName）── */
+    const loc = fcData.records?.Locations?.[0]?.Location?.[0];
+    let wxCode = '04', forecastPts = [], feelsLike = calcFeelsLike(temp, humidity, windSpeed);
 
-    if (loc) {
-      const elMap = {};
-      loc.weatherElement.forEach(el => { elMap[el.elementName] = el.time; });
+    if (loc && loc.WeatherElement) {
+      // 用 includes 比對中文以避免精確字串差異
+      const findEl = (kw) => loc.WeatherElement.find(e =>
+        typeof e.ElementName === 'string' && kw.some(k => e.ElementName.indexOf(k) !== -1)
+      );
+      const wxEl  = findEl(['天氣現象']);
+      const tEl   = findEl(['平均溫度']) || findEl(['溫度']);
+      const popEl = findEl(['降雨機率', '降水機率']);
+      const atEl  = findEl(['最高體感','體感']);
 
-      const wxTimes = elMap['Wx'] || [];
-      if (wxTimes[0]) {
-        const vals = wxTimes[0].elementValue;
-        wxCode = parseInt(vals.length > 1 ? vals[1].value : vals[0].value) || 4;
+      if (wxEl && wxEl.Time[0]) {
+        wxCode = String(wxEl.Time[0].ElementValue[0].WeatherCode || '04').padStart(2,'0');
       }
-
-      const atTimes = elMap['AT'] || [];
-      if (atTimes[0]) feelsLike = parseFloat(atTimes[0].elementValue[0].value) || feelsLike;
-
-      const tTimes   = elMap['T']     || [];
-      const popTimes = elMap['PoP6h'] || [];
+      if (atEl && atEl.Time[0]) {
+        const v = atEl.Time[0].ElementValue[0];
+        const at = parseFloat(v.MaxApparentTemperature || v.MinApparentTemperature || v.ApparentTemperature);
+        if (!isNaN(at)) feelsLike = at;
+      }
+      const popSlots = popEl ? popEl.Time : [];
       const now = Date.now();
-      tTimes.slice(0, 12).forEach(t => {
-        const st = new Date(t.startTime.replace(' ', 'T'));
-        if (st.getTime() < now - 1800000) return;
-        const tVal = parseFloat(t.elementValue[0].value);
-        if (isNaN(tVal)) return;
-        let pop = 0;
-        popTimes.forEach(p => {
-          const ps = new Date(p.startTime.replace(' ', 'T'));
-          const pe = new Date(p.endTime.replace(' ', 'T'));
-          if (st >= ps && st < pe) pop = (parseFloat(p.elementValue[0].value) || 0) / 100;
+      if (tEl && tEl.Time) {
+        tEl.Time.slice(0, 14).forEach(t => {
+          const st = new Date(t.StartTime);
+          if (st.getTime() < now - 1800000) return;
+          const v = t.ElementValue[0];
+          const tVal = parseFloat(v.Temperature || v.AirTemperature);
+          if (isNaN(tVal)) return;
+          let pop = 0;
+          popSlots.forEach(p => {
+            const ps = new Date(p.StartTime), pe = new Date(p.EndTime);
+            if (st >= ps && st < pe) {
+              const pv = p.ElementValue[0].ProbabilityOfPrecipitation;
+              pop = (parseFloat(pv) || 0) / 100;
+            }
+          });
+          if (forecastPts.length < 8) {
+            forecastPts.push({ time: String(st.getHours()).padStart(2,'0') + ':00', temp: tVal, pop });
+          }
         });
-        if (forecastPts.length < 8) forecastPts.push({ time: String(st.getHours()).padStart(2,'0') + ':00', temp: tVal, pop });
-      });
+      }
     }
 
     const nowDate = new Date();
@@ -504,13 +520,13 @@ async function fetchWeatherCWA() {
       name: 'CWA_XITUN',
       weather: [{ icon: iconCode, main: bgType, description: desc }],
       main: { temp, feels_like: feelsLike, humidity, pressure, temp_max: dailyHigh, temp_min: dailyLow },
-      wind: { speed: windSpeed, deg: windDir, gust: null },
+      wind: { speed: windSpeed, deg: windDir, gust },
       visibility,
       clouds: { all: Math.round(humidity > 85 ? 90 : humidity > 65 ? 55 : 20) }
     };
     render(cur, pts, fcHigh, fcLow, {
       sunrise: sunTimes.sunrise, sunset: sunTimes.sunset,
-      windDeg: windDir, windGust: null, pressure, clouds: cur.clouds.all
+      windDeg: windDir, windGust: gust, pressure, clouds: cur.clouds.all
     });
   } catch(e) {
     console.error('[CWA]', e);
