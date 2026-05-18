@@ -96,12 +96,15 @@ input:checked + .slider:before{transform:translateX(20px);}
 .modal-footer{padding:16px 24px;background:rgba(0,0,0,0.2);display:flex;justify-content:flex-end;gap:12px;flex-shrink:0;}
 
 /* 富文本工具列 */
-.rich-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:rgba(0,0,0,0.35);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;}
+.rich-toolbar{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px 10px;background:rgba(0,0,0,0.35);border-radius:8px 8px 0 0;border:1px solid var(--border);border-bottom:none;row-gap:8px;}
 .rich-toolbar button{background:rgba(255,255,255,0.08);color:#fff;border:1px solid var(--border);border-radius:6px;padding:5px 12px;cursor:pointer;font-size:13px;font-family:inherit;transition:background 0.15s;}
 .rich-toolbar button:hover{background:rgba(255,255,255,0.18);}
 .rich-toolbar select{background:#0f172a !important;color:#fff !important;border:1px solid var(--border) !important;border-radius:6px;padding:5px 8px;cursor:pointer;font-size:13px;width:auto;}
-.rich-toolbar input[type=color]{width:32px;height:30px;padding:2px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:none;}
+.rich-toolbar input[type=color]{width:26px;height:26px;padding:1px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:#0f172a;flex-shrink:0;}
 .rich-toolbar .tb-sep{width:1px;height:20px;background:var(--border);flex-shrink:0;}
+.rich-toolbar .tb-label{font-size:11px;color:var(--text2);flex-shrink:0;letter-spacing:0.5px;}
+.color-swatch{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:border-color 0.15s,transform 0.12s;display:inline-block;}
+.color-swatch:hover{border-color:rgba(255,255,255,0.8);transform:scale(1.25);}
 .rich-editor{min-height:130px;max-height:220px;overflow-y:auto;padding:12px 14px;background:#0f172a;color:#fff;border:1px solid var(--border);border-radius:0 0 8px 8px;outline:none;line-height:1.9;font-size:15px;font-family:inherit;}
 .rich-editor:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,0.2);}
 .rich-editor:empty::before{content:attr(data-placeholder);color:rgba(255,255,255,0.25);pointer-events:none;}
@@ -463,6 +466,19 @@ function clearAnnImage() {
 /* fontSize 用 em 對應表，讓 admin 編輯和 screen2 顯示比例一致 */
 var FONT_SIZE_MAP = { '2':'0.65em', '3':'1em', '4':'1.45em', '5':'1.95em', '6':'2.6em' };
 
+/* 快速色票（12 色） */
+var SWATCHES = [
+  ['#ffffff','白'], ['#f1f5f9','淡灰'], ['#94a3b8','灰'],
+  ['#f87171','紅'], ['#fb923c','橘'],  ['#fbbf24','金黃'],
+  ['#facc15','黃'], ['#4ade80','綠'],  ['#22d3ee','青'],
+  ['#60a5fa','藍'], ['#c084fc','紫'],  ['#f472b6','粉']
+];
+function buildSwatches() {
+  return SWATCHES.map(function(s) {
+    return '<div class="color-swatch" style="background:'+s[0]+'" title="'+s[1]+'" onclick="fmt(\'foreColor\',\''+s[0]+'\')"></div>';
+  }).join('');
+}
+
 function fmt(cmd, val) {
   var editor = document.getElementById('annContent');
   editor.focus();
@@ -506,8 +522,9 @@ function openAnnModal(id) {
     '</div>'+
     '<div class="form-group"><label>內容</label>'+
       '<div class="rich-toolbar">'+
-        '<button onclick="fmt(\'bold\')" title="粗體"><b>B</b></button>'+
-        '<button onclick="fmt(\'italic\')" title="斜體"><i>I</i></button>'+
+        '<button onclick="fmt(\'bold\')" title="粗體 Ctrl+B"><b>B</b></button>'+
+        '<button onclick="fmt(\'italic\')" title="斜體 Ctrl+I"><i>I</i></button>'+
+        '<button onclick="fmt(\'underline\')" title="底線 Ctrl+U"><u>U</u></button>'+
         '<div class="tb-sep"></div>'+
         '<select onchange="fmt(\'fontSize\',this.value);this.selectedIndex=0" title="字體大小">'+
           '<option value="">字級</option>'+
@@ -518,9 +535,11 @@ function openAnnModal(id) {
           '<option value="6">超大（2.6×）</option>'+
         '</select>'+
         '<div class="tb-sep"></div>'+
-        '<input type="color" id="txtColor" value="#ffffff" title="文字顏色" onchange="fmt(\'foreColor\',this.value)">'+
+        '<span class="tb-label">文字色：</span>'+
+        buildSwatches()+
+        '<input type="color" id="txtColor" value="#fbbf24" title="自訂顏色（即時套用）" oninput="fmt(\'foreColor\',this.value)" onchange="fmt(\'foreColor\',this.value)">'+
         '<div class="tb-sep"></div>'+
-        '<button onclick="fmt(\'removeFormat\')" title="清除格式" style="font-size:11px">清除</button>'+
+        '<button onclick="fmt(\'removeFormat\')" title="清除所有格式" style="font-size:11px">✕ 清除</button>'+
       '</div>'+
       '<div id="annContent" contenteditable="true" class="rich-editor" data-placeholder="輸入公告內容…"></div>'+
     '</div>'+
