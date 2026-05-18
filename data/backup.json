@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-18T10:54:01.561Z",
+  "_savedAt": "2026-05-18T10:56:41.262Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -18,20 +18,6 @@
         "date": "2026-05-18"
       },
       {
-        "id": 1778757211587,
-        "title": "",
-        "type": "event",
-        "duration": 15,
-        "content": "",
-        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778757204141_S__358604803.jpg",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
-        "date": "2026-05-14"
-      },
-      {
         "id": 1778746414105,
         "title": "17F 鼎京科技有限公司",
         "type": "general",
@@ -43,6 +29,20 @@
         "startTime": "13:00",
         "endDate": "2026-05-22",
         "endTime": "12:00",
+        "date": "2026-05-14"
+      },
+      {
+        "id": 1778757211587,
+        "title": "",
+        "type": "event",
+        "duration": 15,
+        "content": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1778757204141_S__358604803.jpg",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
         "date": "2026-05-14"
       },
       {
