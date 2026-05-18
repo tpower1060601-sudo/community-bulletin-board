@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="1800">
 <title>圖片輪播</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -209,6 +210,9 @@ window.api.on('settings:updated', s => {
   interval = (s.slideInterval || 6) * 1000;
   if (timer) clearInterval(timer);
   loadFiles();
+});
+window.addEventListener('beforeunload', () => {
+  if (timer) clearInterval(timer);
 });
 
 loadFiles();

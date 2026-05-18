@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="1800">
 <title>親家市政廣場｜大廳公佈欄</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -318,7 +319,7 @@ function tick(){
   document.getElementById('dateStr').textContent=
     `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日　星期${DAYS[n.getDay()]}`;
 }
-setInterval(tick,1000); tick();
+clockTimer = setInterval(tick,1000); tick();
 
 /* ────────────────────────────────────────────────────
    背景照片輪播
@@ -441,7 +442,7 @@ function nextAnn(){
 /* ────────────────────────────────────────────────────
    快訊
 ──────────────────────────────────────────────────── */
-let newsIdx=0, newsTimer=null;
+let newsIdx=0, newsTimer=null, clockTimer=null, schedTimer=null;
 function renderNews(list){
   const wrap=document.getElementById('newsWrap');
   if(!list||!list.length){
@@ -509,8 +510,16 @@ async function init(){
   renderAnnouncements(filterActive(_rawAnnList));
 
   // 每分鐘重新過濾（自動上下架）
-  setInterval(()=> renderAnnouncements(filterActive(_rawAnnList)), 60000);
+  schedTimer = setInterval(()=> renderAnnouncements(filterActive(_rawAnnList)), 60000);
 }
+
+window.addEventListener('beforeunload', () => {
+  if (clockTimer)  clearInterval(clockTimer);
+  if (bgTimer)     clearInterval(bgTimer);
+  if (annTimer)    clearInterval(annTimer);
+  if (newsTimer)   clearInterval(newsTimer);
+  if (schedTimer)  clearInterval(schedTimer);
+});
 
 /* ────────────────────────────────────────────────────
    即時更新

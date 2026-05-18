@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="1800">
 <title>即時新聞看板</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -409,7 +410,8 @@ function renderTicker(ri, titles) {
 
 /* ── 初始化 ── */
 FEEDS.forEach((_, i) => fetchRow(i));
-setInterval(() => FEEDS.forEach((_, i) => fetchRow(i)), REFETCH);
+const refetchTimer = setInterval(() => FEEDS.forEach((_, i) => fetchRow(i)), REFETCH);
+window.addEventListener('beforeunload', () => clearInterval(refetchTimer));
 </script>
 </body>
 </html>

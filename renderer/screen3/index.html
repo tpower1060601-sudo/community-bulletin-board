@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="1800">
 <title>全球市場儀表板</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -406,7 +407,8 @@ function tickClocks() {
 
 buildClockBar();
 tickClocks();
-setInterval(tickClocks, 1000);
+const clockTimer = setInterval(tickClocks, 1000);
+window.addEventListener('beforeunload', () => clearInterval(clockTimer));
 
 async function init() {
   if (window.ghBackup) await window.ghBackup.autoRestore();

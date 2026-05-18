@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="1800">
 <title>公告欄 B</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -185,7 +186,7 @@ const TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活�
 const DEFAULT_DURATION = 7000;
 
 let data = { marquee:'', list:[] };
-let current = 0, timer = null;
+let current = 0, timer = null, schedTimer = null;
 let activeList = []; // 目前顯示中的公告（含 duration）
 
 /* 取得第 idx 張投影片的顯示毫秒數 */
@@ -321,8 +322,13 @@ async function init() {
   const [ann] = await Promise.all([window.api.get('announcements')]);
   data = ann;
   render(); renderMarquee();
-  setInterval(render, 60000); // 每分鐘重新過濾排程公告（上架/下架）
+  schedTimer = setInterval(render, 60000); // 每分鐘重新過濾排程公告（上架/下架）
 }
+
+window.addEventListener('beforeunload', () => {
+  if (timer)      clearTimeout(timer);
+  if (schedTimer) clearInterval(schedTimer);
+});
 
 window.api.on('announcements:updated', d=>{ data=d; render(); renderMarquee(); });
 

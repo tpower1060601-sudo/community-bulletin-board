@@ -2,6 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="refresh" content="1800">
 <title>即時天氣</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -122,7 +123,7 @@ function tick() {
   clockEl.textContent = String(n.getHours()).padStart(2,'0') + ':' +
     String(n.getMinutes()).padStart(2,'0') + ':' + String(n.getSeconds()).padStart(2,'0');
 }
-setInterval(tick, 1000);
+const clockTimer = setInterval(tick, 1000);
 
 /* ── 城市中文對照 ── */
 const CITY_ZH = {
@@ -735,14 +736,21 @@ function doFetch() {
   }
   fetchAlertsCWA();
 }
+let fetchTimer = null, alertTimer = null;
 async function init() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
   settings = await window.api.get('settings');
   doFetch();
-  setInterval(doFetch, 10 * 60 * 1000);
-  setInterval(fetchAlertsCWA, 3 * 60 * 1000);
+  fetchTimer = setInterval(doFetch, 10 * 60 * 1000);
+  alertTimer = setInterval(fetchAlertsCWA, 3 * 60 * 1000);
 }
 window.api.on('settings:updated', s => { settings = s; doFetch(); });
+window.addEventListener('beforeunload', () => {
+  clearInterval(clockTimer);
+  if (cwaCarouselTimer) clearInterval(cwaCarouselTimer);
+  if (fetchTimer)  clearInterval(fetchTimer);
+  if (alertTimer)  clearInterval(alertTimer);
+});
 init();
 </script>
 </body>
