@@ -319,7 +319,7 @@ function tick(){
   document.getElementById('dateStr').textContent=
     `${n.getFullYear()}年${n.getMonth()+1}月${n.getDate()}日　星期${DAYS[n.getDay()]}`;
 }
-clockTimer = setInterval(tick,1000); tick();
+let clockTimer = setInterval(tick,1000); tick();
 
 /* ────────────────────────────────────────────────────
    背景照片輪播
@@ -442,7 +442,7 @@ function nextAnn(){
 /* ────────────────────────────────────────────────────
    快訊
 ──────────────────────────────────────────────────── */
-let newsIdx=0, newsTimer=null, clockTimer=null, schedTimer=null;
+let newsIdx=0, newsTimer=null, schedTimer=null;
 function renderNews(list){
   const wrap=document.getElementById('newsWrap');
   if(!list||!list.length){
