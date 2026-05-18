@@ -528,8 +528,24 @@ async function fetchWeatherCWA() {
 
     const sunTimes = calcSunTimes(new Date());
     const isDay    = Date.now()/1000 >= sunTimes.sunrise && Date.now()/1000 <= sunTimes.sunset;
-    const iconCode = (CWA_ICON[wxCode] || '04') + (isDay ? 'd' : 'n');
-    const bgType   = CWA_BG[wxCode] || 'clouds';
+
+    /* 「現在」的天氣以觀測站中文字串為準（晴/多雲/陰/雨/雷/雪/霧），
+       這樣才不會在現在晴朗時還跑雲飄動畫。預報 WeatherCode 只當備援。 */
+    const w = desc || '';
+    let bgType, iconKey;
+    if (w.indexOf('雷') !== -1)       { bgType = 'thunderstorm'; iconKey = '11'; }
+    else if (w.indexOf('雪') !== -1)  { bgType = 'snow';         iconKey = '13'; }
+    else if (w.indexOf('豪雨') !== -1 || w.indexOf('大雨') !== -1) { bgType = 'rain'; iconKey = '09'; }
+    else if (w.indexOf('雨') !== -1)  { bgType = 'rain';         iconKey = '10'; }
+    else if (w.indexOf('霧') !== -1)  { bgType = 'mist';         iconKey = '50'; }
+    else if (w.indexOf('陰') !== -1)  { bgType = 'clouds';       iconKey = '04'; }
+    else if (w.indexOf('多雲') !== -1){ bgType = 'clouds';       iconKey = '03'; }
+    else if (w.indexOf('晴') !== -1)  { bgType = 'clear';        iconKey = '01'; }
+    else { // 觀測站沒給就回退到預報 WeatherCode
+      iconKey = CWA_ICON[wxCode] || '04';
+      bgType  = CWA_BG[wxCode]   || 'clouds';
+    }
+    const iconCode = iconKey + (isDay ? 'd' : 'n');
     const allTemps = pts.map(p => p.temp);
     const fcHigh   = Math.round(Math.max(...allTemps, dailyHigh));
     const fcLow    = Math.round(Math.min(...allTemps, dailyLow));
