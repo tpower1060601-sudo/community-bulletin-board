@@ -30,14 +30,16 @@ body {
 /* 目前天氣 — 三欄：左(日照) 中(溫度) 右(統計) */
 .current { flex: 1; min-height: 0; display: flex; align-items: stretch; gap: 20px; }
 
-/* 左欄：日夜符號 */
-.sun-panel { flex-shrink: 0; width: 480px; background: rgba(15,10,5,.5); border: 1px solid rgba(245,158,11,.15); border-radius: 20px; padding: 18px 20px 14px; backdrop-filter: blur(24px); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
-.sun-symbol { font-size: 130px; line-height: 1; filter: drop-shadow(0 0 32px rgba(251,191,36,.5)); animation: floatIcon 6s ease-in-out infinite; }
-.sun-symbol.night { filter: drop-shadow(0 0 24px rgba(148,163,220,.4)); }
-.sun-times { display: flex; justify-content: space-around; width: 100%; margin-top: 28px; }
-.sun-time-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.sun-time-lbl { font-size: 20px; font-weight: 800; letter-spacing: 2px; color: rgba(255,255,255,.35); text-transform: uppercase; }
-.sun-time-val { font-size: 42px; font-weight: 900; color: rgba(251,191,36,.95); letter-spacing: 2px; }
+/* 左欄：CWA 圖資輪播 */
+.cwa-panel { position: relative; flex-shrink: 0; width: 480px; background: rgba(15,10,5,.55); border: 1px solid rgba(245,158,11,.18); border-radius: 20px; padding: 14px 14px 12px; backdrop-filter: blur(24px); display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.cwa-title { display: flex; align-items: center; justify-content: space-between; font-size: 20px; font-weight: 800; letter-spacing: 3px; color: #fbbf24; padding: 2px 4px; }
+.cwa-title .cwa-src { font-size: 12px; color: rgba(255,255,255,.4); font-weight: 400; letter-spacing: 1px; }
+.cwa-img-wrap { flex: 1; min-height: 0; position: relative; border-radius: 12px; overflow: hidden; background: #000; display: flex; align-items: center; justify-content: center; }
+.cwa-img { max-width: 100%; max-height: 100%; object-fit: contain; opacity: 0; transition: opacity .6s ease; display: block; }
+.cwa-img.show { opacity: 1; }
+.cwa-dots { display: flex; justify-content: center; gap: 6px; padding: 4px 0 2px; }
+.cwa-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); transition: all .3s; }
+.cwa-dot.active { background: #fbbf24; width: 22px; border-radius: 4px; }
 
 /* 中欄：天氣主資訊 */
 .center-block { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; }
@@ -91,8 +93,6 @@ body.has-alert .layout { height: calc(100vh - 56px); }
 
 /* Twemoji 圖片尺寸 */
 .weather-icon img.emoji { width: 110px; height: 110px; }
-.sun-symbol img.emoji   { width: 120px; height: 120px; }
-.sun-time-lbl img.emoji { width: 22px; height: 22px; vertical-align: middle; }
 .stat-lbl img.emoji     { width: 22px; height: 22px; vertical-align: middle; }
 .wind-row .stat-lbl img.emoji { width: 20px; height: 20px; vertical-align: middle; }
 .chart-title img.emoji  { width: 18px; height: 18px; vertical-align: middle; }
@@ -404,8 +404,10 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
       <div class="clock" id="clockEl">--:--:--</div>
     </div>
     <div class="current">
-      <div class="sun-panel">
-        ${sunArc}
+      <div class="cwa-panel" id="cwaPanel">
+        <div class="cwa-title"><span id="cwaImgTitle">中央氣象署 圖資</span><span class="cwa-src">cwa.gov.tw</span></div>
+        <div class="cwa-img-wrap"><img id="cwaImg" class="cwa-img" alt=""></div>
+        <div class="cwa-dots" id="cwaDots"></div>
       </div>
       <div class="center-block">
         <div class="weather-icon">${icon}</div>
@@ -443,6 +445,8 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
   requestAnimationFrame(() => { const c = document.getElementById('fChart'); if (c) drawChart(c, chartData); });
   // Emoji 轉圖片（相容 Windows 7）
   if (window.twemoji) twemoji.parse(document.getElementById('layout'), { folder: 'svg', ext: '.svg' });
+  // 啟動 CWA 圖資輪播
+  startCwaCarousel();
 }
 
 /* ── CWA 中央氣象局 API ── */
@@ -566,6 +570,57 @@ async function fetchWeatherCWA() {
     console.error('[CWA]', e);
     document.getElementById('layout').innerHTML =
       `<div class="no-key">⚠️ 中央氣象局資料取得失敗<br><small style="opacity:.45">${e.message}</small></div>`;
+  }
+}
+
+/* ── CWA 圖資輪播 ── */
+const CWA_IMAGES = [
+  { title: '衛星雲圖',   url: 'https://www.cwa.gov.tw/Data/satellite/LCC_TRGB_1000/LCC_TRGB_1000_forPreview.jpg' },
+  { title: '雷達回波',   url: 'https://www.cwa.gov.tw/Data/radar/CV1_TW_1000_forPreview.png' },
+  { title: '累積雨量',   url: 'https://www.cwa.gov.tw/Data/rainfall/QZJ_forPreview.jpg' },
+  { title: '紫外線指數', url: 'https://www.cwa.gov.tw/Data/UVI/UVI_forPreview.png' },
+  { title: '即時閃電',   url: 'https://www.cwa.gov.tw/Data/lightning/lightning_s_forPreview.jpg' },
+  { title: '溫度分布',   url: 'https://www.cwa.gov.tw/Data/temperature/temp_forPreview.jpg' },
+  { title: '今日健康氣象', url: 'https://www.cwa.gov.tw/Data/health/health_forPreview.png' }
+];
+let cwaCarouselTimer = null;
+let cwaCarouselIdx  = 0;
+
+function startCwaCarousel() {
+  if (cwaCarouselTimer) clearInterval(cwaCarouselTimer);
+  // 建立指示點
+  const dots = document.getElementById('cwaDots');
+  if (dots) {
+    dots.innerHTML = CWA_IMAGES.map((_, i) =>
+      '<span class="cwa-dot' + (i === 0 ? ' active' : '') + '"></span>'
+    ).join('');
+  }
+  cwaCarouselIdx = 0;
+  showCwaImage(0);
+  cwaCarouselTimer = setInterval(() => {
+    cwaCarouselIdx = (cwaCarouselIdx + 1) % CWA_IMAGES.length;
+    showCwaImage(cwaCarouselIdx);
+  }, 12000);
+}
+
+function showCwaImage(idx) {
+  const img   = document.getElementById('cwaImg');
+  const title = document.getElementById('cwaImgTitle');
+  const dots  = document.getElementById('cwaDots');
+  if (!img || !title) return;
+  const item = CWA_IMAGES[idx];
+  // 淡出 → 換圖 → 載入完淡入
+  img.classList.remove('show');
+  setTimeout(() => {
+    title.textContent = item.title;
+    img.onload  = () => img.classList.add('show');
+    img.onerror = () => { img.classList.remove('show'); };
+    // 加時間戳避免快取（CWA 大概每 10 分鐘更新）
+    img.src = item.url + '?t=' + Math.floor(Date.now() / 60000);
+  }, 400);
+  if (dots) {
+    const all = dots.querySelectorAll('.cwa-dot');
+    all.forEach((d, i) => d.classList.toggle('active', i === idx));
   }
 }
 
