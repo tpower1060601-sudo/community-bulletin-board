@@ -6,8 +6,7 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#000; height:100vh; overflow:hidden; }
-.wrap { width:100%; height:100%; position:relative; }
-.wrap iframe { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+#yt-player { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
 .placeholder {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   height:100vh; background:#04080f; color:rgba(255,255,255,0.2);
@@ -19,7 +18,7 @@ body { background:#000; height:100vh; overflow:hidden; }
 </style>
 </head>
 <body>
-<div class="wrap" id="wrap">
+<div id="wrap" style="width:100%;height:100%;position:relative;">
   <div class="placeholder">
     <div class="icon">📺</div>
     <div class="msg">載入中…</div>
@@ -29,20 +28,61 @@ body { background:#000; height:100vh; overflow:hidden; }
 <script src="../../shared/api.js"></script>
 <script>
 'use strict';
+var player = null;
+var currentId = '';
+
+function onYouTubeIframeAPIReady() {
+  if (currentId) loadPlayer(currentId);
+}
+
+function loadPlayer(id) {
+  var wrap = document.getElementById('wrap');
+  wrap.innerHTML = '<div id="yt-player"></div>';
+  player = new YT.Player('yt-player', {
+    videoId: id,
+    width: '100%',
+    height: '100%',
+    playerVars: {
+      autoplay: 1,
+      mute: 1,
+      rel: 0,
+      showinfo: 0,
+      controls: 0,
+      vq: 'hd1080'
+    },
+    events: {
+      onReady: function(e) {
+        e.target.setPlaybackQuality('hd1080');
+        e.target.playVideo();
+      }
+    }
+  });
+}
+
 function render(id) {
-  const wrap = document.getElementById('wrap');
+  currentId = id || '';
+  var wrap = document.getElementById('wrap');
   if (!id) {
+    if (player) { player.destroy(); player = null; }
     wrap.innerHTML = '<div class="placeholder"><div class="icon">📺</div><div class="msg">YouTube 頻道 2</div><div class="sub">請至管理後台設定 YouTube ID</div></div>';
-  } else {
-    wrap.innerHTML = `<iframe src="https://www.youtube.com/embed/${id}?autoplay=1&mute=1&rel=0&showinfo=0&controls=0" allow="autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+    return;
+  }
+  if (window.YT && YT.Player) {
+    loadPlayer(id);
   }
 }
+
 async function init() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
-  const s = await window.api.get('settings');
-  render(s.youtubeId2 || '');
+  var s = await window.api.get('settings');
+  currentId = s.youtubeId2 || '';
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  document.head.appendChild(tag);
+  if (window.YT && YT.Player && currentId) loadPlayer(currentId);
 }
-window.api.on('settings:updated', s => render(s.youtubeId2 || ''));
+
+window.api.on('settings:updated', function(s) { render(s.youtubeId2 || ''); });
 init();
 </script>
 </body>
