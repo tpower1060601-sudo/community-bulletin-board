@@ -71,6 +71,16 @@ body {
 #fChart { width: 100%; display: block; }
 
 .no-key { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; gap: 20px; color: rgba(255,255,255,.35); font-size: 26px; text-align: center; }
+
+/* Twemoji 圖片尺寸 */
+.weather-icon img.emoji { width: 110px; height: 110px; }
+.sun-symbol img.emoji   { width: 120px; height: 120px; }
+.sun-time-lbl img.emoji { width: 22px; height: 22px; vertical-align: middle; }
+.stat-lbl img.emoji     { width: 22px; height: 22px; vertical-align: middle; }
+.wind-row .stat-lbl img.emoji { width: 20px; height: 20px; vertical-align: middle; }
+.chart-title img.emoji  { width: 18px; height: 18px; vertical-align: middle; }
+.hl img.emoji           { width: 0; height: 0; display: none; }
+.live-badge img.emoji   { width: 0; height: 0; display: none; }
 </style>
 </head>
 <body>
@@ -81,6 +91,7 @@ body {
   <div style="margin:auto;color:rgba(255,255,255,.2);font-size:22px">載入中…</div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
 <script src="../../shared/api.js"></script>
 <script>
 'use strict';
@@ -358,6 +369,8 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
   tick();
   chartData = forecast;
   requestAnimationFrame(() => { const c = document.getElementById('fChart'); if (c) drawChart(c, chartData); });
+  // Emoji 轉圖片（相容 Windows 7）
+  if (window.twemoji) twemoji.parse(document.getElementById('layout'), { folder: 'svg', ext: '.svg' });
 }
 
 /* ── API ── */
