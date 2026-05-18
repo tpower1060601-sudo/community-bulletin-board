@@ -362,9 +362,30 @@ function renderAnnouncements() {
     var sh=sc===1?'<span style="color:#10b981;font-weight:700">顯示中</span>':sc===0?'<span style="color:#fbbf24;font-weight:700">待發布</span>':'<span style="color:#f43f5e;font-weight:700">已結束</span>';
     var ds=(a.alwaysValid!==false)?'常駐':((a.startDate||'')+' ~ '+(a.endDate||''));
     var durBadge='<span style="color:var(--text2);font-size:12px;margin-left:6px">⏱ '+(a.duration||7)+'s</span>';
-    html+='<tr><td>'+esc(a.title)+durBadge+'</td><td><span class="tag tag-'+(a.type||'general')+'">'+esc(a.type||'一般')+'</span></td><td>'+ds+'</td><td>'+sh+'</td><td><button class="btn btn-ghost btn-sm" onclick="openAnnModal('+a.id+')">編輯</button></td></tr>';
+    var upBtn = i > 0
+      ? '<button class="btn btn-ghost btn-sm" onclick="moveAnn('+a.id+',-1)" title="上移" style="padding:4px 8px;min-width:30px">▲</button>'
+      : '<button class="btn btn-ghost btn-sm" disabled style="padding:4px 8px;min-width:30px;opacity:0.15;cursor:default">▲</button>';
+    var dnBtn = i < list.length-1
+      ? '<button class="btn btn-ghost btn-sm" onclick="moveAnn('+a.id+',1)" title="下移" style="padding:4px 8px;min-width:30px">▼</button>'
+      : '<button class="btn btn-ghost btn-sm" disabled style="padding:4px 8px;min-width:30px;opacity:0.15;cursor:default">▼</button>';
+    html+='<tr><td>'+esc(a.title)+durBadge+'</td><td><span class="tag tag-'+(a.type||'general')+'">'+esc(a.type||'一般')+'</span></td><td>'+ds+'</td><td>'+sh+'</td>'+
+      '<td style="white-space:nowrap">'+upBtn+' '+dnBtn+'&nbsp; <button class="btn btn-ghost btn-sm" onclick="openAnnModal('+a.id+')">編輯</button></td></tr>';
   }
   body.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">尚無公告</td></tr>';
+}
+
+function moveAnn(id, dir) {
+  var list = announcements.list || [];
+  var idx = list.findIndex(function(x){ return x.id === id; });
+  if (idx < 0) return;
+  var newIdx = idx + dir;
+  if (newIdx < 0 || newIdx >= list.length) return;
+  var tmp = list[idx]; list[idx] = list[newIdx]; list[newIdx] = tmp;
+  announcements.list = list;
+  window.api.save('announcements', announcements).then(function(){
+    renderAnnouncements();
+    triggerBackup();
+  });
 }
 
 /* ── 公告圖片上傳（GitHub API） ───────────────────────────────── */
