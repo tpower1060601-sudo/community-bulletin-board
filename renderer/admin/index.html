@@ -311,7 +311,7 @@ input:checked + .slider:before{transform:translateX(20px);}
         <div style="flex-shrink:0;width:150px">
           <div class="card" style="padding:14px">
             <div class="card-title" style="margin-bottom:10px;font-size:11px;line-height:1.6">可用網頁<br><span style="font-weight:400;color:var(--text2);font-size:10px;text-transform:none;letter-spacing:0">拖曳到右側螢幕格子上</span></div>
-            <div id="screenPalette" style="display:flex;flex-direction:column;gap:6px;align-items:center"></div>
+            <div id="screenPalette" style="display:grid;grid-template-columns:1fr 1fr;gap:5px"></div>
           </div>
         </div>
 
@@ -1030,19 +1030,14 @@ function initLayoutEditor() {
 function renderPalette() {
   var el = $('screenPalette');
   if (!el) return;
-  var PSCALE = 14;
+  var colW = 54; // 每欄約 54px
   el.innerHTML = SCREEN_DEFS.map(function(s) {
-    var pw = Math.round(s.w / PSCALE);
-    var ph = Math.round(s.h / PSCALE);
-    var maxW = 130, maxH = 88;
-    if (pw > maxW) { ph = Math.round(ph * maxW / pw); pw = maxW; }
-    if (ph > maxH) { pw = Math.round(pw * maxH / ph); ph = maxH; }
+    var ph = Math.min(52, Math.round(colW * s.h / s.w));
     return '<div class="screen-block" draggable="true" ' +
       'ondragstart="layDragStart(event,\'' + s.id + '\')" ' +
-      'style="background:' + s.color + ';width:' + pw + 'px;height:' + ph + 'px">' +
-      '<div style="font-size:10px;font-weight:800;letter-spacing:.5px">' + s.id + '</div>' +
-      '<div style="font-size:9px;opacity:.85;margin-top:1px">' + s.label + '</div>' +
-      '<div style="font-size:8px;opacity:.5;margin-top:1px">' + s.w + '×' + s.h + '</div>' +
+      'style="background:' + s.color + ';width:100%;height:' + ph + 'px">' +
+      '<div style="font-size:9px;font-weight:800;letter-spacing:.3px">' + s.id + '</div>' +
+      '<div style="font-size:8px;opacity:.8;margin-top:1px">' + s.label + '</div>' +
       '</div>';
   }).join('');
 }
