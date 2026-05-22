@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-05-22T03:44:58.576Z",
+  "_savedAt": "2026-05-22T03:46:10.456Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -10,11 +10,11 @@
         "duration": 15,
         "content": "",
         "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1779421489031_stone_maintenance_v4_20260522_114301.png",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
+        "alwaysValid": false,
+        "startDate": "2026-05-22",
+        "startTime": "11:50",
+        "endDate": "2026-05-24",
+        "endTime": "18:00",
         "date": "2026-05-22"
       },
       {
