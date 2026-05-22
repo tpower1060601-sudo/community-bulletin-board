@@ -1,8 +1,22 @@
 {
-  "_savedAt": "2026-05-22T03:44:03.204Z",
+  "_savedAt": "2026-05-22T03:44:58.576Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
+      {
+        "id": 1779421498575,
+        "title": "石材保養公告",
+        "type": "general",
+        "duration": 15,
+        "content": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1779421489031_stone_maintenance_v4_20260522_114301.png",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
+        "date": "2026-05-22"
+      },
       {
         "id": 1778746414105,
         "title": "17F 鼎京科技有限公司",
