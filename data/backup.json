@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-06-04T07:49:52.689Z",
+  "_savedAt": "2026-06-04T08:20:08.535Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -111,7 +111,7 @@
     "newsEnabled": false,
     "newsSource": "",
     "youtubeId": "meHTKm4XBS8",
-    "youtubeId2": "meHTKm4XBS8",
+    "youtubeId2": "lM2pZZf8Kag",
     "meetingsUrl": "",
     "meetingsZoom": 1,
     "adminPassword": "admin",
@@ -251,12 +251,12 @@
       {
         "id": "meHTKm4XBS8",
         "note": "華視地震、降雨監視",
-        "active": true
+        "active": false
       },
       {
         "id": "lM2pZZf8Kag",
         "note": "LiveⒼ01天氣、雨量、溫度即時觀測24H》",
-        "active": false
+        "active": true
       },
       {
         "id": "kWRhLLbLFE0",
