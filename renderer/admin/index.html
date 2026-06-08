@@ -156,6 +156,9 @@ input:checked + .slider:before{transform:translateX(20px);}
     <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
       <span class="nav-icon">⚙️</span> 系統設定
     </div>
+    <div class="nav-item" id="nav-annv" onclick="showTab('annv')">
+      <span class="nav-icon">📋</span> 公告管理（直立）
+    </div>
     <div class="nav-item" id="nav-layout" onclick="showTab('layout')">
       <span class="nav-icon">🖥️</span> 螢幕排版
     </div>
@@ -181,6 +184,30 @@ input:checked + .slider:before{transform:translateX(20px);}
           <table>
             <thead><tr><th>標題</th><th>類型</th><th>日期</th><th>狀態</th><th>操作</th></tr></thead>
             <tbody id="annBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Announcements V (直立型) -->
+    <div id="tab-annv" style="display:none">
+      <div class="page-header">
+        <div class="page-title">公告<span>（直立型）</span></div>
+        <button class="btn btn-primary" onclick="openAnnModal(0,'announcements_v')">＋ 新增公告</button>
+      </div>
+      <div class="card">
+        <div class="card-title">🎯 跑馬燈內容（直立螢幕）</div>
+        <div class="input-group">
+          <input type="text" id="marqueeVInput" placeholder="輸入跑馬燈文字...">
+          <button class="btn btn-warning" onclick="saveMarqueeV()">儲存</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">📋 直立版公告列表</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>標題</th><th>類型</th><th>日期</th><th>狀態</th><th>操作</th></tr></thead>
+            <tbody id="annVBody"></tbody>
           </table>
         </div>
       </div>
@@ -420,9 +447,11 @@ function tick() {
 setInterval(tick, 1000); tick();
 
 // State
-var announcements = { marquee:'', list:[] };
-var meetings      = { rooms:[], bookings:[] };
-var settings      = { windows:[] };
+var announcements  = { marquee:'', list:[] };
+var announcementsV = { marquee:'', list:[] };
+var meetings       = { rooms:[], bookings:[] };
+var settings       = { windows:[] };
+var _annDataset    = 'announcements'; // 目前 modal 操作的資料集
 
 // Toast
 function toast(msg, type) {
@@ -433,7 +462,7 @@ function toast(msg, type) {
 
 // Tabs
 function showTab(name) {
-  ['announcements','meetings','status','news','settings','layout'].forEach(function(t){
+  ['announcements','annv','meetings','status','news','settings','layout'].forEach(function(t){
     var p=$('tab-'+t), n=$('nav-'+t);
     if(p) p.style.display=(t===name?'':'none');
     if(n) n.classList.toggle('active', t===name);
@@ -441,6 +470,7 @@ function showTab(name) {
   if(name==='meetings') renderBookings();
   if(name==='status')   renderStatus();
   if(name==='layout')   initLayoutEditor();
+  if(name==='annv')     renderAnnouncementsV();
 }
 
 function isAnnActive(a) {
@@ -475,18 +505,47 @@ function renderAnnouncements() {
   body.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">尚無公告</td></tr>';
 }
 
-function moveAnn(id, dir) {
-  var list = announcements.list || [];
+function moveAnn(id, dir, dataset) {
+  dataset = dataset || 'announcements';
+  var annData = dataset === 'announcements_v' ? announcementsV : announcements;
+  var list = annData.list || [];
   var idx = list.findIndex(function(x){ return x.id === id; });
   if (idx < 0) return;
   var newIdx = idx + dir;
   if (newIdx < 0 || newIdx >= list.length) return;
   var tmp = list[idx]; list[idx] = list[newIdx]; list[newIdx] = tmp;
-  announcements.list = list;
-  window.api.save('announcements', announcements).then(function(){
-    renderAnnouncements();
+  annData.list = list;
+  window.api.save(dataset, annData).then(function(){
+    if(dataset==='announcements_v') renderAnnouncementsV(); else renderAnnouncements();
     triggerBackup();
   });
+}
+
+function renderAnnouncementsV() {
+  var body=$('annVBody'); if(!body) return;
+  if($('marqueeVInput')) $('marqueeVInput').value=announcementsV.marquee||'';
+  var html='', list=announcementsV.list||[];
+  for(var i=0;i<list.length;i++){
+    var a=list[i];
+    var sc=isAnnActive(a);
+    var sh=sc===1?'<span style="color:#10b981;font-weight:700">顯示中</span>':sc===0?'<span style="color:#fbbf24;font-weight:700">待發布</span>':'<span style="color:#f43f5e;font-weight:700">已結束</span>';
+    var ds=(a.alwaysValid!==false)?'常駐':((a.startDate||'')+' ~ '+(a.endDate||''));
+    var durBadge='<span style="color:var(--text2);font-size:12px;margin-left:6px">⏱ '+(a.duration||7)+'s</span>';
+    var upBtn = i > 0
+      ? '<button class="btn btn-ghost btn-sm" onclick="moveAnn('+a.id+',-1,\'announcements_v\')" style="padding:4px 8px;min-width:30px">▲</button>'
+      : '<button class="btn btn-ghost btn-sm" disabled style="padding:4px 8px;min-width:30px;opacity:0.15;cursor:default">▲</button>';
+    var dnBtn = i < list.length-1
+      ? '<button class="btn btn-ghost btn-sm" onclick="moveAnn('+a.id+',1,\'announcements_v\')" style="padding:4px 8px;min-width:30px">▼</button>'
+      : '<button class="btn btn-ghost btn-sm" disabled style="padding:4px 8px;min-width:30px;opacity:0.15;cursor:default">▼</button>';
+    html+='<tr><td>'+esc(a.title)+durBadge+'</td><td><span class="tag tag-'+(a.type||'general')+'">'+esc(a.type||'一般')+'</span></td><td>'+ds+'</td><td>'+sh+'</td>'+
+      '<td style="white-space:nowrap">'+upBtn+' '+dnBtn+'&nbsp; <button class="btn btn-ghost btn-sm" onclick="openAnnModal('+a.id+',\'announcements_v\')">編輯</button></td></tr>';
+  }
+  body.innerHTML=html||'<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">尚無直立版公告</td></tr>';
+}
+
+function saveMarqueeV() {
+  announcementsV.marquee=$('marqueeVInput').value;
+  window.api.save('announcements_v', announcementsV).then(function(){ toast('跑馬燈已存'); triggerBackup(); });
 }
 
 /* ── 公告圖片上傳（GitHub API） ───────────────────────────────── */
@@ -598,10 +657,13 @@ function fmt(cmd, val) {
   document.execCommand(cmd, false, val || null);
 }
 
-function openAnnModal(id) {
-  var a=(announcements.list||[]).find(function(x){return x.id===id;})||{};
+function openAnnModal(id, dataset) {
+  _annDataset = dataset || 'announcements';
+  var annData = _annDataset === 'announcements_v' ? announcementsV : announcements;
+  var a=(annData.list||[]).find(function(x){return x.id===id;})||{};
   var isNew=!a.id, alwaysValid=a.alwaysValid!==false;
-  $('modalTitle').innerText=isNew?'新增公告':'編輯公告';
+  var isV = _annDataset === 'announcements_v';
+  $('modalTitle').innerText=isNew?(isV?'新增直立公告':'新增公告'):(isV?'編輯直立公告':'編輯公告');
   $('modalBody').innerHTML=
     '<div class="form-group"><label>標題</label><input type="text" id="annTitle" value="'+esc(a.title)+'"></div>'+
     '<div class="form-row" style="grid-template-columns:1fr auto">'+
@@ -685,7 +747,8 @@ function openAnnModal(id) {
 }
 
 function saveAnn(id) {
-  var list=announcements.list||[];
+  var annData = _annDataset === 'announcements_v' ? announcementsV : announcements;
+  var list=annData.list||[];
   var editor=$('annContent');
   var updated={
     id:id||new Date().getTime(),
@@ -700,14 +763,23 @@ function saveAnn(id) {
   };
   if(id){ var idx=list.findIndex(function(x){return x.id===id;}); if(idx>-1) list[idx]=updated; }
   else { list.unshift(updated); }
-  announcements.list=list;
-  window.api.save('announcements',announcements).then(function(){ toast('公告已儲存'); renderAnnouncements(); closeModal(); triggerBackup(); });
+  annData.list=list;
+  window.api.save(_annDataset, annData).then(function(){
+    toast('公告已儲存');
+    if(_annDataset==='announcements_v') renderAnnouncementsV(); else renderAnnouncements();
+    closeModal(); triggerBackup();
+  });
 }
 
 function deleteAnn(id) {
   if(!confirm('確定要刪除這則公告嗎？')) return;
-  announcements.list=(announcements.list||[]).filter(function(x){return x.id!==id;});
-  window.api.save('announcements',announcements).then(function(){ toast('公告已刪除','warning'); renderAnnouncements(); closeModal(); triggerBackup(); });
+  var annData = _annDataset === 'announcements_v' ? announcementsV : announcements;
+  annData.list=(annData.list||[]).filter(function(x){return x.id!==id;});
+  window.api.save(_annDataset, annData).then(function(){
+    toast('公告已刪除','warning');
+    if(_annDataset==='announcements_v') renderAnnouncementsV(); else renderAnnouncements();
+    closeModal(); triggerBackup();
+  });
 }
 
 function renderBookings() {
@@ -842,11 +914,12 @@ function safeGet(k) {
 }
 
 function loadAll() {
-  return Promise.all([safeGet('announcements'),safeGet('meetings'),safeGet('settings')])
+  return Promise.all([safeGet('announcements'),safeGet('announcements_v'),safeGet('meetings'),safeGet('settings')])
     .then(function(res){
       if(res[0]) announcements=res[0];
-      if(res[1]) meetings=res[1];
-      if(res[2]) settings=res[2];
+      if(res[1]) announcementsV=res[1];
+      if(res[2]) meetings=res[2];
+      if(res[3]) settings=res[3];
       // 把 api.js 合併後的 settings（含新視窗）存回 localStorage，確保視窗清單是最新的
       window.api.save('settings', settings);
       if($('topCommunity')) $('topCommunity').innerText=settings.communityName||'社區管理系統';

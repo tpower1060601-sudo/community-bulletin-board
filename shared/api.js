@@ -3,10 +3,11 @@
   'use strict';
 
   const PREFIX = 'bbs_';
-  const DATA_KEYS = ['announcements', 'settings', 'meetings', 'news'];
+  const DATA_KEYS = ['announcements', 'announcements_v', 'settings', 'meetings', 'news'];
 
   const DEFAULTS = {
-    announcements: { marquee: '歡迎光臨！', list: [] },
+    announcements:   { marquee: '歡迎光臨！', list: [] },
+    announcements_v: { marquee: '歡迎光臨！', list: [] },
     settings: {
       communityName: '幸福社區',
       weatherApiKey: '', weatherCity: 'Taipei',
@@ -28,7 +29,7 @@
         { id: 'screen10', title: '樓層告示牌 A',     enabled: true  },
         { id: 'screen11', title: '樓層告示牌 B',     enabled: true  },
         { id: 'screen12', title: '台股熱力圖',        enabled: true  },
-        { id: 'screen13', title: '影片播放（雙螢幕）', enabled: true  },
+        { id: 'screen13', title: '公告欄（直立型）',   enabled: true  },
       ],
     },
     meetings: { rooms: ['會議室A', '會議室B', '會議室C'], bookings: [] },

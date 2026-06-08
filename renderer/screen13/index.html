@@ -329,7 +329,7 @@ function renderMarquee() {
 
 async function init() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
-  const ann = await window.api.get('announcements');
+  const ann = await window.api.get('announcements_v');
   data = ann;
   render();
   renderMarquee();
@@ -341,7 +341,7 @@ window.addEventListener('beforeunload', () => {
   if (schedTimer) clearInterval(schedTimer);
 });
 
-window.api.on('announcements:updated', d => { data = d; render(); renderMarquee(); });
+window.api.on('announcements_v:updated', d => { data = d; render(); renderMarquee(); });
 
 init();
 </script>
