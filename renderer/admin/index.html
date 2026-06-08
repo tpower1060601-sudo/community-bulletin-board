@@ -121,6 +121,11 @@ input:checked + .slider:before{transform:translateX(20px);}
 .status-grid{display:grid;grid-template-columns:1fr;gap:24px;padding-bottom:40px;}
 .room-row{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;}
 .room-name{font-size:16px;font-weight:800;color:var(--accent);}
+.win-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.win-card{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;}
+.win-card-title{font-size:14px;font-weight:800;color:var(--text);}
+.win-card-link{font-size:11px;color:var(--accent);opacity:.65;word-break:break-all;text-decoration:none;transition:opacity .2s;}
+.win-card-link:hover{opacity:1;}
 
 /* ── 螢幕排版編輯器 ── */
 .screen-block{border-radius:6px;padding:6px 4px;cursor:grab;color:rgba(255,255,255,.93);font-size:10px;font-weight:700;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;user-select:none;border:2px solid rgba(255,255,255,.15);transition:transform .12s,box-shadow .12s;line-height:1.4;box-sizing:border-box;}
@@ -150,17 +155,17 @@ input:checked + .slider:before{transform:translateX(20px);}
     <div class="nav-item active" id="nav-announcements" onclick="showTab('announcements')">
       <span class="nav-icon">📢</span> 公告管理
     </div>
-    <div class="nav-item" id="nav-news" onclick="showTab('news')">
-      <span class="nav-icon">📰</span> 視窗與新聞
-    </div>
-    <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
-      <span class="nav-icon">⚙️</span> 系統設定
-    </div>
     <div class="nav-item" id="nav-annv" onclick="showTab('annv')">
       <span class="nav-icon">📋</span> 公告管理（直立）
     </div>
+    <div class="nav-item" id="nav-news" onclick="showTab('news')">
+      <span class="nav-icon">📰</span> 視窗與新聞
+    </div>
     <div class="nav-item" id="nav-layout" onclick="showTab('layout')">
       <span class="nav-icon">🖥️</span> 螢幕排版
+    </div>
+    <div class="nav-item" id="nav-settings" onclick="showTab('settings')">
+      <span class="nav-icon">⚙️</span> 系統設定
     </div>
   </nav>
 
@@ -888,21 +893,20 @@ function loadSettingsForm() {
     hasToken
       ? '✅ Token 已設定' + (last ? '　上次備份：' + new Date(last).toLocaleString('zh-TW') : '')
       : '尚未設定 Token');
-  var ctrl=$('windowControls'), wHtml='', wins=settings.windows||[];
+  var ctrl=$('windowControls'), wins=settings.windows||[];
   // 計算 base URL：從 admin 頁面路徑推導出各 screen 的完整網址
   var adminHref = window.location.href.split('?')[0].split('#')[0];
   var baseUrl = adminHref.replace(/renderer\/admin\/?.*$/, 'renderer/');
+  var wHtml='<div class="win-grid">';
   for(var i=0;i<wins.length;i++){
     var w=wins[i];
     var screenUrl = baseUrl + (w.id||('screen'+(i+1))) + '/';
-    wHtml+='<div class="switch-group">'+
-      '<div style="display:flex;flex-direction:column;gap:4px">'+
-        '<span style="font-weight:700">'+esc(w.title)+'</span>'+
-        '<a href="'+screenUrl+'" target="_blank" style="font-size:12px;color:var(--accent);opacity:0.7;word-break:break-all;text-decoration:none;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.7">'+screenUrl+'</a>'+
-      '</div>'+
-      '<label class="switch" style="flex-shrink:0;margin-left:16px"><input type="checkbox" id="win-en-'+i+'"'+(w.enabled?' checked':'')+'><span class="slider"></span></label>'+
+    wHtml+='<div class="win-card">'+
+      '<div class="win-card-title">'+esc(w.title)+'</div>'+
+      '<a class="win-card-link" href="'+screenUrl+'" target="_blank">'+screenUrl+'</a>'+
     '</div>';
   }
+  wHtml+='</div>';
   if(ctrl) ctrl.innerHTML=wHtml;
 }
 
@@ -962,8 +966,6 @@ function saveSettings() {
     else       settings.youtubeId2=activeId;
   });
   var pw=($('sAdminPassword')||{}).value; if(pw) settings.adminPassword=pw;
-  var wins=settings.windows||[];
-  for(var i=0;i<wins.length;i++){ var el=$('win-en-'+i); if(el) wins[i].enabled=el.checked; }
   settings.meetingsUrl=($('sMeetingsUrl')||{}).value||'';
   settings.meetingsZoom=parseFloat(($('sMeetingsZoom')||{}).value)||1.0;
   Promise.all([window.api.save('settings',settings), window.api.save('meetings',meetings)]).then(function(){ toast('設定已更新'); loadAll(); triggerBackup(); });
