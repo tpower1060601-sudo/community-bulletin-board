@@ -48,12 +48,10 @@ function loadPlayer(id) {
       mute: 1,
       rel: 0,
       showinfo: 0,
-      controls: 0,
-      vq: 'hd720'
+      controls: 0
     },
     events: {
       onReady: function(e) {
-        e.target.setPlaybackQuality('hd720');
         e.target.playVideo();
       }
     }
