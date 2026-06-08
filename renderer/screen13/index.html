@@ -3,125 +3,347 @@
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="refresh" content="1800">
-<title>影片播放（雙螢幕）</title>
+<title>公告欄（直立版）</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
+:root { --accent:#f59e0b; --bg:#0c0b09; }
 body {
-  background: #000;
+  background: var(--bg);
+  color: #fff;
+  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
   width: 1920px;
   height: 2160px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   user-select: none;
-  font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
 }
-.video-wrap {
-  position: fixed; inset:0;
-  display:flex; align-items:center; justify-content:center;
+
+/* ── 投影片主區 ── */
+.slides { flex:1; position:relative; overflow:hidden; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 80px;
+  opacity: 0;
+  z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(0,40,80,.5) 0%, transparent 70%);
+  transition: opacity 0.7s ease;
 }
-video {
-  width:100%; height:100%;
+.slide.active { opacity: 1; z-index: 1; }
+
+/* 新投影片從下方滑入 */
+.slide.slide-in {
+  z-index: 2;
+  opacity: 1;
+  animation: annSlideUp 1.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+}
+@keyframes annSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0%); }
+}
+
+/* ── 純文字版型 ── */
+.slide-inner {
+  max-width: 1720px;
+  text-align: center;
+  width: 100%;
+}
+
+/* ── 上圖下文版型 ── */
+.slide-with-img {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+  text-align: center;
+  width: 100%;
+  max-width: 1720px;
+}
+.slide-img-top {
+  flex-shrink: 0;
+  width: 100%;
+  max-height: 900px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.slide-img-top img {
+  max-width: 100%;
+  max-height: 900px;
+  border-radius: 28px;
+  object-fit: contain;
+  box-shadow: 0 16px 64px rgba(0,0,0,0.6);
+}
+.slide-text-block { width: 100%; }
+
+/* ── 純圖全螢幕版型（fixed 蓋滿 1920×2160） ── */
+.slide-fullimg {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+}
+.slide-fullimg img {
+  width: 1920px;
+  height: 2160px;
   object-fit: contain;
 }
 
-/* HUD */
-.hud {
-  position: fixed; bottom:0; left:0; right:0;
-  background: linear-gradient(transparent, rgba(0,0,0,.6));
-  padding: 20px 30px 12px;
+/* ── 文字元素 ── */
+.slide-badge {
+  display: inline-block;
+  padding: 16px 40px;
+  border-radius: 60px;
+  font-size: 44px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  margin-bottom: 48px;
+  border: 1px solid;
+}
+.badge-general{ color:#f0a500; border-color:rgba(240,165,0,.4); background:rgba(240,165,0,.1); }
+.badge-urgent { color:#ff4d4d; border-color:rgba(255,77,77,.4);  background:rgba(255,77,77,.1); }
+.badge-event  { color:#2ecc71; border-color:rgba(46,204,113,.4); background:rgba(46,204,113,.1); }
+.badge-notice { color:var(--accent); border-color:rgba(0,212,255,.4); background:rgba(0,212,255,.1); }
+
+.slide-title {
+  font-size: 120px;
+  font-weight: 900;
+  line-height: 1.35;
+  margin-bottom: 48px;
+  color: #fff;
+  text-shadow: 0 0 60px rgba(0,212,255,.3);
+}
+.slide-with-img .slide-title { font-size: 96px; }
+
+.slide-body {
+  font-size: 72px;
+  line-height: 2.0;
+  color: rgba(255,255,255,.8);
+}
+.slide-with-img .slide-body { font-size: 60px; }
+
+.slide-date {
+  margin-top: 56px;
+  font-size: 40px;
+  color: rgba(255,255,255,.35);
+}
+
+/* ── 分頁點 ── */
+.dots {
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
-  gap: 16px;
-  opacity: 0;
-  transition: opacity .4s;
-  z-index:10;
+  justify-content: center;
+  gap: 20px;
+  padding: 18px 0;
+  background: rgba(0,0,0,.3);
 }
-body:hover .hud { opacity:1; }
-.vid-name { font-size:18px; color:rgba(255,255,255,.6); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.vid-counter { font-size:16px; color:rgba(255,255,255,.4); white-space:nowrap; }
+.dot {
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.2);
+  transition: all .3s;
+  cursor: pointer;
+}
+.dot.active { background: var(--accent); transform:scale(1.4); box-shadow:0 0 12px var(--accent); }
 
-/* Progress */
-.vid-progress {
-  position:fixed; bottom:0; left:0; right:0;
-  height:4px; z-index:20;
-  background:rgba(255,255,255,.15);
+/* ── 進度條 ── */
+.progress {
+  height: 6px;
+  background: rgba(255,255,255,.1);
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
 }
-.vid-progress-bar {
-  height:100%;
-  background:rgba(255,255,255,.5);
-  width:0%;
-  transition: width .5s linear;
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), #00ff88);
+  width: 0%;
+  transition: none;
 }
 
-/* Empty */
-.empty {
-  position:fixed; inset:0;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  background:#0a0e1a;
-  color:rgba(255,255,255,.3);
-  gap:20px;
+/* ── 跑馬燈 ── */
+.marquee-bar {
+  background: linear-gradient(90deg,#04111f,#072340,#04111f);
+  border-top: 3px solid var(--accent);
+  padding: 22px 0;
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.empty-icon { font-size:100px; }
-.empty-text { font-size:28px; letter-spacing:3px; }
-.empty-sub  { font-size:16px; color:rgba(255,255,255,.15); }
+.marquee-track { display:flex; white-space:nowrap; animation:mq linear infinite; }
+@keyframes mq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.mq-seg { color:var(--accent); font-size:56px; font-weight:800; letter-spacing:5px; padding:0 80px; }
+.mq-sep { color:rgba(0,212,255,.5); font-size:52px; line-height:56px; }
 </style>
 </head>
 <body>
 
-<div class="video-wrap" id="videoWrap">
-  <video id="player" muted playsinline></video>
-</div>
+<div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+<div class="slides" id="slides"></div>
+<div class="dots"   id="dots"></div>
 
-<div class="hud">
-  <div class="vid-name" id="vidName">—</div>
-  <div class="vid-counter" id="vidCounter"></div>
+<div class="marquee-bar">
+  <div class="marquee-track" id="mTrack" style="animation-duration:30s">
+    <span class="mq-seg" id="ms1"></span><span class="mq-sep">◈</span>
+    <span class="mq-seg" id="ms2"></span><span class="mq-sep">◈</span>
+  </div>
 </div>
-<div class="vid-progress"><div class="vid-progress-bar" id="vidPbar"></div></div>
 
 <script src="../../shared/api.js"></script>
 <script>
-let files = [], current = 0;
-const player = document.getElementById('player');
+const TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活動公告', notice:'重要通知' };
 
-async function load() {
-  if (window.ghBackup) await window.ghBackup.autoRestore();
-  const s = await window.api.get('settings');
-  files = s.videoUrls || [];
-  if (!files.length) {
-    document.getElementById('videoWrap').innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">🎬</div>
-        <div class="empty-text">尚無影片</div>
-        <div class="empty-sub">請至管理後台「影片播放設定」新增影片網址</div>
-      </div>`;
-    document.querySelector('.hud').style.display = 'none';
-    document.querySelector('.vid-progress').style.display = 'none';
+let data = { marquee:'', list:[] };
+let current = 0, timer = null, schedTimer = null;
+let activeList = [];
+
+function getDuration(idx) {
+  const a = activeList[idx];
+  const sec = a && parseInt(a.duration) > 0 ? parseInt(a.duration) : 7;
+  return Math.max(3, sec) * 1000;
+}
+
+function startProgress(ms) {
+  const bar = document.getElementById('progressBar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${ms}ms linear`;
+    bar.style.width = '100%';
+  });
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function isAnnActive(a) {
+  if (a.alwaysValid !== false && !a.startDate) return true;
+  if (a.alwaysValid) return true;
+  const now = new Date().getTime();
+  const start = a.startDate ? new Date(a.startDate + 'T' + (a.startTime || '00:00')).getTime() : 0;
+  const end   = a.endDate   ? new Date(a.endDate   + 'T' + (a.endTime   || '23:59:59')).getTime() : Infinity;
+  return now >= start && now <= end;
+}
+
+function render() {
+  const active = (data.list||[]).filter(isAnnActive);
+  const slidesEl = document.getElementById('slides');
+  const dotsEl   = document.getElementById('dots');
+
+  if (!active.length) {
+    slidesEl.innerHTML = '<div style="color:rgba(255,255,255,.2);font-size:40px;text-align:center;margin-top:40%">暫無公告</div>';
+    dotsEl.innerHTML = '';
+    activeList = [];
     return;
   }
+
+  activeList = active;
+
+  slidesEl.innerHTML = active.map((a,i) => {
+    const type    = a.type || 'general';
+    const hasImg  = !!a.imageUrl;
+    const hasText = !!(a.title || a.content);
+
+    const textBlock = `
+      <div class="slide-badge badge-${type}">${TYPE_LABEL[type]||'公告'}</div>
+      <div class="slide-title">${esc(a.title)}</div>
+      <div class="slide-body">${a.content||''}</div>
+      <div class="slide-date">${a.date||''}</div>`;
+
+    let inner;
+    if (hasImg && !hasText) {
+      /* 純圖：fixed 蓋滿整個 1920×2160 */
+      inner = `<div class="slide-fullimg">
+        <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.style.display='none'">
+      </div>`;
+    } else if (hasImg) {
+      /* 上圖下文 */
+      inner = `<div class="slide-inner slide-with-img">
+        <div class="slide-img-top">
+          <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.parentNode.style.display='none'">
+        </div>
+        <div class="slide-text-block">${textBlock}</div>
+      </div>`;
+    } else {
+      /* 純文字 */
+      inner = `<div class="slide-inner">${textBlock}</div>`;
+    }
+    return `<div class="slide${i===0?' active':''}" data-i="${i}">${inner}</div>`;
+  }).join('');
+
+  dotsEl.innerHTML = active.map((_,i) =>
+    `<div class="dot${i===0?' active':''}" onclick="goTo(${i})"></div>`
+  ).join('');
+
   current = 0;
-  playFile(current);
+  startSlider();
 }
 
-function playFile(idx) {
-  current = ((idx % files.length) + files.length) % files.length;
-  const src = files[current];
-  const name = src.split('/').pop();
-  player.src = src;
-  player.load();
-  player.play().catch(() => {});
-  document.getElementById('vidName').textContent = decodeURIComponent(name);
-  document.getElementById('vidCounter').textContent = `${current+1} / ${files.length}`;
+function goTo(idx) {
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.dot');
+  if (!slides.length) return;
+
+  slides[current].classList.remove('active');
+  dots[current].classList.remove('active');
+
+  current = ((idx % slides.length) + slides.length) % slides.length;
+
+  const newSlide = slides[current];
+  newSlide.classList.add('active', 'slide-in');
+  dots[current].classList.add('active');
+  setTimeout(() => newSlide.classList.remove('slide-in'), 1200);
+
+  const dur = getDuration(current);
+  startProgress(dur);
+  scheduleNext(dur);
 }
 
-player.addEventListener('ended', () => { playFile(current + 1); });
-player.addEventListener('error', () => { setTimeout(() => playFile(current + 1), 1000); });
-player.addEventListener('timeupdate', () => {
-  if (!player.duration) return;
-  const pct = (player.currentTime / player.duration) * 100;
-  document.getElementById('vidPbar').style.width = pct + '%';
+function scheduleNext(dur) {
+  if (timer) clearTimeout(timer);
+  if (activeList.length <= 1) return;
+  timer = setTimeout(() => goTo(current + 1), dur);
+}
+
+function startSlider() {
+  if (timer) clearTimeout(timer);
+  const slides = document.querySelectorAll('.slide');
+  if (slides[0]) {
+    slides[0].classList.add('slide-in');
+    setTimeout(() => slides[0].classList.remove('slide-in'), 1200);
+  }
+  const dur = getDuration(0);
+  startProgress(dur);
+  scheduleNext(dur);
+}
+
+function renderMarquee() {
+  const t = data.marquee || '歡迎光臨！';
+  document.getElementById('ms1').textContent = t;
+  document.getElementById('ms2').textContent = t;
+  document.getElementById('mTrack').style.animationDuration = Math.max(20, t.length * 0.6) + 's';
+}
+
+async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
+  const ann = await window.api.get('announcements');
+  data = ann;
+  render();
+  renderMarquee();
+  schedTimer = setInterval(render, 60000);
+}
+
+window.addEventListener('beforeunload', () => {
+  if (timer)      clearTimeout(timer);
+  if (schedTimer) clearInterval(schedTimer);
 });
 
-window.api.on('settings:updated', () => load());
-load();
+window.api.on('announcements:updated', d => { data = d; render(); renderMarquee(); });
+
+init();
 </script>
 </body>
 </html>
