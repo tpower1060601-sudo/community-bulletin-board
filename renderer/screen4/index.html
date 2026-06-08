@@ -82,18 +82,19 @@ body {
 /* ── CWA 警特報跑馬燈（底部）── */
 .alert-marquee {
   position: fixed; left: 0; right: 0; bottom: 0; height: 72px; z-index: 30;
-  display: none; align-items: center; overflow: hidden;
+  display: none; flex-direction: row; align-items: center; overflow: hidden;
   border-top: 3px solid rgba(255,255,255,.4);
-  color: #fff; font-size: 30px; font-weight: 800; letter-spacing: 2px;
+  color: #fff; font-size: 28px; font-weight: 800; letter-spacing: 1px;
   box-shadow: 0 -4px 24px rgba(0,0,0,.5);
 }
 .alert-marquee.warning  { background: linear-gradient(90deg,#dc2626,#991b1b); color:#fff; }
 .alert-marquee.advisory { background: linear-gradient(90deg,#f59e0b,#d97706); color:#1a1a1a; }
 .alert-marquee.show     { display: flex; }
-.alert-track { display: block; white-space: nowrap; line-height: 72px; animation: alertScroll 45s linear infinite; }
+.alert-track { display: inline-flex; align-items: center; white-space: nowrap; height: 72px; animation: alertScroll 45s linear infinite; }
 @keyframes alertScroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-.alert-tag { display: inline-block; vertical-align: middle; padding: 6px 20px; background: rgba(0,0,0,.25); border-radius: 8px; margin: 0 16px 0 0; }
-.alert-end { display: inline-block; vertical-align: middle; margin-right: 60px; opacity: .85; }
+.alert-tag { display: inline-flex; align-items: center; gap: 10px; padding: 6px 22px; background: rgba(0,0,0,.25); border-radius: 8px; margin: 0 16px 0 0; }
+.alert-end { margin-right: 60px; opacity: .85; }
+.alert-marquee img.emoji { width: 26px; height: 26px; vertical-align: middle; }
 .alert-marquee.advisory .alert-tag { background: rgba(0,0,0,.18); }
 body.has-alert .layout { height: calc(100vh - 72px); }
 
