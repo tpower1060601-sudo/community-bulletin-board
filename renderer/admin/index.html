@@ -399,8 +399,7 @@ input:checked + .slider:before{transform:translateX(20px);}
             <label>視窗間隔（秒）</label>
             <div style="display:flex;align-items:center;gap:10px">
               <input type="number" id="batWinDelay" value="60" min="0" max="120" oninput="previewBat()" style="width:90px">
-              <button class="btn btn-primary btn-sm" onclick="downloadBat()">⬇️ 下載 .bat</button>
-              <button class="btn btn-ghost btn-sm" onclick="copyBat()">📋 複製</button>
+              <button class="btn btn-primary btn-sm" onclick="previewBat()">⚙️ 產生 .bat</button>
             </div>
           </div>
         </div>
@@ -1104,6 +1103,7 @@ function initLayoutEditor() {
   }
   renderPalette();
   renderMonitorWall();
+  previewBat();
 }
 
 function renderPalette() {
