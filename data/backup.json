@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-06-09T09:53:20.925Z",
+  "_savedAt": "2026-06-09T09:53:37.872Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -107,20 +107,6 @@
     "marquee": "歡迎光臨！",
     "list": [
       {
-        "id": 1780980430221,
-        "title": "",
-        "type": "general",
-        "duration": 20,
-        "content": "",
-        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1780980418971_20260608_155917_image_617526112985022755.jpg",
-        "alwaysValid": false,
-        "startDate": "0115-06-10",
-        "startTime": "08:00",
-        "endDate": "0115-07-31",
-        "endTime": "21:00",
-        "date": "2026-06-09"
-      },
-      {
         "id": 1780983798128,
         "title": "",
         "type": "general",
@@ -135,10 +121,24 @@
         "date": "2026-06-09"
       },
       {
+        "id": 1780980430221,
+        "title": "",
+        "type": "general",
+        "duration": 20,
+        "content": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1780980418971_20260608_155917_image_617526112985022755.jpg",
+        "alwaysValid": false,
+        "startDate": "0115-06-10",
+        "startTime": "08:00",
+        "endDate": "0115-07-31",
+        "endTime": "21:00",
+        "date": "2026-06-09"
+      },
+      {
         "id": 1780983884979,
         "title": "",
         "type": "general",
-        "duration": 7,
+        "duration": 10,
         "content": "",
         "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1780983880734__________.png",
         "alwaysValid": true,
