@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-06-08T02:53:21.978Z",
+  "_savedAt": "2026-06-09T04:47:10.222Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -103,6 +103,25 @@
       }
     ]
   },
+  "announcements_v": {
+    "marquee": "歡迎光臨！",
+    "list": [
+      {
+        "id": 1780980430221,
+        "title": "",
+        "type": "general",
+        "duration": 20,
+        "content": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1780980418971_20260608_155917_image_617526112985022755.jpg",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
+        "date": "2026-06-09"
+      }
+    ]
+  },
   "settings": {
     "communityName": "親家市政廣場管理委員會",
     "cwaKey": "CWA-FADE6959-7181-49F0-9497-9D9711554AAD",
@@ -179,7 +198,7 @@
       },
       {
         "id": "screen13",
-        "title": "影片播放（雙螢幕）",
+        "title": "公告欄（直立型）",
         "enabled": true
       }
     ],
