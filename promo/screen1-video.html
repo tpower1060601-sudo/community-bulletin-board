@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>親家市政廣場｜大廳公佈欄 影片版</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --gold:  #f59e0b;
+  --gold2: #fcd34d;
+  --bg:    #020617;
+}
+html, body {
+  width:1920px; height:1080px;
+  overflow:hidden;
+  background:var(--bg);
+  font-family:'Microsoft JhengHei','PingFang TC','Noto Sans TC',sans-serif;
+  user-select:none;
+}
+
+/* ══ 背景照片輪播 ══ */
+#bg-container { position:fixed; inset:0; z-index:0; }
+.bg-slide {
+  position:absolute; inset:0;
+  opacity:0;
+  transition:opacity 2s ease;
+}
+.bg-slide.active { opacity:1; }
+.bg-slide.active .bg-img { animation:kenburns 12s ease-in-out forwards; }
+.bg-slide.alt.active .bg-img { animation:kenburns2 12s ease-in-out forwards; }
+@keyframes kenburns  { 0%{transform:scale(1.0) translate(0,0)} 100%{transform:scale(1.14) translate(-2%,-1%)} }
+@keyframes kenburns2 { 0%{transform:scale(1.0) translate(0,0)} 100%{transform:scale(1.14) translate(2%,1%)} }
+.bg-img { width:100%; height:100%; object-fit:cover; display:block; }
+
+/* ══ 暗色遮罩 ══ */
+#overlay {
+  position:fixed; inset:0; z-index:1;
+  background:
+    linear-gradient(to bottom,
+      rgba(0,0,0,0.72) 0%,
+      rgba(0,0,0,0.15) 25%,
+      rgba(0,0,0,0.10) 60%,
+      rgba(0,0,0,0.78) 100%
+    );
+}
+
+/* ══ 頂部欄（無時鐘）══ */
+#topbar {
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  height:120px;
+  display:flex; align-items:center;
+  padding:0 60px;
+  background:linear-gradient(to bottom, rgba(0,0,0,0.82) 0%, transparent 100%);
+}
+.brand { display:flex; align-items:center; gap:22px; }
+.brand-icon {
+  width:72px; height:72px;
+  background:linear-gradient(135deg,var(--gold),#92400e);
+  border-radius:18px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:36px;
+  box-shadow:0 0 24px rgba(245,158,11,0.4);
+  flex-shrink:0;
+}
+.brand-name {
+  font-size:64px; font-weight:900;
+  letter-spacing:8px; color:#fff;
+  text-shadow:0 2px 20px rgba(0,0,0,0.8), 0 0 30px rgba(245,158,11,0.3);
+  line-height:1;
+}
+.brand-sub {
+  font-size:18px; letter-spacing:5px;
+  color:var(--gold); margin-top:6px;
+  text-shadow:0 2px 8px rgba(0,0,0,0.8);
+}
+
+/* ══ 中央大字 ══ */
+#identity-area {
+  position:fixed; z-index:14;
+  top:0; left:0; right:0; bottom:160px;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  pointer-events:none;
+}
+.id-main {
+  font-size:108px; font-weight:900;
+  letter-spacing:18px; color:#fff;
+  text-shadow:0 4px 30px rgba(0,0,0,0.8), 0 0 60px rgba(245,158,11,0.35);
+  line-height:1.1;
+  animation:fadeInUp 1.6s ease both;
+}
+.id-sub {
+  font-size:32px; letter-spacing:10px;
+  color:var(--gold);
+  text-shadow:0 2px 12px rgba(0,0,0,0.8);
+  margin-top:20px;
+  animation:fadeInUp 1.6s .4s ease both;
+}
+@keyframes fadeInUp {
+  from { opacity:0; transform:translateY(24px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ══ 跑馬燈 ══ */
+#marquee-bar {
+  position:fixed; bottom:20px; left:0; right:0; z-index:22;
+  height:56px;
+  background:linear-gradient(90deg,#04111f,#072340,#04111f);
+  border-top:2px solid var(--gold);
+  display:flex; align-items:center; overflow:hidden;
+}
+#mtrack {
+  display:flex; white-space:nowrap;
+  animation:mq 24s linear infinite;
+  align-items:center;
+}
+@keyframes mq { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+.mq-seg {
+  color:var(--gold); font-size:28px; font-weight:800;
+  letter-spacing:5px; padding:0 80px;
+}
+.mq-sep { color:rgba(0,212,255,0.5); font-size:26px; }
+
+/* ══ 進度條 ══ */
+#pbar-wrap {
+  position:fixed; bottom:76px; left:0; right:0; z-index:21;
+  height:3px; background:rgba(255,255,255,0.08);
+}
+#pbar {
+  height:100%;
+  background:linear-gradient(90deg,var(--gold),var(--gold2));
+  width:0%;
+  box-shadow:0 0 8px var(--gold);
+}
+
+/* ══ 照片指示點 ══ */
+#slide-dots {
+  position:fixed; bottom:86px; left:50%; transform:translateX(-50%);
+  display:flex; gap:10px; z-index:21;
+}
+.sdot {
+  width:8px; height:8px; border-radius:50%;
+  background:rgba(255,255,255,0.25); transition:all .4s;
+}
+.sdot.active { width:28px; border-radius:4px; background:var(--gold); }
+</style>
+</head>
+<body>
+
+<div id="bg-container"></div>
+<div id="overlay"></div>
+
+<div id="topbar">
+  <div class="brand">
+    <div class="brand-icon">🏢</div>
+    <div>
+      <div class="brand-name">親家市政廣場</div>
+      <div class="brand-sub">亞太新核心・七期智慧商辦</div>
+    </div>
+  </div>
+</div>
+
+<div id="identity-area">
+  <div class="id-main">親家市政廣場</div>
+  <div class="id-sub">台中市西屯區・亞太新核心・七期智慧商辦</div>
+</div>
+
+<div id="marquee-bar">
+  <div id="mtrack">
+    <span class="mq-seg">親家市政廣場</span><span class="mq-sep">◈</span>
+    <span class="mq-seg">亞太新核心　七期智慧商辦</span><span class="mq-sep">◈</span>
+    <span class="mq-seg">台中市西屯區</span><span class="mq-sep">◈</span>
+    <span class="mq-seg">親家市政廣場</span><span class="mq-sep">◈</span>
+    <span class="mq-seg">亞太新核心　七期智慧商辦</span><span class="mq-sep">◈</span>
+    <span class="mq-seg">台中市西屯區</span><span class="mq-sep">◈</span>
+  </div>
+</div>
+
+<div id="pbar-wrap"><div id="pbar"></div></div>
+<div id="slide-dots"></div>
+
+<script>
+/* ── 照片（6 張精選，每張 10 秒 = 剛好 60 秒）── */
+const BASE = 'https://www.chingjia.com/';
+const PHOTOS = [
+  'upload/project_more_b/98469d8d5c82e63758e8e382bbfa2db9-20220517160647.jpg',
+  'upload/project_more_b/f576654784e58dc57f11b80a11325d5f-20220517160649.jpg',
+  'upload/project_more_b/4a20d0d4c5fbf105b10a3c7ffe1b0db7-20220517160651.jpg',
+  'upload/project_more_b/9e523dfebe23b2b8341ecd313cf16361-20220517160653.jpg',
+  'upload/project_more_b/d4d1d529ea10e398af6d8d13ecae3ba4-20220517160654.jpg',
+  'upload/project_more_b/263c70f4c291fbcf394e857e2ef9ff94-20220517160656.jpg',
+].map(p => BASE + p);
+
+const INTERVAL = 10000; // 10 秒 × 6 張 = 60 秒
+let idx = 0;
+
+/* ── 建立投影片 ── */
+const container = document.getElementById('bg-container');
+const dotsEl    = document.getElementById('slide-dots');
+
+container.innerHTML = PHOTOS.map((src, i) =>
+  `<div class="bg-slide${i===0?' active':''}${i%2?' alt':''}" id="bg${i}">
+     <img class="bg-img" src="${src}" alt="" loading="${i<2?'eager':'lazy'}" draggable="false">
+   </div>`
+).join('');
+
+dotsEl.innerHTML = PHOTOS.map((_, i) =>
+  `<div class="sdot${i===0?' active':''}"></div>`
+).join('');
+
+/* ── 切換照片 ── */
+function go(next) {
+  document.getElementById('bg' + idx)?.classList.remove('active');
+  dotsEl.children[idx]?.classList.remove('active');
+  idx = ((next % PHOTOS.length) + PHOTOS.length) % PHOTOS.length;
+  document.getElementById('bg' + idx)?.classList.add('active');
+  dotsEl.children[idx]?.classList.add('active');
+}
+
+/* ── 進度條 ── */
+function resetPbar() {
+  const b = document.getElementById('pbar');
+  b.style.transition = 'none'; b.style.width = '0%';
+  requestAnimationFrame(() => {
+    b.style.transition = 'width ' + INTERVAL + 'ms linear';
+    b.style.width = '100%';
+  });
+}
+
+/* ── 啟動 ── */
+resetPbar();
+setInterval(() => { go(idx + 1); resetPbar(); }, INTERVAL);
+</script>
+</body>
+</html>
