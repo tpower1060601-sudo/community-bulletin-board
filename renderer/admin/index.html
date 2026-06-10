@@ -1300,6 +1300,12 @@ function copyBat() {
       loadAll().catch(function(){});
     }
   });
+
+  // 每分鐘自動刷新公告狀態欄（待發布 / 顯示中 / 已結束）
+  setInterval(function(){
+    renderAnnouncements();
+    renderAnnouncementsV();
+  }, 60000);
 })();
 </script>
 </body>

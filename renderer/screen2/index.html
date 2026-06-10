@@ -221,10 +221,16 @@ function render() {
   const slidesEl = document.getElementById('slides');
   const dotsEl   = document.getElementById('dots');
 
+  // 比較新舊清單 ID 是否有變化，沒變化就不重建 DOM、不重置輪播位置
+  const newIds = active.map(a => a.id).join(',');
+  const oldIds = activeList.map(a => a.id).join(',');
+  if (newIds === oldIds) return;  // 完全相同 → 不重置
+
   if (!active.length) {
     slidesEl.innerHTML = '<div style="color:rgba(255,255,255,.2);font-size:24px;text-align:center;margin-top:40%">暫無公告</div>';
     dotsEl.innerHTML = '';
     activeList = [];
+    if (timer) clearTimeout(timer);
     return;
   }
 
