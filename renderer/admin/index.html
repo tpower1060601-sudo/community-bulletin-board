@@ -1257,7 +1257,7 @@ function generateBatContent() {
     // 以確保 --window-size 生效；kiosk 會被實體螢幕高度截斷。
     var isNonStd = def.h > 1080;
     var cmd = isNonStd
-      ? 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --app="' + url + '"'
+      ? 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --start-fullscreen --app="' + url + '"'
       : 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --kiosk "' + url + '"';
     lines.push(cmd);
     if (i < sorted.length - 1) lines.push('timeout /t ' + winDelay + ' /nobreak');
