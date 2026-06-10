@@ -79,9 +79,9 @@ body {
 }
 .slide-text-block { width: 100%; }
 
-/* ── 純圖全螢幕版型（fixed 蓋滿 1920×2160） ── */
+/* ── 純圖全螢幕版型（absolute，相對 .slide，覆蓋整個 1920×2160） ── */
 .slide-fullimg {
-  position: fixed;
+  position: absolute;
   inset: 0;
   z-index: 5;
   display: flex;
@@ -90,9 +90,9 @@ body {
   background: #000;
 }
 .slide-fullimg img {
-  width: 1920px;
-  height: 2160px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* ── 文字元素 ── */
