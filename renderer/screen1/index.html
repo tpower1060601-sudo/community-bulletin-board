@@ -374,11 +374,12 @@ let hasAnn=false;
 let _rawAnnList=[];   // 完整清單（含未到期、已結束），用於排程重新檢查
 
 /* ── 排程過濾 ── */
+function rocToWestern(d){ var p=d.split('-'),y=+p[0]; return (y<1900?y+1911:y)+'-'+p[1]+'-'+p[2]; }
 function isAnnActive(a){
   if(a.alwaysValid!==false) return true;
   const now=Date.now();
-  const start=a.startDate?new Date(a.startDate+'T'+(a.startTime||'00:00')).getTime():0;
-  const end  =a.endDate  ?new Date(a.endDate  +'T'+(a.endTime  ||'23:59:59')).getTime():Infinity;
+  const start=a.startDate?new Date(rocToWestern(a.startDate)+'T'+(a.startTime||'00:00')).getTime():0;
+  const end  =a.endDate  ?new Date(rocToWestern(a.endDate)  +'T'+(a.endTime  ||'23:59:59')).getTime():Infinity;
   return now>=start && now<=end;
 }
 function filterActive(list){ return (list||[]).filter(isAnnActive); }

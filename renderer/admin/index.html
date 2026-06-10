@@ -480,11 +480,18 @@ function showTab(name) {
   if(name==='annv')     renderAnnouncementsV();
 }
 
+function rocDateToWestern(dateStr) {
+  // 民國年格式 0115-06-15 → 西元年 2026-06-15
+  var parts = dateStr.split('-');
+  var year = parseInt(parts[0], 10);
+  if (year < 1900) year += 1911;
+  return year + '-' + parts[1] + '-' + parts[2];
+}
 function isAnnActive(a) {
   if(a.alwaysValid!==false) return 1;
   var now=new Date().getTime();
-  var start=a.startDate?new Date(a.startDate+'T'+(a.startTime||'00:00')).getTime():0;
-  var end=a.endDate?new Date(a.endDate+'T'+(a.endTime||'23:59:59')).getTime():Infinity;
+  var start=a.startDate?new Date(rocDateToWestern(a.startDate)+'T'+(a.startTime||'00:00')).getTime():0;
+  var end=a.endDate?new Date(rocDateToWestern(a.endDate)+'T'+(a.endTime||'23:59:59')).getTime():Infinity;
   if(now<start) return 0;
   if(now>end)   return -1;
   return 1;

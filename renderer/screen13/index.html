@@ -219,12 +219,13 @@ function startProgress(ms) {
 
 function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
+function rocToWestern(d){ var p=d.split('-'),y=+p[0]; return (y<1900?y+1911:y)+'-'+p[1]+'-'+p[2]; }
 function isAnnActive(a) {
   if (a.alwaysValid !== false && !a.startDate) return true;
   if (a.alwaysValid) return true;
   const now = new Date().getTime();
-  const start = a.startDate ? new Date(a.startDate + 'T' + (a.startTime || '00:00')).getTime() : 0;
-  const end   = a.endDate   ? new Date(a.endDate   + 'T' + (a.endTime   || '23:59:59')).getTime() : Infinity;
+  const start = a.startDate ? new Date(rocToWestern(a.startDate) + 'T' + (a.startTime || '00:00')).getTime() : 0;
+  const end   = a.endDate   ? new Date(rocToWestern(a.endDate)   + 'T' + (a.endTime   || '23:59:59')).getTime() : Infinity;
   return now >= start && now <= end;
 }
 
