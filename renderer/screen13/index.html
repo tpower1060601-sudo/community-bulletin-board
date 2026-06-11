@@ -7,6 +7,7 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 :root { --accent:#f59e0b; --bg:#0c0b09; }
+html { overflow: hidden; }
 body {
   background: var(--bg);
   color: #fff;
@@ -17,6 +18,8 @@ body {
   display: flex;
   flex-direction: column;
   user-select: none;
+  transform-origin: 0 0;
+  -webkit-transform-origin: 0 0;
 }
 
 /* ── 投影片主區 ── */
@@ -92,7 +95,7 @@ body {
 .slide-fullimg img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* ── 文字元素 ── */
@@ -350,13 +353,17 @@ window.addEventListener('beforeunload', () => {
 
 window.api.on('announcements_v:updated', d => { data = d; render(); renderMarquee(); });
 
-// 自動全螢幕（--app 模式下無需使用者手勢）
-function tryFullscreen() {
-  const el = document.documentElement;
-  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-  if (req) req.call(el).catch(() => {});
+// 縮放 body 以填滿視窗（Win7 Edge 相容）
+function fitScreen() {
+  var sw = document.documentElement.clientWidth  || window.innerWidth;
+  var sh = document.documentElement.clientHeight || window.innerHeight;
+  var s  = Math.min(sw / 1920, sh / 2160);
+  document.body.style.webkitTransform = 'scale(' + s + ')';
+  document.body.style.transform       = 'scale(' + s + ')';
 }
-window.addEventListener('load', () => setTimeout(tryFullscreen, 800));
+window.addEventListener('load',   fitScreen);
+window.addEventListener('resize', fitScreen);
+fitScreen();
 
 init();
 </script>
