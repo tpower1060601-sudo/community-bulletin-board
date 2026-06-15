@@ -1260,12 +1260,7 @@ function generateBatContent() {
     if (rowLabel !== lastRow) { lines.push(':: ' + rowLabel); lastRow = rowLabel; }
     var url = LAY_BASE_URL + def.id + '/';
     var userDir = 'C:\\EdgeP' + (i + 1);
-    // 高度超過 1080 的螢幕（如直立型雙螢幕 1920x2160）使用 --app= 模式，
-    // 以確保 --window-size 生效；kiosk 會被實體螢幕高度截斷。
-    var isNonStd = def.h > 1080;
-    var cmd = isNonStd
-      ? 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --start-fullscreen --app="' + url + '"'
-      : 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --kiosk "' + url + '"';
+    var cmd = 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --kiosk "' + url + '"';
     lines.push(cmd);
     if (i < sorted.length - 1) lines.push('timeout /t ' + winDelay + ' /nobreak');
   });
