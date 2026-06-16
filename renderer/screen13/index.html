@@ -350,14 +350,6 @@ window.addEventListener('beforeunload', () => {
 
 window.api.on('announcements_v:updated', d => { data = d; render(); renderMarquee(); });
 
-// 自動全螢幕（--app 模式下無需使用者手勢）
-function tryFullscreen() {
-  const el = document.documentElement;
-  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
-  if (req) req.call(el).catch(() => {});
-}
-window.addEventListener('load', () => setTimeout(tryFullscreen, 800));
-
 init();
 </script>
 </body>
