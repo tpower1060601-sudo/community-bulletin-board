@@ -1263,11 +1263,9 @@ function generateBatContent() {
     if (rowLabel !== lastRow) { lines.push(':: ' + rowLabel); lastRow = rowLabel; }
     var url = LAY_BASE_URL + def.id + '/';
     var userDir = 'C:\\EdgeP' + (i + 1);
-    // 高度 >1080（跨螢幕直立）用 --app 保留 --window-size 跨顯示器；
-    // --disable-infobars（已在 FLAGS）會壓制 Win7 警告條。
     var isNonStd = def.h > 1080;
     var cmd = isNonStd
-      ? 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --start-fullscreen --app="' + url + '"'
+      ? 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --app="' + url + '"'
       : 'start "" %' + varName + '% %FLAGS% --user-data-dir="' + userDir + '" --window-position=' + w.physX + ',' + w.physY + ' --window-size=' + def.w + ',' + def.h + ' --kiosk "' + url + '"';
     lines.push(cmd);
     if (i < sorted.length - 1) lines.push('timeout /t ' + winDelay + ' /nobreak');
