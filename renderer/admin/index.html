@@ -384,6 +384,7 @@ input:checked + .slider:before{transform:translateX(20px);}
             <select id="browserSelect" onchange="toggleCustomBrowser();previewBat()" style="width:auto">
               <option value="edge">Microsoft Edge（預設安裝路徑）</option>
               <option value="chrome">Google Chrome（預設安裝路徑）</option>
+              <option value="supermium">Supermium（Win7 相容）</option>
               <option value="custom">自訂路徑</option>
             </select>
           </div>
@@ -1089,8 +1090,9 @@ var DEFAULT_LAYOUT = [
 ];
 
 var LAY_BROWSER_PATHS = {
-  edge:   'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-  chrome: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
+  edge:      'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+  chrome:    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  supermium: 'C:\\Program Files (x86)\\Supermium\\chrome.exe'
 };
 var LAY_BASE_URL = 'https://tpower1060601-sudo.github.io/community-bulletin-board/renderer/';
 
@@ -1230,7 +1232,8 @@ function generateBatContent() {
   var initDelay = parseInt(($('batInitDelay')||{}).value) || 15;
   var winDelay  = parseInt(($('batWinDelay') ||{}).value) || 10;
   var exePath   = getBatBrowserPath();
-  var varName   = (($('browserSelect')||{}).value==='chrome') ? 'CHROME' : 'EDGE';
+  var bsel = ($('browserSelect')||{}).value || 'edge';
+  var varName = bsel==='chrome' ? 'CHROME' : bsel==='supermium' ? 'BROWSER' : 'EDGE';
 
   // 依上排→下排、左→右排序
   var sorted = layoutWindows.slice().sort(function(a,b){
