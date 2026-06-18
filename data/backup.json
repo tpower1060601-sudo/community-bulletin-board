@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-06-18T09:04:14.894Z",
+  "_savedAt": "2026-06-18T09:11:22.458Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -106,6 +106,20 @@
   "announcements_v": {
     "marquee": "歡迎光臨親家市政廣場！",
     "list": [
+      {
+        "id": 1781773882457,
+        "title": "",
+        "type": "general",
+        "duration": 7,
+        "content": "",
+        "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1781773877454________20260618_171035.png",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
+        "date": "2026-06-18"
+      },
       {
         "id": 1781773454893,
         "title": "電梯故障維修公告",
