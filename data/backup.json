@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-06-18T09:11:32.960Z",
+  "_savedAt": "2026-06-18T09:20:03.744Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -125,7 +125,7 @@
         "title": "電梯故障維修公告",
         "type": "urgent",
         "duration": 15,
-        "content": "<span style=\"font-size: 1.95em;\">因為2號客梯(高樓層)故障的緣故，需要時間維修，因此自6/22日起暫時調度6號客梯(低樓層)開放全棟各樓層都可以搭乘，另外貨梯的部分，裝潢施工的廠商在9點之後才可進場，空出貨梯來疏散上班的人潮，若有不清楚的地方，請聽管理中心祕書的指揮，不便之處妄請海涵。</span>",
+        "content": "<span style=\"font-size: 1.45em;\">因為2號客梯(高樓層)故障的緣故，需要時間維修，因此自6/22日起暫時調度6號客梯(低樓層)開放全棟各樓層都可以搭乘，另外貨梯的部分，裝潢施工的廠商在9點之後才可進場，空出貨梯來疏散上班的人潮，若有不清楚的地方，請聽管理中心祕書的指揮，不便之處妄請海涵。</span>",
         "imageUrl": "https://raw.githubusercontent.com/tpower1060601-sudo/community-bulletin-board/main/data/images/1781773448120___________20260618_170233.png",
         "alwaysValid": true,
         "startDate": "",
