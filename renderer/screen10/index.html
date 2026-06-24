@@ -6,7 +6,7 @@
 <title>樓層告示牌 螢幕一 1F–14F</title>
 <style>
 *{margin:0;padding:0;-webkit-box-sizing:border-box;box-sizing:border-box}
-html,body{width:1080px;height:1920px;overflow:hidden;background:#050505;font-family:'Microsoft JhengHei','PingFang TC','Hiragino Sans TC','Noto Sans TC',sans-serif}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#050505;font-family:'Microsoft JhengHei','PingFang TC','Hiragino Sans TC','Noto Sans TC',sans-serif;-webkit-transform-origin:0 0;transform-origin:0 0}
 #bd{position:absolute;top:18px;left:18px;right:18px;bottom:18px;display:-webkit-box;display:-ms-flexbox;display:flex;-webkit-box-orient:vertical;-webkit-box-direction:normal;-ms-flex-direction:column;flex-direction:column;border:1px solid #1c1005;border-radius:6px;padding:5px}
 .sl{position:relative;-webkit-box-flex:1;-ms-flex:1 1 auto;flex:1;margin-bottom:3px}
 .sl:last-child{margin-bottom:0}
@@ -408,6 +408,8 @@ var DATA = [
   }
 ];
 
+DATA = DATA.filter(function(d){ return d.company; });
+
 var PAGE_MS = 10000;  // 每頁停留毫秒（10000 = 10 秒）
 var STAGGER  = 180;   // 每列翻牌間隔毫秒
 // ──────────────────────────────────────────────────────
@@ -429,11 +431,12 @@ for(var i=0;i<PG;i++){
     th:e.querySelector('.th'),thi:e.querySelector('.th .in'),
     bf:e.querySelector('.bf'),bfi:e.querySelector('.bf .in')});
 }
-function sc(el,f,c){el.querySelector('.fl').textContent=f||'';el.querySelector('.co').textContent=c||'';el.style.opacity=(f||c)?'1':'0.06';}
+function sc(el,f,c){el.querySelector('.fl').textContent=f||'';var co=el.querySelector('.co');co.textContent=c||'';co.style.fontSize='';if(c){var base=68;co.style.fontSize=base+'px';if(co.scrollWidth>co.clientWidth){co.style.fontSize=Math.max(Math.floor(base*co.clientWidth/co.scrollWidth),36)+'px';}}el.style.opacity=(f||c)?'1':'0.06';}
 function initSlots(pi){pgs[pi].forEach(function(d,i){var s=sl[i];sc(s.bg,d.floor,d.company);sc(s.bc,d.floor,d.company);sc(s.thi,d.floor,d.company);sc(s.bfi,d.floor,d.company);s.th.style.transition='none';s.th.style.transform='';s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';});}
 function flipRow(s,f,c,done){sc(s.bg,f,c);sc(s.bfi,f,c);s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';requestAnimationFrame(function(){s.th.style.transition='transform 0.28s ease-in';s.th.style.transform='perspective(900px) rotateX(-90deg)';setTimeout(function(){s.bf.style.transition='transform 0.28s ease-out';s.bf.style.transform='perspective(900px) rotateX(0deg)';setTimeout(function(){sc(s.bc,f,c);sc(s.thi,f,c);s.th.style.transition='none';s.th.style.transform='';s.bf.style.transition='none';s.bf.style.transform='perspective(900px) rotateX(-90deg)';if(done)done();},360);},200);});}
 var cur=0;initSlots(0);
 (function run(){if(pgs.length<=1)return;var nxt=(cur+1)%pgs.length;setTimeout(function(){for(var i=0;i<PG;i++){(function(idx){var d=pgs[nxt][idx];setTimeout(function(){flipRow(sl[idx],d.floor,d.company,idx===PG-1?function(){cur=nxt;run();}:null);},idx*STAGGER);})(i);}},PAGE_MS);})();
+(function autoScale(){var W=1080,H=1920;function fit(){var s=Math.min(window.innerWidth/W,window.innerHeight/H);document.body.style.transform='scale('+s+')';document.documentElement.style.width=W+'px';document.documentElement.style.height=H+'px';}fit();window.addEventListener('resize',fit);})();
 </script>
 </body>
 </html>
