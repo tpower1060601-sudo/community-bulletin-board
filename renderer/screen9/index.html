@@ -56,18 +56,7 @@ function loadPlayer(id) {
         e.target.playVideo();
       },
       onPlaybackQualityChange: function(e) {},
-      onStateChange: function(e) {
-        if (e.data === YT.PlayerState.BUFFERING) {
-          if (!player._bufCount) player._bufCount = 0;
-          player._bufCount++;
-          if (player._bufCount >= 3) {
-            e.target.setPlaybackQuality('hd720');
-            player._bufCount = 0;
-          }
-        } else if (e.data === YT.PlayerState.PLAYING) {
-          player._bufCount = 0;
-        }
-      }
+      onStateChange: function(e) {}
     }
   });
 }
