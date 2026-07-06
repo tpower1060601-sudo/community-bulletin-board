@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-07-06T06:21:43.071Z",
+  "_savedAt": "2026-07-06T06:22:18.598Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -111,7 +111,7 @@
         "title": "電梯維修進度報告",
         "type": "urgent",
         "duration": 15,
-        "content": "<p class=\"MsoNormal\"><span style=\"font-size:14.0pt;line-height:115%;font-family:\n標楷體\">因為<span lang=\"EN-US\">2</span>號電梯井內的線路拉扯的緣故，導致許多線路及控制器及有的電梯門板損壞，因此維修需要時間，原定最後的材料在<span lang=\"EN-US\">7/15</span>日能夠準備好，目前已向電梯廠商催促，請加快速度修復。<span lang=\"EN-US\"><br>\n</span>另外，貨梯因為乘坐人數過多導致過載情形，目前已經重新定位完成使用，也請電梯廠商針對過載的偵測再做安全性的調整，以確保不再發生此事。<span lang=\"EN-US\"><br>\n</span>也請使用貨梯的業戶在調整完之前期間，勿超過<b><u><span lang=\"EN-US\" style=\"color:#EE0000\">12</span><span style=\"color:#EE0000\">人</span></u></b>搭乘為洽當，貨梯車廂空間較大的緣故，<b><u>請勿看起來尚有空間就乘坐超過限制人數，以保證搭乘的安全。<span lang=\"EN-US\"><o:p></o:p></span></u></b></span></p>\n\n<p class=\"MsoNormal\" align=\"right\" style=\"text-align:right\"><span style=\"font-size:\n14.0pt;line-height:115%;font-family:標楷體\">管委會<span lang=\"EN-US\">&amp;</span>管理中心 敬上<span lang=\"EN-US\"><o:p></o:p></span></span></p>",
+        "content": "<p class=\"MsoNormal\"><span style=\"line-height: 115%; font-family: 標楷體;\"><span style=\"font-size: 1.95em;\">因為<span lang=\"EN-US\" style=\"\">2</span>號電梯井內的線路拉扯的緣故，導致許多線路及控制器及有的電梯門板損壞，因此維修需要時間，原定最後的材料在<span lang=\"EN-US\" style=\"\">7/15</span>日能夠準備好，目前已向電梯廠商催促，請加快速度修復。<span lang=\"EN-US\" style=\"\"><br>\n</span>另外，貨梯因為乘坐人數過多導致過載情形，目前已經重新定位完成使用，也請電梯廠商針對過載的偵測再做安全性的調整，以確保不再發生此事。<span lang=\"EN-US\" style=\"\"><br>\n</span>也請使用貨梯的業戶在調整完之前期間，勿超過<b style=\"\"><u><span lang=\"EN-US\" style=\"color:#EE0000\">12</span><span style=\"color:#EE0000\">人</span></u></b>搭乘為洽當，貨梯車廂空間較大的緣故，<b style=\"\"><u>請勿看起來尚有空間就乘坐超過限制人數，以保證搭乘的安全。<span lang=\"EN-US\"><o:p></o:p></span></u></b></span></span></p>\n\n<p class=\"MsoNormal\" align=\"right\" style=\"text-align:right\"><span style=\"line-height: 115%; font-family: 標楷體;\"><span style=\"font-size: 1.95em;\">管委會<span lang=\"EN-US\" style=\"\">&amp;</span>管理中心 敬上</span><span lang=\"EN-US\" style=\"font-size: 14pt;\"><o:p></o:p></span></span></p>",
         "imageUrl": "",
         "alwaysValid": true,
         "startDate": "",
