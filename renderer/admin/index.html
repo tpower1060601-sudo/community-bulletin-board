@@ -1105,6 +1105,12 @@ function initLayoutEditor() {
     try {
       var saved = localStorage.getItem('bbs_screen_layout');
       layoutWindows = saved ? JSON.parse(saved) : DEFAULT_LAYOUT.map(function(x){ return {screenId:x.screenId,physX:x.physX,physY:x.physY}; });
+      // 座標遷移：舊版用 0/1920/3840，新版用 -1920/0/1920
+      var needMigrate = layoutWindows.some(function(w){ return w.physX >= 3840; });
+      if (needMigrate) {
+        layoutWindows.forEach(function(w){ w.physX -= 1920; });
+        saveLayoutLocal();
+      }
     } catch(e) {
       layoutWindows = DEFAULT_LAYOUT.map(function(x){ return {screenId:x.screenId,physX:x.physX,physY:x.physY}; });
     }
