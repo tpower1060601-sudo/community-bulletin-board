@@ -355,9 +355,9 @@ input:checked + .slider:before{transform:translateX(20px);}
             </div>
             <div style="display:grid;grid-template-columns:28px repeat(3,240px);margin-bottom:3px">
               <div></div>
-              <div style="text-align:center;font-size:10px;color:var(--text2)">第 1 欄　X:0</div>
-              <div style="text-align:center;font-size:10px;color:var(--text2)">第 2 欄　X:1920</div>
-              <div style="text-align:center;font-size:10px;color:var(--text2)">第 3 欄　X:3840</div>
+              <div style="text-align:center;font-size:10px;color:var(--text2)">第 1 欄　X:-1920</div>
+              <div style="text-align:center;font-size:10px;color:var(--text2)">第 2 欄　X:0</div>
+              <div style="text-align:center;font-size:10px;color:var(--text2)">第 3 欄　X:1920</div>
             </div>
             <div style="display:flex;align-items:stretch">
               <div style="width:28px;display:flex;flex-direction:column">
@@ -1081,12 +1081,12 @@ var SCREEN_DEFS = [
 ];
 
 var DEFAULT_LAYOUT = [
-  { screenId:'screen1', physX:0,    physY:-1080 },
-  { screenId:'screen4', physX:1920, physY:-1080 },
-  { screenId:'screen3', physX:3840, physY:-1080 },
-  { screenId:'screen2', physX:0,    physY:0     },
-  { screenId:'screen7', physX:1920, physY:0     },
-  { screenId:'screen8', physX:3840, physY:0     },
+  { screenId:'screen1', physX:-1920, physY:-1080 },
+  { screenId:'screen4', physX:0,    physY:-1080 },
+  { screenId:'screen3', physX:1920, physY:-1080 },
+  { screenId:'screen2', physX:-1920, physY:0    },
+  { screenId:'screen7', physX:0,    physY:0     },
+  { screenId:'screen8', physX:1920, physY:0     },
 ];
 
 var LAY_BROWSER_PATHS = {
@@ -1138,7 +1138,7 @@ function renderMonitorWall() {
   // 6 格位（3×2）
   for (var row = 0; row < 2; row++) {
     for (var col = 0; col < 3; col++) {
-      var physX = col * 1920;
+      var physX = (col - 1) * 1920;
       var physY = row * 1080 - 1080;
       var cx = col * 240, cy = row * 135;
       html += '<div class="monitor-slot" ' +
@@ -1155,7 +1155,7 @@ function renderMonitorWall() {
   layoutWindows.forEach(function(w, idx) {
     var def = SCREEN_DEFS.find(function(s){ return s.id === w.screenId; });
     if (!def) return;
-    var cx = w.physX / LAY_SCALE;
+    var cx = (w.physX + 1920) / LAY_SCALE;
     var cy = (w.physY + 1080) / LAY_SCALE;
     var cw = def.w / LAY_SCALE;
     var ch = def.h / LAY_SCALE;
