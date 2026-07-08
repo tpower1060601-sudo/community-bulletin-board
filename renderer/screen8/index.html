@@ -48,16 +48,30 @@ function loadPlayer(id) {
       mute: 1,
       rel: 0,
       showinfo: 0,
-      controls: 0
+      controls: 0,
+      vq: 'hd1080'
     },
     events: {
       onReady: function(e) {
         e.target.setPlaybackQuality('hd1080');
+        if (e.target.setPlaybackQualityRange) e.target.setPlaybackQualityRange('hd1080', 'highres');
         e.target.playVideo();
       },
-      onPlaybackQualityChange: function(e) {},
-      onStateChange: function(e) {}
-    }
+      onPlaybackQualityChange: function(e) {
+        var q = e.target.getPlaybackQuality();
+        if (q !== 'hd1080' && q !== 'hd2160' && q !== 'highres') {
+          e.target.setPlaybackQuality('hd1080');
+        }
+      },
+      onStateChange: function(e) {
+        if (e.data === YT.PlayerState.PLAYING) {
+          var q = e.target.getPlaybackQuality();
+          if (q !== 'hd1080' && q !== 'hd2160' && q !== 'highres') {
+            e.target.setPlaybackQuality('hd1080');
+            if (e.target.setPlaybackQualityRange) e.target.setPlaybackQualityRange('hd1080', 'highres');
+          }
+        }
+      }
   });
 }
 
