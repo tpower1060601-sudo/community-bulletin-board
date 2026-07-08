@@ -1189,8 +1189,14 @@ function layDrop(e, physX, physY) {
   e.currentTarget.classList.remove('drag-over');
   var screenId = e.dataTransfer.getData('text/plain') || layDragId;
   if (!screenId) return;
-  // 同位置只能放一個
-  layoutWindows = layoutWindows.filter(function(w){ return !(w.physX===physX && w.physY===physY); });
+  // 移除同 screenId 的舊放置 + 同位置的舊放置
+  layoutWindows = layoutWindows.filter(function(w){ return w.screenId !== screenId && !(w.physX===physX && w.physY===physY); });
+  // 跨列視窗（如 screen13 高 2160）也清除被遮蓋的下方格子
+  var def = SCREEN_DEFS.find(function(s){ return s.id === screenId; });
+  if (def && def.h > 1080) {
+    var coveredY = physY + 1080;
+    layoutWindows = layoutWindows.filter(function(w){ return !(w.physX===physX && w.physY===coveredY); });
+  }
   layoutWindows.push({ screenId:screenId, physX:physX, physY:physY });
   saveLayoutLocal();
   renderMonitorWall();
@@ -1235,8 +1241,13 @@ function generateBatContent() {
   var bsel = ($('browserSelect')||{}).value || 'edge';
   var varName = bsel==='chrome' ? 'CHROME' : bsel==='supermium' ? 'BROWSER' : 'EDGE';
 
-  // 依上排→下排、左→右排序
-  var sorted = layoutWindows.slice().sort(function(a,b){
+  // 去重（同 screenId 只保留第一個）+ 依上排→下排、左→右排序
+  var seen = {};
+  var sorted = layoutWindows.slice().filter(function(w){
+    if (seen[w.screenId]) return false;
+    seen[w.screenId] = true;
+    return true;
+  }).sort(function(a,b){
     if (a.physY !== b.physY) return a.physY - b.physY;
     return a.physX - b.physX;
   });
