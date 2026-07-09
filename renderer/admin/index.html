@@ -591,8 +591,9 @@ function uploadAnnImage(file) {
       })
       .then(function(r) {
         if (r.ok) {
-          var rawUrl = 'https://raw.githubusercontent.com/' + GH_IMG_REPO + '/main/' + path;
-          resolve(rawUrl);
+          // 用 GitHub Pages 網域（raw.githubusercontent.com 有流量限制會 429）
+          var pagesUrl = 'https://tpower1060601-sudo.github.io/community-bulletin-board/' + path;
+          resolve(pagesUrl);
         } else {
           r.text().then(function(t){ console.error('[img upload]', r.status, t); });
           toast('圖片上傳失敗（HTTP ' + r.status + '）', 'warning');

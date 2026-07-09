@@ -39,8 +39,13 @@
   /* ── localStorage helpers ─────────────────────────────────────────────── */
   function lsGet(key) {
     try {
-      const raw = localStorage.getItem(PREFIX + key);
+      let raw = localStorage.getItem(PREFIX + key);
       if (raw) {
+        // 舊資料的圖片網址改寫為 GitHub Pages 網域（raw.githubusercontent.com 有流量限制會 429）
+        raw = raw.replace(
+          /https:\/\/raw\.githubusercontent\.com\/tpower1060601-sudo\/community-bulletin-board\/main\/data\/images\//g,
+          'https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/'
+        );
         const stored = JSON.parse(raw);
         if (key === 'settings' && DEFAULTS.settings.windows) {
           const wins = stored.windows || [];
