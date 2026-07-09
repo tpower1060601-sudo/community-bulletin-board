@@ -1083,22 +1083,40 @@ var layDragId = null;
 var layEditorInited = false;
 
 function initLayoutEditor() {
-  if (!layEditorInited) {
-    try {
-      var saved = localStorage.getItem('bbs_screen_layout');
-      layoutWindows = saved ? JSON.parse(saved) : DEFAULT_LAYOUT.map(function(x){ return {screenId:x.screenId,physX:x.physX,physY:x.physY}; });
+  if (layEditorInited) {
+    renderPalette();
+    renderMonitorWall();
+    previewBat();
+    return;
+  }
+  layEditorInited = true;
+
+  window.api.get('screenLayout').then(function(saved) {
+    if (saved && saved.length) {
+      layoutWindows = saved;
       // 座標遷移：3840 是舊版才有的無效座標，修正為 1920
-      var needSave = false;
-      layoutWindows.forEach(function(w){ if (w.physX >= 3840) { w.physX = 1920; needSave = true; } });
-      if (needSave) saveLayoutLocal();
-    } catch(e) {
+      var needFix = false;
+      layoutWindows.forEach(function(w){ if (w.physX >= 3840) { w.physX = 1920; needFix = true; } });
+      if (needFix) saveLayoutLocal();
+      renderPalette(); renderMonitorWall(); previewBat();
+      return;
+    }
+
+    // 新資料鍵是空的：嘗試從舊版 raw localStorage key 遷移過來（一次性）
+    var legacy = null;
+    try { legacy = JSON.parse(localStorage.getItem('bbs_screen_layout') || 'null'); } catch(e) {}
+    if (legacy && legacy.length) {
+      legacy.forEach(function(w){ if (w.physX >= 3840) w.physX = 1920; });
+      layoutWindows = legacy;
+      localStorage.removeItem('bbs_screen_layout');
+      saveLayoutLocal(); // 寫入新資料鍵，觸發 GitHub 同步
+    } else {
       layoutWindows = DEFAULT_LAYOUT.map(function(x){ return {screenId:x.screenId,physX:x.physX,physY:x.physY}; });
     }
-    layEditorInited = true;
-  }
-  renderPalette();
-  renderMonitorWall();
-  previewBat();
+    renderPalette();
+    renderMonitorWall();
+    previewBat();
+  });
 }
 
 function renderPalette() {
@@ -1208,7 +1226,7 @@ function loadDefaultLayout() {
   toast('已載入目前 .bat 預設配置');
 }
 function saveLayoutLocal() {
-  try { localStorage.setItem('bbs_screen_layout', JSON.stringify(layoutWindows)); } catch(e) {}
+  window.api.save('screenLayout', layoutWindows).then(function(){ triggerBackup(); });
 }
 function toggleCustomBrowser() {
   var sel = ($('browserSelect')||{}).value;
