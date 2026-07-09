@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-07-09T08:25:54.008Z",
+  "_savedAt": "2026-07-09T11:16:03.286Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -435,5 +435,32 @@
       "會議室C"
     ],
     "bookings": []
-  }
+  },
+  "screenLayout": [
+    {
+      "screenId": "screen1",
+      "physX": -1920,
+      "physY": -1080
+    },
+    {
+      "screenId": "screen4",
+      "physX": 0,
+      "physY": -1080
+    },
+    {
+      "screenId": "screen13",
+      "physX": 1920,
+      "physY": -1080
+    },
+    {
+      "screenId": "screen7",
+      "physX": -1920,
+      "physY": 0
+    },
+    {
+      "screenId": "screen8",
+      "physX": 0,
+      "physY": 0
+    }
+  ]
 }
