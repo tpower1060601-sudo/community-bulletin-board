@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<title>螢幕牆</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:5760px; height:2160px; overflow:hidden; background:#000; }
+.wall-frame { position:absolute; border:0; background:#000; }
+</style>
+</head>
+<body>
+<div id="wall"></div>
+
+<script src="../../shared/api.js"></script>
+<script src="../../shared/screenDefs.js"></script>
+<script>
+'use strict';
+
+var STAGGER_MS = 3000; // 每格延遲載入間隔，避免同時發起多條連線（尤其 YouTube 兩格）
+
+function frameSrc(screenId) {
+  return '../' + screenId + '/';
+}
+
+function renderWall(layout) {
+  var wall = document.getElementById('wall');
+  wall.innerHTML = '';
+  var defs = window.ScreenDefs.SCREEN_DEFS;
+
+  layout.forEach(function(w, i) {
+    var def = null;
+    for (var j = 0; j < defs.length; j++) {
+      if (defs[j].id === w.screenId) { def = defs[j]; break; }
+    }
+    if (!def) return;
+
+    // 畫布左上角對應實體座標 (-1920, -1080)
+    var left = w.physX + 1920;
+    var top  = w.physY + 1080;
+
+    var iframe = document.createElement('iframe');
+    iframe.className = 'wall-frame';
+    iframe.setAttribute('allow', 'autoplay');
+    iframe.style.left = left + 'px';
+    iframe.style.top = top + 'px';
+    iframe.style.width = def.w + 'px';
+    iframe.style.height = def.h + 'px';
+    wall.appendChild(iframe);
+
+    setTimeout(function() {
+      iframe.src = frameSrc(def.id);
+    }, i * STAGGER_MS);
+  });
+}
+
+async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
+  var layout = await window.api.get('screenLayout');
+  if (!layout || !layout.length) layout = window.ScreenDefs.DEFAULT_LAYOUT;
+  renderWall(layout);
+}
+
+window.api.on('screenLayout:updated', function(layout) {
+  if (!layout || !layout.length) layout = window.ScreenDefs.DEFAULT_LAYOUT;
+  renderWall(layout);
+});
+
+init();
+</script>
+</body>
+</html>
