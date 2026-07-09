@@ -378,6 +378,17 @@ input:checked + .slider:before{transform:translateX(20px);}
       <!-- BAT 設定與預覽 -->
       <div class="card" id="batSection" style="margin-top:16px">
         <div class="card-title">⚙️ 執行檔設定</div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label>輸出模式</label>
+          <div style="display:flex;gap:16px;align-items:center;margin-top:4px">
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer">
+              <input type="radio" name="batMode" value="multi" checked onchange="previewBat()"> 多視窗模式（每格一個瀏覽器視窗）
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-weight:400;cursor:pointer">
+              <input type="radio" name="batMode" value="wall" onchange="previewBat()"> 螢幕牆模式（單一視窗，iframe 拼接）
+            </label>
+          </div>
+        </div>
         <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px">
           <div class="form-group" style="margin-bottom:0">
             <label>瀏覽器</label>
@@ -1246,6 +1257,24 @@ function generateBatContent() {
   var exePath   = getBatBrowserPath();
   var bsel = ($('browserSelect')||{}).value || 'edge';
   var varName = bsel==='chrome' ? 'CHROME' : bsel==='supermium' ? 'BROWSER' : 'EDGE';
+  var modeEl = document.querySelector('input[name="batMode"]:checked');
+  var mode = modeEl ? modeEl.value : 'multi';
+
+  var lines = [
+    '@echo off',
+    'timeout /t ' + initDelay + ' /nobreak',
+    '',
+    'set ' + varName + '="' + exePath + '"',
+    'set FLAGS=--no-first-run --no-default-browser-check --disable-translate --disable-infobars',
+    ''
+  ];
+
+  if (mode === 'wall') {
+    var wallUrl = LAY_BASE_URL + 'wall/';
+    lines.push(':: 螢幕牆模式（單一視窗，5760x2160，涵蓋全部螢幕位置，iframe 拼接）');
+    lines.push('start "" %' + varName + '% %FLAGS% --user-data-dir="C:\\EdgeWall" --window-position=-1920,-1080 --window-size=5760,2160 --app="' + wallUrl + '"');
+    return lines.join('\r\n');
+  }
 
   // 去重（同 screenId 只保留第一個）+ 依上排→下排、左→右排序
   var seen = {};
@@ -1257,15 +1286,6 @@ function generateBatContent() {
     if (a.physY !== b.physY) return a.physY - b.physY;
     return a.physX - b.physX;
   });
-
-  var lines = [
-    '@echo off',
-    'timeout /t ' + initDelay + ' /nobreak',
-    '',
-    'set ' + varName + '="' + exePath + '"',
-    'set FLAGS=--no-first-run --no-default-browser-check --disable-translate --disable-infobars',
-    ''
-  ];
 
   if (!sorted.length) {
     lines.push(':: 尚未配置任何螢幕');
