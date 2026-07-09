@@ -1091,10 +1091,12 @@ function initLayoutEditor() {
   }
   layEditorInited = true;
 
+  var newKeyWritten = localStorage.getItem('bbs_screenLayout') !== null;
+
   window.api.get('screenLayout').then(function(saved) {
-    if (saved && saved.length) {
-      layoutWindows = saved;
-      // 座標遷移：3840 是舊版才有的無效座標，修正為 1920
+    if (newKeyWritten) {
+      // 新資料鍵已經存在過（即使是清空後存的空陣列），視為使用者的真實意圖，不觸發舊資料遷移
+      layoutWindows = saved || [];
       var needFix = false;
       layoutWindows.forEach(function(w){ if (w.physX >= 3840) { w.physX = 1920; needFix = true; } });
       if (needFix) saveLayoutLocal();
@@ -1102,7 +1104,7 @@ function initLayoutEditor() {
       return;
     }
 
-    // 新資料鍵是空的：嘗試從舊版 raw localStorage key 遷移過來（一次性）
+    // 新資料鍵從未寫入過：嘗試從舊版 raw localStorage key 遷移過來（一次性）
     var legacy = null;
     try { legacy = JSON.parse(localStorage.getItem('bbs_screen_layout') || 'null'); } catch(e) {}
     if (legacy && legacy.length) {
