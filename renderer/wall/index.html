@@ -23,7 +23,12 @@ function frameSrc(screenId) {
   return '../' + screenId + '/';
 }
 
+var pendingTimers = [];
+
 function renderWall(layout) {
+  pendingTimers.forEach(function(id){ clearTimeout(id); });
+  pendingTimers = [];
+
   var wall = document.getElementById('wall');
   wall.innerHTML = '';
   var defs = window.ScreenDefs.SCREEN_DEFS;
@@ -33,7 +38,10 @@ function renderWall(layout) {
     for (var j = 0; j < defs.length; j++) {
       if (defs[j].id === w.screenId) { def = defs[j]; break; }
     }
-    if (!def) return;
+    if (!def) {
+      console.warn('[wall] unknown screenId in layout:', w.screenId);
+      return;
+    }
 
     // 畫布左上角對應實體座標 (-1920, -1080)
     var left = w.physX + 1920;
@@ -48,9 +56,10 @@ function renderWall(layout) {
     iframe.style.height = def.h + 'px';
     wall.appendChild(iframe);
 
-    setTimeout(function() {
+    var timerId = setTimeout(function() {
       iframe.src = frameSrc(def.id);
     }, i * STAGGER_MS);
+    pendingTimers.push(timerId);
   });
 }
 
