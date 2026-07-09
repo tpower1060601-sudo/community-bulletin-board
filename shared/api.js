@@ -3,7 +3,7 @@
   'use strict';
 
   const PREFIX = 'bbs_';
-  const DATA_KEYS = ['announcements', 'announcements_v', 'settings', 'meetings', 'news'];
+  const DATA_KEYS = ['announcements', 'announcements_v', 'settings', 'meetings', 'news', 'screenLayout'];
 
   const DEFAULTS = {
     announcements:   { marquee: '歡迎光臨！', list: [] },
@@ -34,6 +34,7 @@
     },
     meetings: { rooms: ['會議室A', '會議室B', '會議室C'], bookings: [] },
     news: [],
+    screenLayout: [],
   };
 
   /* ── localStorage helpers ─────────────────────────────────────────────── */
