@@ -85,6 +85,10 @@ window.api.on('screenLayout:updated', function(layout) {
   }
   fit();
   window.addEventListener('resize', fit);
+  // kiosk 視窗開啟後，OS 需要一點時間才會把 --window-position/--window-size
+  // 真正套用到最終跨螢幕位置，太早讀到的 window.innerWidth/innerHeight 可能不準，
+  // 補幾次延遲重新校正，避免縮放比例鎖死在錯誤的暫時尺寸上。
+  [300, 1000, 3000].forEach(function(delay) { setTimeout(fit, delay); });
 })();
 
 init();
