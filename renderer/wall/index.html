@@ -80,10 +80,10 @@ window.api.on('screenLayout:updated', function(layout) {
   var W = 5760, H = 2160;
   var wallEl = document.getElementById('wall');
   function fit() {
-    var s = Math.min(window.innerWidth / W, window.innerHeight / H);
-    var offsetX = (window.innerWidth - W * s) / 2;
-    var offsetY = (window.innerHeight - H * s) / 2;
-    wallEl.style.transform = 'translate(' + offsetX + 'px,' + offsetY + 'px) scale(' + s + ')';
+    // 寬高分開撐滿實際可視區域，不留白（可能有極輕微的比例變形，換取完全貼滿螢幕）
+    var sx = window.innerWidth / W;
+    var sy = window.innerHeight / H;
+    wallEl.style.transform = 'scale(' + sx + ',' + sy + ')';
   }
   fit();
   window.addEventListener('resize', fit);
