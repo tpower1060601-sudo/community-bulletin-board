@@ -81,7 +81,9 @@ window.api.on('screenLayout:updated', function(layout) {
   var wallEl = document.getElementById('wall');
   function fit() {
     var s = Math.min(window.innerWidth / W, window.innerHeight / H);
-    wallEl.style.transform = 'scale(' + s + ')';
+    var offsetX = (window.innerWidth - W * s) / 2;
+    var offsetY = (window.innerHeight - H * s) / 2;
+    wallEl.style.transform = 'translate(' + offsetX + 'px,' + offsetY + 'px) scale(' + s + ')';
   }
   fit();
   window.addEventListener('resize', fit);
