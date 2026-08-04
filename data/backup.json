@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-04T05:05:03.186Z",
+  "_savedAt": "2026-08-04T05:11:09.525Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -106,6 +106,20 @@
   "announcements_v": {
     "marquee": "歡迎光臨親家市政廣場！",
     "list": [
+      {
+        "id": 1785820269523,
+        "title": "",
+        "type": "general",
+        "duration": 7,
+        "content": "",
+        "imageUrl": "https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/1785820255897_Gemini_Generated_Image_jwcbxojwcbxojwcb.png",
+        "alwaysValid": true,
+        "startDate": "",
+        "startTime": "",
+        "endDate": "",
+        "endTime": "",
+        "date": "2026-08-04"
+      },
       {
         "id": 1783318903069,
         "title": "電梯維修進度報告",
