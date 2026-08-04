@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-04T05:11:09.525Z",
+  "_savedAt": "2026-08-04T05:16:29.889Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -113,11 +113,11 @@
         "duration": 7,
         "content": "",
         "imageUrl": "https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/1785820255897_Gemini_Generated_Image_jwcbxojwcbxojwcb.png",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
+        "alwaysValid": false,
+        "startDate": "2026-08-04",
+        "startTime": "13:16",
+        "endDate": "2026-08-09",
+        "endTime": "20:16",
         "date": "2026-08-04"
       },
       {
