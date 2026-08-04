@@ -89,6 +89,7 @@ input:checked + .slider:before{transform:translateX(20px);}
 .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .modal-backdrop.open{display:flex;}
 .modal{background:var(--sidebar);width:620px;max-height:90vh;border-radius:20px;overflow:hidden;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.5);display:flex;flex-direction:column;}
+.modal.modal-wide{width:min(1560px,96vw);max-height:94vh;}
 .modal-header{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
 .modal-title{font-size:18px;font-weight:800;}
 .modal-close{background:none;border:none;color:var(--text2);font-size:20px;}
@@ -105,7 +106,20 @@ input:checked + .slider:before{transform:translateX(20px);}
 .rich-toolbar .tb-label{font-size:11px;color:var(--text2);flex-shrink:0;letter-spacing:0.5px;}
 .color-swatch{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:border-color 0.15s,transform 0.12s;display:inline-block;}
 .color-swatch:hover{border-color:rgba(255,255,255,0.8);transform:scale(1.25);}
-.rich-editor{min-height:130px;max-height:220px;overflow-y:auto;padding:12px 14px;background:#0f172a;color:#fff;border:1px solid var(--border);border-radius:0 0 8px 8px;outline:none;line-height:1.9;font-size:15px;font-family:inherit;}
+.rich-editor{min-height:260px;max-height:420px;overflow-y:auto;padding:12px 14px;background:#0f172a;color:#fff;border:1px solid var(--border);border-radius:0 0 8px 8px;outline:none;line-height:1.9;font-size:15px;font-family:inherit;}
+
+/* 公告編輯：左編輯 / 右即時預覽 */
+.ann-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start;}
+@media (max-width:1100px){ .ann-grid{grid-template-columns:minmax(0,1fr);} }
+.ann-preview-pane{position:sticky;top:0;}
+.ann-preview-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px;}
+.ann-preview-stage{background:#000;border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative;}
+.ann-preview-canvas{transform-origin:0 0;position:absolute;top:0;left:0;}
+.tb-group{display:flex;align-items:center;gap:6px;}
+.rich-toolbar button.tb-on{background:var(--accent);color:#04121f;border-color:var(--accent);font-weight:800;}
+.preset-btn{border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:inherit;background:#0f172a;}
+.preset-btn:hover{filter:brightness(1.35);}
+.color-swatch{width:30px;height:30px;}
 .rich-editor:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(56,189,248,0.2);}
 .rich-editor:empty::before{content:attr(data-placeholder);color:rgba(255,255,255,0.25);pointer-events:none;}
 
@@ -633,6 +647,7 @@ function handleAnnImageUpload(input) {
     if (preview)  { preview.style.display = 'flex'; }
     if (status)   status.textContent = file.name;
     toast('圖片上傳成功 ✓');
+    renderAnnPreview();
   });
 }
 
@@ -647,6 +662,7 @@ function clearAnnImage() {
   if (preview)  preview.style.display = 'none';
   if (status)   status.textContent = '未選擇';
   if (fileInput) fileInput.value = '';
+  renderAnnPreview();
 }
 
 /* fontSize 用 em 對應表，讓 admin 編輯和 screen2 顯示比例一致 */
@@ -665,25 +681,164 @@ function buildSwatches() {
   }).join('');
 }
 
+/* 沒有選取任何文字時自動全選，讓樣式直接套用到整篇內容
+   （大部分公告整篇同色同字級，免去每次都要先反白的麻煩） */
+function selectAllIfNothingSelected(editor) {
+  var sel = window.getSelection();
+  var inEditor = sel.rangeCount && editor.contains(sel.getRangeAt(0).commonAncestorContainer);
+  if (inEditor && !sel.isCollapsed) return false;
+  var range = document.createRange();
+  range.selectNodeContents(editor);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  return true;
+}
+
+/* 套用字級：先用 size="7" 當暫存標記，再換成 span+em。
+   瀏覽器會把 color 併進同一個 <font> 標籤，換元素時要一併保留，否則顏色會不見。 */
+function applyFontSize(editor, sizeKey) {
+  document.execCommand('fontSize', false, '7');
+  var emSize = FONT_SIZE_MAP[sizeKey] || '1em';
+  editor.querySelectorAll('font[size="7"]').forEach(function(font) {
+    var span = document.createElement('span');
+    span.style.fontSize = emSize;
+    if (font.getAttribute('color')) span.style.color = font.getAttribute('color');
+    while (font.firstChild) span.appendChild(font.firstChild);
+    font.parentNode.replaceChild(span, font);
+  });
+}
+
 function fmt(cmd, val) {
   var editor = document.getElementById('annContent');
   editor.focus();
+  var autoSelected = selectAllIfNothingSelected(editor);
 
-  if (cmd === 'fontSize') {
-    /* 用 size="7" 當暫存標記（不太可能已存在），之後立刻換成 span+em */
-    document.execCommand('fontSize', false, '7');
-    var fonts = editor.querySelectorAll('font[size="7"]');
-    var emSize = FONT_SIZE_MAP[val] || '1em';
-    fonts.forEach(function(font) {
-      var span = document.createElement('span');
-      span.style.fontSize = emSize;
-      while (font.firstChild) span.appendChild(font.firstChild);
-      font.parentNode.replaceChild(span, font);
-    });
-    return;
+  if (cmd === 'fontSize') applyFontSize(editor, val);
+  else document.execCommand(cmd, false, val || null);
+
+  if (autoSelected) window.getSelection().collapseToEnd();
+  renderAnnPreview();
+}
+
+/* 一鍵樣式：常用的顏色＋字級＋粗細組合，一次套好 */
+var ANN_PRESETS = {
+  plain: { color:'#ffffff', size:'3', bold:false },
+  gold:  { color:'#fbbf24', size:'4', bold:true  },
+  alert: { color:'#f87171', size:'4', bold:true  }
+};
+function applyPreset(name) {
+  var p = ANN_PRESETS[name];
+  if (!p) return;
+  var editor = document.getElementById('annContent');
+  editor.focus();
+  var autoSelected = selectAllIfNothingSelected(editor);
+
+  document.execCommand('removeFormat', false, null);
+  document.execCommand('foreColor', false, p.color);
+  if (p.bold) document.execCommand('bold', false, null);
+  applyFontSize(editor, p.size);
+
+  if (autoSelected) window.getSelection().collapseToEnd();
+  renderAnnPreview();
+}
+
+/* ── 即時預覽（模擬 screen2 橫式 / screen13 直式的實際呈現）───────────── */
+var _annPreviewMode = 'h';
+var ANN_TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活動公告', notice:'重要通知' };
+
+function setAnnPreviewMode(mode) {
+  _annPreviewMode = mode;
+  var h = $('annPvH'), v = $('annPvV');
+  if (h) h.classList.toggle('tb-on', mode === 'h');
+  if (v) v.classList.toggle('tb-on', mode === 'v');
+  renderAnnPreview();
+}
+
+function renderAnnPreview() {
+  var stage = $('annPreviewStage'), canvas = $('annPreviewCanvas');
+  if (!stage || !canvas) return;
+
+  var isV = _annPreviewMode === 'v';
+  var W = 1920, H = isV ? 2160 : 1080;
+  var title   = ($('annTitle')||{}).value || '';
+  var type    = ($('annType')||{}).value || 'general';
+  var content = (document.getElementById('annContent')||{}).innerHTML || '';
+  var img     = ($('annImageUrl')||{}).value || '';
+  var hasText = !!(title || content.replace(/<[^>]*>/g,'').trim());
+
+  /* 字級與間距對齊 screen2 / screen13 的實際 CSS */
+  var S = isV
+    ? { badge:44, title:(img?96:120), body:(img?60:72), date:40, pad:'60px 80px', gapT:48, gapB:48 }
+    : { badge:24, title:64,           body:40,          date:24, pad:'60px 80px', gapT:32, gapB:36 };
+
+  var badgeColor = { general:'#f0a500', urgent:'#ff4d4d', event:'#2ecc71', notice:'#f59e0b' }[type] || '#f0a500';
+  var textBlock =
+    '<div style="display:inline-block;padding:'+(isV?'16px 40px':'10px 24px')+';border-radius:60px;font-size:'+S.badge+'px;font-weight:700;letter-spacing:2px;margin-bottom:'+S.gapT+'px;border:1px solid;color:'+badgeColor+';border-color:'+badgeColor+'66;background:'+badgeColor+'1a">'+(ANN_TYPE_LABEL[type]||'公告')+'</div>'+
+    '<div style="font-size:'+S.title+'px;font-weight:900;line-height:1.4;margin-bottom:'+S.gapB+'px;color:#fff">'+esc(title)+'</div>'+
+    '<div style="font-size:'+S.body+'px;line-height:'+(isV?2.0:2.2)+';color:rgba(255,255,255,.8)">'+content+'</div>'+
+    '<div style="margin-top:'+(isV?56:40)+'px;font-size:'+S.date+'px;color:rgba(255,255,255,.35)">'+today()+'</div>';
+
+  var inner;
+  if (img && !hasText) {
+    /* 純圖：滿版 */
+    inner = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000">'+
+            '<img src="'+esc(img)+'" style="width:100%;height:100%;object-fit:contain">'+
+            '</div>';
+  } else if (img && isV) {
+    /* 直式上圖下文 */
+    inner = '<div style="max-width:1720px;width:100%;text-align:left">'+
+            '<div style="width:100%;max-height:900px;display:flex;align-items:center;justify-content:center;margin-bottom:60px">'+
+            '<img src="'+esc(img)+'" style="max-width:100%;max-height:900px;object-fit:contain;border-radius:28px">'+
+            '</div><div>'+textBlock+'</div></div>';
+  } else if (img) {
+    /* 橫式左圖右文 */
+    inner = '<div style="max-width:1400px;width:100%;display:flex;align-items:center;gap:60px;text-align:left">'+
+            '<div style="flex-shrink:0;width:640px;height:640px;display:flex;align-items:center;justify-content:center">'+
+            '<img src="'+esc(img)+'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:20px">'+
+            '</div><div style="flex:1;min-width:0">'+textBlock+'</div></div>';
+  } else {
+    inner = '<div style="max-width:'+(isV?1720:1400)+'px;width:100%;text-align:'+(isV?'left':'center')+'">'+textBlock+'</div>';
   }
 
-  document.execCommand(cmd, false, val || null);
+  canvas.style.width = W+'px';
+  canvas.style.height = H+'px';
+  canvas.innerHTML =
+    '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:'+S.pad+';'+
+    'background:radial-gradient(ellipse at center, rgba(0,40,80,.5) 0%, transparent 70%), #0c0b09;'+
+    'font-family:\'Microsoft JhengHei\',\'PingFang TC\',sans-serif;overflow:hidden">'+inner+'</div>';
+
+  /* 依預覽框實際寬度等比例縮小 */
+  var scale = stage.clientWidth / W;
+  canvas.style.transform = 'scale('+scale+')';
+  stage.style.height = (H * scale) + 'px';
+}
+
+/* 把目前編輯中的內容複製一份到另一個公告欄（版面比例不同，圖片不帶過去） */
+function copyAnnToOther() {
+  var target     = _annDataset === 'announcements_v' ? 'announcements' : 'announcements_v';
+  var targetName = target === 'announcements_v' ? '直立公告' : '一般公告';
+  var targetData = target === 'announcements_v' ? announcementsV : announcements;
+  var editor = document.getElementById('annContent');
+
+  targetData.list = targetData.list || [];
+  targetData.list.unshift({
+    id: new Date().getTime(),
+    title: $('annTitle').value,
+    type: $('annType').value,
+    duration: Math.max(3, parseInt(($('annDuration')||{}).value)||7),
+    content: editor ? editor.innerHTML : '',
+    imageUrl: '',
+    alwaysValid: $('annAlwaysValid').checked,
+    startDate: $('annStartDate').value, startTime: $('annStartTime').value,
+    endDate:   $('annEndDate').value,   endTime:   $('annEndTime').value,
+    date: today()
+  });
+
+  window.api.save(target, targetData).then(function(){
+    toast('已複製到「'+targetName+'」，圖片與版面請到該頁面各自調整');
+    if (target === 'announcements_v') renderAnnouncementsV(); else renderAnnouncements();
+    triggerBackup();
+  });
 }
 
 function openAnnModal(id, dataset) {
@@ -694,9 +849,11 @@ function openAnnModal(id, dataset) {
   var isV = _annDataset === 'announcements_v';
   $('modalTitle').innerText=isNew?(isV?'新增直立公告':'新增公告'):(isV?'編輯直立公告':'編輯公告');
   $('modalBody').innerHTML=
-    '<div class="form-group"><label>標題</label><input type="text" id="annTitle" value="'+esc(a.title)+'"></div>'+
+    '<div class="ann-grid">'+
+    '<div>'+
+    '<div class="form-group"><label>標題</label><input type="text" id="annTitle" value="'+esc(a.title)+'" oninput="renderAnnPreview()"></div>'+
     '<div class="form-row" style="grid-template-columns:1fr auto">'+
-      '<div class="form-group" style="margin-bottom:0"><label>類型</label><select id="annType">'+
+      '<div class="form-group" style="margin-bottom:0"><label>類型</label><select id="annType" onchange="renderAnnPreview()">'+
         '<option value="general"'+(a.type==='general'?' selected':'')+'>一般公告</option>'+
         '<option value="notice"'+(a.type==='notice'?' selected':'')+'>重要提醒</option>'+
         '<option value="event"'+(a.type==='event'?' selected':'')+'>活動通知</option>'+
@@ -711,26 +868,36 @@ function openAnnModal(id, dataset) {
     '</div>'+
     '<div class="form-group"><label>內容</label>'+
       '<div class="rich-toolbar">'+
-        '<button onclick="fmt(\'bold\')" title="粗體 Ctrl+B"><b>B</b></button>'+
-        '<button onclick="fmt(\'italic\')" title="斜體 Ctrl+I"><i>I</i></button>'+
-        '<button onclick="fmt(\'underline\')" title="底線 Ctrl+U"><u>U</u></button>'+
-        '<div class="tb-sep"></div>'+
-        '<select onchange="fmt(\'fontSize\',this.value);this.selectedIndex=0" title="字體大小">'+
-          '<option value="">字級</option>'+
-          '<option value="2">小（0.65×）</option>'+
-          '<option value="3">中（預設）</option>'+
-          '<option value="4">大（1.45×）</option>'+
-          '<option value="5">特大（1.95×）</option>'+
-          '<option value="6">超大（2.6×）</option>'+
-        '</select>'+
-        '<div class="tb-sep"></div>'+
-        '<span class="tb-label">文字色：</span>'+
-        buildSwatches()+
-        '<input type="color" id="txtColor" value="#fbbf24" title="自訂顏色（即時套用）" oninput="fmt(\'foreColor\',this.value)" onchange="fmt(\'foreColor\',this.value)">'+
-        '<div class="tb-sep"></div>'+
-        '<button onclick="fmt(\'removeFormat\')" title="清除所有格式" style="font-size:11px">✕ 清除</button>'+
+        '<span class="tb-label">一鍵樣式：</span>'+
+        '<button class="preset-btn" style="color:#fff" onclick="applyPreset(\'plain\')">標準白字</button>'+
+        '<button class="preset-btn" style="color:#fbbf24;font-weight:800;font-size:15px" onclick="applyPreset(\'gold\')">金色大字</button>'+
+        '<button class="preset-btn" style="color:#f87171;font-weight:800" onclick="applyPreset(\'alert\')">紅色警示</button>'+
       '</div>'+
-      '<div id="annContent" contenteditable="true" class="rich-editor" data-placeholder="輸入公告內容…"></div>'+
+      '<div class="rich-toolbar" style="border-radius:0;border-top:none">'+
+        '<div class="tb-group">'+
+          '<button onclick="fmt(\'bold\')" title="粗體"><b>B</b> 粗體</button>'+
+          '<button onclick="fmt(\'italic\')" title="斜體"><i>I</i> 斜體</button>'+
+          '<button onclick="fmt(\'underline\')" title="底線"><u>U</u> 底線</button>'+
+        '</div>'+
+        '<div class="tb-sep"></div>'+
+        '<div class="tb-group">'+
+          '<span class="tb-label">字級</span>'+
+          '<button onclick="fmt(\'fontSize\',\'2\')">小</button>'+
+          '<button onclick="fmt(\'fontSize\',\'3\')">中</button>'+
+          '<button onclick="fmt(\'fontSize\',\'4\')">大</button>'+
+          '<button onclick="fmt(\'fontSize\',\'5\')">特大</button>'+
+          '<button onclick="fmt(\'fontSize\',\'6\')">超大</button>'+
+        '</div>'+
+        '<div class="tb-sep"></div>'+
+        '<button onclick="fmt(\'removeFormat\')" title="清除所有格式">✕ 清除格式</button>'+
+      '</div>'+
+      '<div class="rich-toolbar" style="border-radius:0;border-top:none">'+
+        '<span class="tb-label">文字顏色</span>'+
+        buildSwatches()+
+        '<input type="color" id="txtColor" value="#fbbf24" title="自訂顏色" oninput="fmt(\'foreColor\',this.value)" onchange="fmt(\'foreColor\',this.value)">'+
+      '</div>'+
+      '<div id="annContent" contenteditable="true" class="rich-editor" data-placeholder="輸入公告內容…" oninput="renderAnnPreview()"></div>'+
+      '<div style="font-size:12px;color:var(--text2);margin-top:6px">💡 沒有選取文字時，樣式會套用到整篇內容；只想改一段就先反白那段文字</div>'+
     '</div>'+
     '<div class="form-group"><label>公告圖片（選填）</label>'+
       '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
@@ -745,7 +912,7 @@ function openAnnModal(id, dataset) {
         '<img id="annImageThumb" style="max-height:72px;max-width:160px;border-radius:8px;object-fit:contain;border:1px solid var(--border)">'+
         '<button class="btn btn-danger btn-sm" onclick="clearAnnImage()">✕ 移除</button>'+
       '</div>'+
-      '<div style="font-size:11px;color:var(--text2);margin-top:6px">圖片將顯示在公告左側；需先在「備份與還原」設定 GitHub Token 才能上傳</div>'+
+      '<div style="font-size:11px;color:var(--text2);margin-top:6px">需先在「備份與還原」設定 GitHub Token 才能上傳</div>'+
     '</div>'+
     '<div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:8px;margin-top:4px">'+
       '<div class="switch-group" style="margin-bottom:12px"><span>一直有效（常駐）</span>'+
@@ -754,7 +921,23 @@ function openAnnModal(id, dataset) {
         '<div class="form-group"><label>起始時間</label><div style="display:flex;gap:8px"><input type="date" id="annStartDate" value="'+esc(a.startDate)+'"><input type="time" id="annStartTime" value="'+esc(a.startTime)+'"></div></div>'+
         '<div class="form-group"><label>結束時間</label><div style="display:flex;gap:8px"><input type="date" id="annEndDate" value="'+esc(a.endDate)+'"><input type="time" id="annEndTime" value="'+esc(a.endTime)+'"></div></div>'+
       '</div>'+
+    '</div>'+
+    '</div>'+
+    '<div class="ann-preview-pane">'+
+      '<div class="ann-preview-head">'+
+        '<label style="margin:0">實際畫面預覽</label>'+
+        '<div class="tb-group">'+
+          '<button class="preset-btn'+(isV?'':' tb-on')+'" id="annPvH" onclick="setAnnPreviewMode(\'h\')">橫式 1920×1080</button>'+
+          '<button class="preset-btn'+(isV?' tb-on':'')+'" id="annPvV" onclick="setAnnPreviewMode(\'v\')">直式 1920×2160</button>'+
+        '</div>'+
+      '</div>'+
+      '<div class="ann-preview-stage" id="annPreviewStage">'+
+        '<div class="ann-preview-canvas" id="annPreviewCanvas"></div>'+
+      '</div>'+
+      '<div style="font-size:11px;color:var(--text2);margin-top:6px">此預覽依大廳實際畫面的字級與版面等比例縮小呈現</div>'+
+    '</div>'+
     '</div>';
+  _annPreviewMode = isV ? 'v' : 'h';
   /* 載入既有內容（HTML 格式） */
   var editor = document.getElementById('annContent');
   if (editor) editor.innerHTML = a.content || '';
@@ -770,9 +953,12 @@ function openAnnModal(id, dataset) {
   $('modalFooter').innerHTML=
     (isNew?'':'<button class="btn btn-warning" onclick="deleteAnn('+id+')">刪除</button>')+
     '<div style="flex:1"></div>'+
+    '<button class="btn btn-ghost" onclick="copyAnnToOther()" title="把標題與內容複製一份到另一個公告欄，之後兩邊可各自調整版面">⧉ 複製到'+(isV?'一般公告':'直立公告')+'</button>'+
     '<button class="btn btn-ghost" onclick="closeModal()">取消</button>'+
     '<button class="btn btn-primary" onclick="saveAnn('+(id||0)+')">儲存</button>';
+  document.querySelector('.modal').classList.add('modal-wide');
   $('modalBackdrop').classList.add('open');
+  renderAnnPreview();
 }
 
 function saveAnn(id) {
@@ -1058,7 +1244,10 @@ function triggerBackup() {
   });
 }
 
-function closeModal() { $('modalBackdrop').classList.remove('open'); }
+function closeModal() {
+  $('modalBackdrop').classList.remove('open');
+  document.querySelector('.modal').classList.remove('modal-wide');
+}
 
 // Web-mode login (localStorage password check)
 function doLogin() {
