@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-07-22T05:56:00.989Z",
+  "_savedAt": "2026-08-04T05:05:03.186Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -183,12 +183,12 @@
         "duration": 20,
         "content": "",
         "imageUrl": "https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/1780980418971_20260608_155917_image_617526112985022755.jpg",
-        "alwaysValid": true,
+        "alwaysValid": false,
         "startDate": "0115-06-10",
         "startTime": "08:00",
         "endDate": "0115-07-31",
         "endTime": "21:00",
-        "date": "2026-06-10"
+        "date": "2026-08-04"
       },
       {
         "id": 1780983884979,
