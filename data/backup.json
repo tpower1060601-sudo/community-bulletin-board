@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-06T02:26:07.875Z",
+  "_savedAt": "2026-08-07T04:20:44.690Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -169,12 +169,12 @@
         "duration": 15,
         "content": "<span style=\"font-size: 1em;\">因為2號客梯(高樓層)故障的緣故，需要時間維修，因此自6/22日起暫時調度6號客梯(低樓層)開放全棟各樓層都可以搭乘，另外貨梯的部分，裝潢施工的廠商在9點之後才可進場，空出貨梯來疏散上班的人潮，若有不清楚的地方，請聽管理中心祕書的指揮，不便之處妄請海涵。</span>",
         "imageUrl": "https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/1781773448120___________20260618_170233.png",
-        "alwaysValid": true,
+        "alwaysValid": false,
         "startDate": "",
         "startTime": "",
-        "endDate": "",
+        "endDate": "2026-08-06",
         "endTime": "",
-        "date": "2026-06-18"
+        "date": "2026-08-07"
       },
       {
         "id": 1781492473560,
