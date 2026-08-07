@@ -681,6 +681,41 @@ function buildSwatches() {
   }).join('');
 }
 
+/* ── 選取範圍保存 ─────────────────────────────────────────────────────
+   點工具列按鈕時編輯區可能失去焦點、選取範圍被清掉，
+   導致「只想改選取的字」變成整篇都被改。因此隨時記住編輯區內最後一次
+   的選取範圍，套用樣式前先還原回去。 */
+var _annSavedRange = null;
+
+function saveAnnRange() {
+  var editor = document.getElementById('annContent');
+  if (!editor) return;
+  var sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  var r = sel.getRangeAt(0);
+  if (editor.contains(r.commonAncestorContainer)) {
+    _annSavedRange = r.cloneRange();
+    updateAnnScopeHint();
+  }
+}
+
+function restoreAnnRange(editor) {
+  if (!_annSavedRange || !editor.contains(_annSavedRange.commonAncestorContainer)) return;
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(_annSavedRange);
+}
+
+/* 即時顯示「接下來的樣式會套用到哪裡」，避免使用者搞不清楚範圍 */
+function updateAnnScopeHint() {
+  var hint = document.getElementById('annScopeHint');
+  if (!hint) return;
+  var hasSel = _annSavedRange && !_annSavedRange.collapsed;
+  hint.innerHTML = hasSel
+    ? '<span style="color:#4ade80">✓ 只會套用到你選取的文字</span>'
+    : '<span style="color:var(--text2)">未選取文字 → 會套用到整篇內容（想只改一段就先反白該段文字）</span>';
+}
+
 /* 沒有選取任何文字時自動全選，讓樣式直接套用到整篇內容
    （大部分公告整篇同色同字級，免去每次都要先反白的麻煩） */
 function selectAllIfNothingSelected(editor) {
@@ -699,24 +734,39 @@ function selectAllIfNothingSelected(editor) {
 function applyFontSize(editor, sizeKey) {
   document.execCommand('fontSize', false, '7');
   var emSize = FONT_SIZE_MAP[sizeKey] || '1em';
+  var created = [];
   editor.querySelectorAll('font[size="7"]').forEach(function(font) {
     var span = document.createElement('span');
     span.style.fontSize = emSize;
     if (font.getAttribute('color')) span.style.color = font.getAttribute('color');
     while (font.firstChild) span.appendChild(font.firstChild);
     font.parentNode.replaceChild(span, font);
+    created.push(span);
   });
+  /* 節點被替換後原本的選取範圍會失效（接著再套其他樣式會誤套用到整篇），
+     因此重新把選取範圍框回剛建立的元素上 */
+  if (created.length) {
+    var r = document.createRange();
+    r.setStartBefore(created[0]);
+    r.setEndAfter(created[created.length - 1]);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+  }
 }
 
 function fmt(cmd, val) {
   var editor = document.getElementById('annContent');
   editor.focus();
+  restoreAnnRange(editor);
   var autoSelected = selectAllIfNothingSelected(editor);
 
   if (cmd === 'fontSize') applyFontSize(editor, val);
   else document.execCommand(cmd, false, val || null);
 
-  if (autoSelected) window.getSelection().collapseToEnd();
+  if (autoSelected) { window.getSelection().collapseToEnd(); _annSavedRange = null; }
+  else saveAnnRange();
+  updateAnnScopeHint();
   renderAnnPreview();
 }
 
@@ -731,6 +781,7 @@ function applyPreset(name) {
   if (!p) return;
   var editor = document.getElementById('annContent');
   editor.focus();
+  restoreAnnRange(editor);
   var autoSelected = selectAllIfNothingSelected(editor);
 
   document.execCommand('removeFormat', false, null);
@@ -738,7 +789,9 @@ function applyPreset(name) {
   if (p.bold) document.execCommand('bold', false, null);
   applyFontSize(editor, p.size);
 
-  if (autoSelected) window.getSelection().collapseToEnd();
+  if (autoSelected) { window.getSelection().collapseToEnd(); _annSavedRange = null; }
+  else saveAnnRange();
+  updateAnnScopeHint();
   renderAnnPreview();
 }
 
@@ -897,7 +950,7 @@ function openAnnModal(id, dataset) {
         '<input type="color" id="txtColor" value="#fbbf24" title="自訂顏色" oninput="fmt(\'foreColor\',this.value)" onchange="fmt(\'foreColor\',this.value)">'+
       '</div>'+
       '<div id="annContent" contenteditable="true" class="rich-editor" data-placeholder="輸入公告內容…" oninput="renderAnnPreview()"></div>'+
-      '<div style="font-size:12px;color:var(--text2);margin-top:6px">💡 沒有選取文字時，樣式會套用到整篇內容；只想改一段就先反白那段文字</div>'+
+      '<div id="annScopeHint" style="font-size:12px;margin-top:6px"></div>'+
     '</div>'+
     '<div class="form-group"><label>公告圖片（選填）</label>'+
       '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">'+
@@ -941,6 +994,22 @@ function openAnnModal(id, dataset) {
   /* 載入既有內容（HTML 格式） */
   var editor = document.getElementById('annContent');
   if (editor) editor.innerHTML = a.content || '';
+
+  /* 工具列按鈕不奪走編輯區焦點，否則使用者選取的文字會在點按鈕的瞬間消失，
+     造成「只想改選取的字」變成整篇都被改。色票輸入框需要焦點才能開啟選色器，故排除。 */
+  document.querySelectorAll('#modalBody .rich-toolbar').forEach(function(tb) {
+    tb.addEventListener('mousedown', function(e) {
+      if (e.target.tagName !== 'INPUT') e.preventDefault();
+    });
+  });
+  /* 隨時記住使用者在編輯區內的選取範圍 */
+  _annSavedRange = null;
+  if (editor) {
+    ['mouseup','keyup','focus'].forEach(function(ev) {
+      editor.addEventListener(ev, saveAnnRange);
+    });
+  }
+  updateAnnScopeHint();
   /* 載入既有圖片預覽 */
   if (a.imageUrl) {
     var thumb = document.getElementById('annImageThumb');
