@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-07T06:06:29.942Z",
+  "_savedAt": "2026-08-07T06:07:36.661Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -269,7 +269,7 @@
     "weatherCity": "Taichung",
     "newsEnabled": false,
     "newsSource": "",
-    "youtubeId": "CXQ-maBSxa4",
+    "youtubeId": "lM2pZZf8Kag",
     "youtubeId2": "lM2pZZf8Kag",
     "meetingsUrl": "",
     "meetingsZoom": 1,
@@ -348,7 +348,7 @@
       {
         "id": "CXQ-maBSxa4",
         "note": "非凡財經24H",
-        "active": true
+        "active": false
       },
       {
         "id": "V1p33hqPrUk",
@@ -391,9 +391,9 @@
         "active": false
       },
       {
-        "id": "meHTKm4XBS8",
-        "note": "華視地震、降雨監視",
-        "active": false
+        "id": "lM2pZZf8Kag",
+        "note": "LiveⒼ01天氣、雨量、溫度即時觀測24H》",
+        "active": true
       }
     ],
     "youtubeSlots2": [
