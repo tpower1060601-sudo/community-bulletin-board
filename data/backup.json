@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-07T05:58:07.719Z",
+  "_savedAt": "2026-08-07T05:58:25.142Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -106,20 +106,6 @@
   "announcements_v": {
     "marquee": "歡迎光臨親家市政廣場！",
     "list": [
-      {
-        "id": 1786082287719,
-        "title": "",
-        "type": "general",
-        "duration": 7,
-        "content": "",
-        "imageUrl": "https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/1786082280322_____________20260807_135624.png",
-        "alwaysValid": true,
-        "startDate": "",
-        "startTime": "",
-        "endDate": "",
-        "endTime": "",
-        "date": "2026-08-07"
-      },
       {
         "id": 1785983001760,
         "title": "中元普渡公告",
