@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-07T04:20:44.690Z",
+  "_savedAt": "2026-08-07T05:37:39.186Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -139,14 +139,14 @@
         "title": "電梯維修進度報告",
         "type": "urgent",
         "duration": 15,
-        "content": "<p class=\"MsoNormal\"><span style=\"font-size: 1.45em;\"><font color=\"#f87171\">二號電梯維修進度:</font></span></p><p class=\"MsoNormal\"><span style=\"font-size: 1.45em;\"><font color=\"#f87171\">電梯於今日將整體進行檢測，預計今日(8/6)能夠開放使用。<br>漫長的等待造成的不方便，感謝各位用戶的包容。</font></span></p>\n\n<p class=\"MsoNormal\" align=\"right\" style=\"text-align:right\"><span style=\"line-height: 115%; font-family: 標楷體;\"><span style=\"font-size: 1.45em;\"><font color=\"#f87171\">管委會<span lang=\"EN-US\" style=\"\">&amp;</span>管理中心 敬上</font></span><span lang=\"EN-US\" style=\"font-size: 14pt;\"><o:p></o:p></span></span></p>",
+        "content": "<p class=\"MsoNormal\"><span style=\"color: rgb(248, 113, 113);\"><span style=\"font-size: 1.45em;\">管理中心報告:<br>目前高樓層電梯已恢復正常，原低樓層6號梯參與高樓層運輸的機制，於8/7日觀察維修後電梯使用無狀況的話，將恢復一樣低樓層的機制。</span></span></p><p class=\"MsoNormal\"><span style=\"color: rgb(248, 113, 113);\"><span style=\"font-size: 1.45em;\">下星期一(8/10)恢復原本機制使用。</span></span></p><p class=\"MsoNormal\"><span style=\"font-size: 1.95em; color: rgb(248, 113, 113);\">再請各位用戶注意!!</span></p>\n\n<p class=\"MsoNormal\" align=\"right\" style=\"text-align:right\"><span style=\"line-height: 115%; font-family: 標楷體;\"><span style=\"font-size: 1.45em;\"><font color=\"#f87171\">管委會<span lang=\"EN-US\" style=\"\">&amp;</span>管理中心 敬上</font></span><span lang=\"EN-US\" style=\"font-size: 14pt;\"><o:p></o:p></span></span></p>",
         "imageUrl": "",
         "alwaysValid": true,
         "startDate": "",
         "startTime": "",
         "endDate": "",
         "endTime": "",
-        "date": "2026-08-06"
+        "date": "2026-08-07"
       },
       {
         "id": 1781773882457,
