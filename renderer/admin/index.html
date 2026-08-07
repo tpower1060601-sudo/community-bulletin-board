@@ -633,21 +633,39 @@ function uploadAnnImage(file) {
   });
 }
 
+/* 剛上傳的圖片：GitHub Pages 需要 1~2 分鐘重新部署才吃得到新網址，
+   期間直接用本機選取的檔案做預覽，避免看起來像「圖片沒上傳成功」 */
+var _annImgLocalUrl = null;
+function setAnnImgLocalUrl(url) {
+  if (_annImgLocalUrl) URL.revokeObjectURL(_annImgLocalUrl);
+  _annImgLocalUrl = url;
+}
+
 function handleAnnImageUpload(input) {
   var file = input.files[0]; if (!file) return;
   var status = document.getElementById('annImageStatus');
   if (status) status.textContent = '上傳中…';
+
+  /* 先用本機檔案立刻顯示，不必等雲端部署 */
+  setAnnImgLocalUrl(URL.createObjectURL(file));
+  var thumb   = document.getElementById('annImageThumb');
+  var preview = document.getElementById('annImagePreview');
+  if (thumb)   thumb.src = _annImgLocalUrl;
+  if (preview) preview.style.display = 'flex';
+  renderAnnPreview();
+
   uploadAnnImage(file).then(function(url) {
-    if (!url) { if (status) status.textContent = '上傳失敗'; return; }
+    if (!url) {
+      if (status) status.textContent = '上傳失敗';
+      setAnnImgLocalUrl(null);
+      if (preview) preview.style.display = 'none';
+      renderAnnPreview();
+      return;
+    }
     var hiddenUrl = document.getElementById('annImageUrl');
-    var thumb     = document.getElementById('annImageThumb');
-    var preview   = document.getElementById('annImagePreview');
     if (hiddenUrl) hiddenUrl.value = url;
-    if (thumb)    { thumb.src = url; }
-    if (preview)  { preview.style.display = 'flex'; }
     if (status)   status.textContent = file.name;
-    toast('圖片上傳成功 ✓');
-    renderAnnPreview();
+    toast('圖片上傳成功 ✓（雲端約 1~2 分鐘後生效，預覽已可正常顯示）');
   });
 }
 
@@ -662,6 +680,7 @@ function clearAnnImage() {
   if (preview)  preview.style.display = 'none';
   if (status)   status.textContent = '未選擇';
   if (fileInput) fileInput.value = '';
+  setAnnImgLocalUrl(null);
   renderAnnPreview();
 }
 
@@ -816,7 +835,8 @@ function renderAnnPreview() {
   var title   = ($('annTitle')||{}).value || '';
   var type    = ($('annType')||{}).value || 'general';
   var content = (document.getElementById('annContent')||{}).innerHTML || '';
-  var img     = ($('annImageUrl')||{}).value || '';
+  /* 剛上傳的圖片優先用本機網址顯示（雲端網址要等部署完成才讀得到） */
+  var img     = _annImgLocalUrl || ($('annImageUrl')||{}).value || '';
   var hasText = !!(title || content.replace(/<[^>]*>/g,'').trim());
 
   /* 字級與間距對齊 screen2 / screen13 的實際 CSS */
@@ -994,6 +1014,7 @@ function openAnnModal(id, dataset) {
   /* 載入既有內容（HTML 格式） */
   var editor = document.getElementById('annContent');
   if (editor) editor.innerHTML = a.content || '';
+  setAnnImgLocalUrl(null);
 
   /* 工具列按鈕不奪走編輯區焦點，否則使用者選取的文字會在點按鈕的瞬間消失，
      造成「只想改選取的字」變成整篇都被改。色票輸入框需要焦點才能開啟選色器，故排除。 */
