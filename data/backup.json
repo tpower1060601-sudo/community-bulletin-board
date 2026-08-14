@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-11T03:50:13.038Z",
+  "_savedAt": "2026-08-14T04:04:47.060Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -106,6 +106,20 @@
   "announcements_v": {
     "marquee": "歡迎光臨親家市政廣場！",
     "list": [
+      {
+        "id": 1786680287059,
+        "title": "消毒公告",
+        "type": "general",
+        "duration": 10,
+        "content": "8/15(六)下午2:00進行例行消毒。<div>範圍:</div><div>B2~B7地下室停車場，各樓層資源回收室、B1機車區、垃圾間及回收區。<br><br></div><div>如有下午時間進出，還請多加注意。</div><div><br></div><div>管理中心敬上</div>",
+        "imageUrl": "",
+        "alwaysValid": false,
+        "startDate": "2026-08-14",
+        "startTime": "",
+        "endDate": "2026-08-16",
+        "endTime": "17:04",
+        "date": "2026-08-14"
+      },
       {
         "id": 1786331315997,
         "title": "",
