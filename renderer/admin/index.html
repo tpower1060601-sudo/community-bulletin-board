@@ -175,6 +175,9 @@ input:checked + .slider:before{transform:translateX(20px);}
     <div class="nav-item" id="nav-news" onclick="showTab('news')">
       <span class="nav-icon">📰</span> 視窗與新聞
     </div>
+    <div class="nav-item" id="nav-floors" onclick="showTab('floors')">
+      <span class="nav-icon">🏢</span> 水牌管理
+    </div>
     <div class="nav-item" id="nav-layout" onclick="showTab('layout')">
       <span class="nav-icon">🖥️</span> 螢幕排版
     </div>
@@ -341,6 +344,54 @@ input:checked + .slider:before{transform:translateX(20px);}
       </div>
     </div>
 
+    <!-- ── 水牌管理（樓層公司名錄）── -->
+    <div id="tab-floors" style="display:none">
+      <div class="page-header">
+        <div class="page-title">水牌<span>管理</span></div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="addFloorRow()">＋ 新增一列</button>
+          <button class="btn btn-primary" onclick="saveFloors()">💾 儲存並套用</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px">
+          <div class="form-group" style="margin-bottom:0;min-width:240px">
+            <label>搜尋（樓層或公司名稱）</label>
+            <input type="text" id="floorSearch" placeholder="例如 20A 或 公會" oninput="renderFloors()">
+          </div>
+          <div class="form-group" style="margin-bottom:0">
+            <label>顯示範圍</label>
+            <select id="floorFilter" onchange="renderFloors()" style="width:auto">
+              <option value="all">全部樓層</option>
+              <option value="a">水牌 A（1–14 樓）</option>
+              <option value="b">水牌 B（15 樓以上）</option>
+              <option value="empty">只看空戶</option>
+            </select>
+          </div>
+          <div style="flex:1"></div>
+          <div id="floorStats" style="font-size:13px;color:var(--text2)"></div>
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:12px;line-height:1.8">
+          💡 <b>樓層</b>決定顯示在哪一塊水牌（1–14 樓走水牌 A，15 樓以上走水牌 B）。
+          <b>公司名稱</b>留空代表空戶，畫面上不會顯示該列。
+          <b>群組框線</b>填相同名稱的<u>相鄰</u>樓層會被金色外框圈在一起（例如 20A/20B/20C 填「不動產公會」）。
+          修改後要按右上角「儲存並套用」才會生效。
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:110px">樓層</th>
+              <th>公司名稱</th>
+              <th style="width:170px">群組框線</th>
+              <th style="width:100px">顯示於</th>
+              <th style="width:130px">操作</th>
+            </tr></thead>
+            <tbody id="floorBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <!-- ── 螢幕排版編輯器 ── -->
     <div id="tab-layout" style="display:none">
       <div class="page-header">
@@ -467,6 +518,7 @@ input:checked + .slider:before{transform:translateX(20px);}
 
 <script src="../../shared/api.js"></script>
 <script src="../../shared/screenDefs.js"></script>
+<script src="../../shared/floorData.js"></script>
 <script>
 'use strict';
 function $(id) { return document.getElementById(id); }
@@ -497,7 +549,7 @@ function toast(msg, type) {
 
 // Tabs
 function showTab(name) {
-  ['announcements','annv','meetings','status','news','settings','layout'].forEach(function(t){
+  ['announcements','annv','meetings','status','news','settings','layout','floors'].forEach(function(t){
     var p=$('tab-'+t), n=$('nav-'+t);
     if(p) p.style.display=(t===name?'':'none');
     if(n) n.classList.toggle('active', t===name);
@@ -506,6 +558,124 @@ function showTab(name) {
   if(name==='status')   renderStatus();
   if(name==='layout')   initLayoutEditor();
   if(name==='annv')     renderAnnouncementsV();
+  if(name==='floors')   initFloorEditor();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   水牌管理（樓層公司名錄）
+   資料存於 bbs_floors，screen10 / screen11 依樓層號碼各自取用
+   ══════════════════════════════════════════════════════════════ */
+var floorList = [];
+var floorEditorInited = false;
+
+function initFloorEditor() {
+  if (floorEditorInited) { renderFloors(); return; }
+  floorEditorInited = true;
+  window.api.get('floors').then(function(saved) {
+    /* 尚未設定過 → 以 shared/floorData.js 的預設資料當起點 */
+    floorList = (saved && saved.length)
+      ? saved
+      : window.FloorData.DEFAULT_FLOORS.map(function(f){
+          return { floor:f.floor, company:f.company || '', group:f.group || '' };
+        });
+    renderFloors();
+  });
+}
+
+function floorBoard(floor) {
+  return window.FloorData.floorNum(floor) >= 15 ? 'b' : 'a';
+}
+
+function renderFloors() {
+  var body = $('floorBody'); if (!body) return;
+  var kw     = (($('floorSearch')||{}).value || '').trim().toLowerCase();
+  var filter = ($('floorFilter')||{}).value || 'all';
+
+  var rows = '';
+  var shown = 0;
+  floorList.forEach(function(f, i) {
+    var board = floorBoard(f.floor);
+    if (filter === 'a' && board !== 'a') return;
+    if (filter === 'b' && board !== 'b') return;
+    if (filter === 'empty' && f.company) return;
+    if (kw && (String(f.floor||'')+' '+String(f.company||'')+' '+String(f.group||'')).toLowerCase().indexOf(kw) === -1) return;
+    shown++;
+    var badge = board === 'b'
+      ? '<span class="tag" style="background:rgba(56,189,248,.15);color:#38bdf8">水牌 B</span>'
+      : '<span class="tag" style="background:rgba(251,191,36,.15);color:#fbbf24">水牌 A</span>';
+    rows +=
+      '<tr'+(f.company?'':' style="opacity:.55"')+'>'+
+      '<td><input type="text" value="'+esc(f.floor)+'" oninput="updFloor('+i+',\'floor\',this.value)" style="width:100%;text-align:center;font-weight:700"></td>'+
+      '<td><input type="text" value="'+esc(f.company)+'" placeholder="（空戶，畫面上不顯示）" oninput="updFloor('+i+',\'company\',this.value)" style="width:100%"></td>'+
+      '<td><input type="text" value="'+esc(f.group||'')+'" placeholder="（無）" oninput="updFloor('+i+',\'group\',this.value)" style="width:100%"></td>'+
+      '<td>'+badge+'</td>'+
+      '<td style="white-space:nowrap">'+
+        '<button class="btn btn-ghost btn-sm" onclick="moveFloor('+i+',-1)" title="上移" style="padding:4px 8px;min-width:30px">▲</button> '+
+        '<button class="btn btn-ghost btn-sm" onclick="moveFloor('+i+',1)" title="下移" style="padding:4px 8px;min-width:30px">▼</button> '+
+        '<button class="btn btn-danger btn-sm" onclick="removeFloor('+i+')" title="刪除這一列">✕</button>'+
+      '</td></tr>';
+  });
+
+  body.innerHTML = rows || '<tr><td colspan="5" style="text-align:center;padding:40px;color:var(--text2)">沒有符合條件的資料</td></tr>';
+
+  var total = floorList.length;
+  var filled = floorList.filter(function(f){ return f.company; }).length;
+  var stats = $('floorStats');
+  if (stats) stats.textContent = '顯示 ' + shown + ' 列 ／ 共 ' + total + ' 列（已進駐 ' + filled + '，空戶 ' + (total-filled) + '）';
+}
+
+function updFloor(i, field, val) {
+  if (!floorList[i]) return;
+  floorList[i][field] = val;
+  /* 只有「顯示於」和樣式會受影響，避免每敲一個字就重畫整張表造成游標跳走 */
+  if (field === 'floor') {
+    var stats = $('floorStats');
+    if (stats) stats.textContent = '樓層已變更，儲存後生效';
+  }
+}
+
+function addFloorRow() {
+  floorList.push({ floor:'', company:'', group:'' });
+  renderFloors();
+  var body = $('floorBody');
+  var inputs = body.querySelectorAll('tr:last-child input');
+  if (inputs.length) inputs[0].focus();
+}
+
+function removeFloor(i) {
+  var f = floorList[i];
+  if (!f) return;
+  if (!confirm('確定要刪除「' + (f.floor||'(未填樓層)') + ' ' + (f.company||'空戶') + '」這一列嗎？')) return;
+  floorList.splice(i, 1);
+  renderFloors();
+}
+
+function moveFloor(i, dir) {
+  var j = i + dir;
+  if (j < 0 || j >= floorList.length) return;
+  var tmp = floorList[i]; floorList[i] = floorList[j]; floorList[j] = tmp;
+  renderFloors();
+}
+
+function saveFloors() {
+  /* 清掉完全空白的列，並移除空字串的 group 以維持資料乾淨 */
+  var clean = floorList
+    .filter(function(f){ return String(f.floor||'').trim() || String(f.company||'').trim(); })
+    .map(function(f){
+      var o = { floor: String(f.floor||'').trim(), company: String(f.company||'').trim() };
+      var g = String(f.group||'').trim();
+      if (g) o.group = g;
+      return o;
+    });
+  var noFloor = clean.filter(function(f){ return !f.floor; }).length;
+  if (noFloor) { toast('有 ' + noFloor + ' 列沒有填樓層，請先補上', 'error'); return; }
+
+  floorList = clean.map(function(f){ return { floor:f.floor, company:f.company, group:f.group||'' }; });
+  window.api.save('floors', clean).then(function(){
+    toast('水牌已更新，大廳畫面約 1 分鐘內自動套用');
+    renderFloors();
+    triggerBackup();
+  });
 }
 
 function rocDateToWestern(dateStr) {
