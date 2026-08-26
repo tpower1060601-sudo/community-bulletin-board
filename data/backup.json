@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-08-26T09:45:32.213Z",
+  "_savedAt": "2026-08-26T09:45:53.873Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -158,8 +158,8 @@
         "alwaysValid": false,
         "startDate": "",
         "startTime": "",
-        "endDate": "",
-        "endTime": "",
+        "endDate": "2026-08-26",
+        "endTime": "21:00",
         "date": "2026-08-26"
       },
       {
