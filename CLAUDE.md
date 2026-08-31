@@ -207,6 +207,44 @@ Yahoo Finance → CORS 封鎖 → Stooq 反爬蟲 → Twelve Data 403（免費�
 
 ---
 
+## 樓層告示牌實體機（172.18.0.51）— 2026-08-19 部署紀錄
+
+### 機器資訊
+- IP：`172.18.0.51`，主機名稱 `MYUSER-PC`，帳號 `Myuser`（無密碼）
+- 作業系統：**Windows Embedded Standard 7**（64 位元，非一般 Windows 7）
+- SSH：已裝 OpenSSH Server，用**金鑰登入**（`~/.ssh/id_ed25519` 對應的公鑰已加進該機器 `C:\Users\Myuser\.ssh\authorized_keys`），不需密碼
+- 寫入過濾器（EWF / FBWF）：**已確認皆為 DISABLED**，代表變更會正常持久保存、不會在重開機後被還原清空
+
+### 瀏覽器：Chrome 卡在 109 版，改用 Supermium
+- 這台機器官方 Chrome 已無法再更新（Google 從 110 版起不支援 Windows 7/WES7），且此機器**沒有安裝 .NET Framework 4.x**、PowerShell 仍是 2.0（無 `Invoke-WebRequest`、TLS 只到 1.0，連不上 GitHub 等新版網站），故未在此機器上直接下載安裝，而是**在本機下載後用 SCP 傳過去**再解壓縮
+- 已安裝 **Supermium 144（免安裝版）**：`C:\webpage_tools\Supermium_portable\Supermium\chrome.exe`
+- 若要升級 PowerShell/`.NET`（讓這台能直接上網下載東西），需要先裝 .NET Framework 4.5.2+ 再裝 WMF 5.1，且需重開機——2026-08-19 已跟使用者確認**暫不進行**
+
+### 開關機排程
+- `start_floorboards_kiosk.bat`：開兩個 Supermium **獨立** kiosk 視窗（不是合併版 `renderer/floorboards`），左邊螢幕 `--window-position=0,0`、右邊螢幕 `--window-position=1080,0`，各 `--window-size=1080,1920`，各自指向 `screen10`／`screen11`
+  - 用 `--kiosk`（非 `--app`）：因為兩台是各自獨立視窗、只對應單一螢幕，不像螢幕牆要跨螢幕，所以能用真正全螢幕無邊框的 kiosk 模式
+  - 各自獨立 `--user-data-dir`：`C:\SupermiumFloorA` / `C:\SupermiumFloorB`
+- `close_floorboards.bat`：`taskkill /F /IM chrome.exe`（Supermium 執行檔也叫 chrome.exe）
+- 兩檔案本機留一份在專案根目錄（`C:\webpage\`，**故意不 commit 進 git**，純本機工具），部署一份在該機器 `C:\webpage_tools\`
+- Windows工作排程器（Task Scheduler）：
+  - `FloorboardsOpen`：每天 08:00 執行 `start_floorboards_kiosk.bat`
+  - `FloorboardsClose`：每天 21:00 執行 `close_floorboards.bat`
+  - 兩者都設定登入模式為**「僅限互動」**（`/it`），因為 GUI 程式必須在使用者已登入的桌面工作階段才能顯示畫面，透過 SSH 或非互動工作階段啟動 kiosk 瀏覽器視窗會卡住沒有畫面（Session 0 隔離問題）
+  - 前提：`Myuser` 需持續保持登入狀態（`console` session `使用中`），且電腦不關機
+
+### .bat 檔中文編碼注意事項
+Windows 7／WES7 用舊字碼頁（Big5）解讀 `.bat`，若檔案內含全形符號（中文括號、破折號）當註解，會把命令列切壞、產生亂碼指令。**跨機器部署的 `.bat` 檔一律只用純 ASCII 英文（含註解）**，不要用中文 `::` 或 `rem` 註解。
+
+### 該機器上停用的軟體（2026-08-19）
+- **TightVNC**：系統匣圖示（`tvncontrol` Run 機碼）已移除、背景服務 `tvnserver` 已停用（`sc config tvnserver start= disabled`），VNC 遠端連線功能已完全關閉。原登錄檔設定備份於 `C:\webpage_tools\Run_backup_before_change.reg`
+- **AisWatcher.exe**：從共用啟動資料夾移出，備份於 `C:\webpage_tools\disabled_startup_items\`
+- **AnyDesk**：使用者確認在用，保留不動
+
+### `renderer/floorboards/index.html` 目前未使用
+專案裡有一個用 iframe 把 screen10+screen11 合併成單一網頁的版本（跨螢幕視窗），但實際部署時改用「兩個獨立 kiosk 視窗」方案（可用 `--kiosk` 做到真正全螢幕，合併版因跨螢幕限制只能用 `--app`、會保留一條標題列）。這個檔案先保留在 repo 裡，未刪除。
+
+---
+
 ## 已知限制
 - screen5（圖片輪播）、screen6（影片播放）在 web 版無法用本地媒體（media() 回傳 []）
 - Twelve Data 免費方案不含股市指數（^GSPC 等），故改用龍頭個股替代
