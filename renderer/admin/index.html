@@ -814,10 +814,22 @@ function setAnnImgLocalUrl(url) {
   _annImgLocalUrl = url;
 }
 
+/* 圖片上傳期間鎖住「儲存」按鈕，避免在雲端網址還沒回來前就存檔，
+   導致公告存進去卻沒有圖片網址（本機預覽看得到、畫面卻是空的） */
+var _annImageUploading = false;
+function setAnnSaveLocked(locked, label) {
+  var btn = document.getElementById('annSaveBtn');
+  if (!btn) return;
+  btn.disabled = locked;
+  btn.textContent = locked ? (label || '圖片上傳中…') : '儲存';
+}
+
 function handleAnnImageUpload(input) {
   var file = input.files[0]; if (!file) return;
   var status = document.getElementById('annImageStatus');
   if (status) status.textContent = '上傳中…';
+  _annImageUploading = true;
+  setAnnSaveLocked(true);
 
   /* 先用本機檔案立刻顯示，不必等雲端部署 */
   setAnnImgLocalUrl(URL.createObjectURL(file));
@@ -828,6 +840,8 @@ function handleAnnImageUpload(input) {
   renderAnnPreview();
 
   uploadAnnImage(file).then(function(url) {
+    _annImageUploading = false;
+    setAnnSaveLocked(false);
     if (!url) {
       if (status) status.textContent = '上傳失敗';
       setAnnImgLocalUrl(null);
@@ -1218,13 +1232,16 @@ function openAnnModal(id, dataset) {
     '<div style="flex:1"></div>'+
     '<button class="btn btn-ghost" onclick="copyAnnToOther()" title="把標題與內容複製一份到另一個公告欄，之後兩邊可各自調整版面">⧉ 複製到'+(isV?'一般公告':'直立公告')+'</button>'+
     '<button class="btn btn-ghost" onclick="closeModal()">取消</button>'+
-    '<button class="btn btn-primary" onclick="saveAnn('+(id||0)+')">儲存</button>';
+    '<button class="btn btn-primary" id="annSaveBtn" onclick="saveAnn('+(id||0)+')">儲存</button>';
   document.querySelector('.modal').classList.add('modal-wide');
   $('modalBackdrop').classList.add('open');
+  _annImageUploading = false;
+  setAnnSaveLocked(false);
   renderAnnPreview();
 }
 
 function saveAnn(id) {
+  if (_annImageUploading) { toast('圖片還在上傳中，請稍候再儲存', 'error'); return; }
   var annData = _annDataset === 'announcements_v' ? announcementsV : announcements;
   var list=annData.list||[];
   var editor=$('annContent');
