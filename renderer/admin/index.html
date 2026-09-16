@@ -1821,6 +1821,25 @@ function copyBat() {
     renderAnnouncements();
     renderAnnouncementsV();
   }, 60000);
+
+  /* 背景輪詢（每分鐘檢查 GitHub 是否有新版本）偵測到更新時，
+     只會靜默寫入 localStorage，畫面上顯示的列表不會自動跟著換新。
+     這裡補上監聽，讓「別台電腦或直接改雲端資料」造成的更新，
+     這個分頁也能自動反映出來，不用手動按「強制從 GitHub 還原」。 */
+  window.api.on('announcements:updated', function(d){ announcements = d; renderAnnouncements(); });
+  window.api.on('announcements_v:updated', function(d){ announcementsV = d; renderAnnouncementsV(); });
+  window.api.on('meetings:updated', function(d){ meetings = d; renderBookings(); });
+  window.api.on('settings:updated', function(d){
+    settings = d;
+    if ($('topCommunity')) $('topCommunity').innerText = settings.communityName || '社區管理系統';
+    loadSettingsForm();
+  });
+  window.api.on('floors:updated', function(d){
+    floorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
+      return { floor:f.floor, company:f.company || '', group:f.group || '' };
+    });
+    renderFloors();
+  });
 })();
 </script>
 </body>
