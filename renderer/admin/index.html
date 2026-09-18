@@ -1541,8 +1541,8 @@ function openBookModal(id) {
   var rooms = meetings.rooms || [];
   var defaultDate = (typeof _selectedCalendarDate !== 'undefined' && _selectedCalendarDate) || today();
 
-  var tenantOpts = tenantFloorList.filter(function(f){ return f.company; }).map(function(f){
-    return f.floor + ' - ' + f.company;
+  var tenantOpts = tenantFloorList.map(function(f){
+    return f.company ? (f.floor + ' - ' + f.company) : f.floor;
   });
   var tenantIsKnown = !!b.tenant && tenantOpts.indexOf(b.tenant) > -1;
   var tenantSelectValue = b.tenant ? (tenantIsKnown ? b.tenant : '__other__') : '';
