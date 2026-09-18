@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T10:45:58.855Z",
+  "_savedAt": "2026-09-18T10:46:32.050Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,6 +597,18 @@
       }
     ],
     "bookings": [
+      {
+        "id": 1789728392048,
+        "roomId": "A",
+        "date": "2026-09-30",
+        "startTime": "15:00",
+        "endTime": "18:00",
+        "topic": "",
+        "person": "",
+        "phone": "",
+        "tenant": "11D - 台灣木工機械工業同業公會",
+        "paid": true
+      },
       {
         "id": 1789728358853,
         "roomId": "B",
