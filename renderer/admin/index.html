@@ -781,7 +781,8 @@ function rocDateToWestern(dateStr) {
   return year + '-' + parts[1] + '-' + parts[2];
 }
 function isAnnActive(a) {
-  if(a.alwaysValid!==false) return 1;
+  if(a.alwaysValid!==false && !a.startDate) return 1;
+  if(a.alwaysValid) return 1;
   var now=new Date().getTime();
   var start=a.startDate?new Date(rocDateToWestern(a.startDate)+'T'+(a.startTime||'00:00')).getTime():0;
   var end=a.endDate?new Date(rocDateToWestern(a.endDate)+'T'+(a.endTime||'23:59:59')).getTime():Infinity;
