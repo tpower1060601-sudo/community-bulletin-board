@@ -3,7 +3,7 @@
   'use strict';
 
   const PREFIX = 'bbs_';
-  const DATA_KEYS = ['announcements', 'announcements_v', 'settings', 'meetings', 'news', 'screenLayout', 'floors'];
+  const DATA_KEYS = ['announcements', 'announcements_v', 'settings', 'meetings', 'news', 'screenLayout', 'floors', 'meetingAnnouncements'];
 
   const DEFAULTS = {
     announcements:   { marquee: '歡迎光臨！', list: [] },
@@ -32,10 +32,20 @@
         { id: 'screen13', title: '公告欄（直立型）',   enabled: true  },
       ],
     },
-    meetings: { rooms: ['會議室A', '會議室B', '會議室C'], bookings: [] },
+    meetings: {
+      rooms: [
+        { id:'A', name:'會議室A', capacity: 40 },
+        { id:'B', name:'會議室B', capacity: 20 },
+        { id:'C', name:'會議室C', capacity: 20 },
+        { id:'D', name:'會議室D', capacity: 10 },
+        { id:'E', name:'會議室E', capacity: 10 }
+      ],
+      bookings: []
+    },
     news: [],
     screenLayout: [],
     floors: [],
+    meetingAnnouncements: { marquee:'', list: [] },
   };
 
   /* ── localStorage helpers ─────────────────────────────────────────────── */
