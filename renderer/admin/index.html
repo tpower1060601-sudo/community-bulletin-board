@@ -1450,7 +1450,7 @@ function renderCalendar() {
 
   for (var d=1; d<=daysInMonth; d++) {
     var dateStr = _calendarYear+'-'+pad2(_calendarMonth+1)+'-'+pad2(d);
-    var dayBookings = bookings.filter(function(b){ return b.date === dateStr; });
+    var dayBookings = bookings.filter(function(b){ return b.date === dateStr && !b.deletedAt; });
     var hasUnpaid = dayBookings.some(function(b){ return !isBookingPaid(b); });
     var isSelected = dateStr === _selectedCalendarDate;
     var chips = dayBookings.map(function(b){
@@ -1700,7 +1700,9 @@ function renderBookings() {
   var html='', rooms=meetings.rooms||[], bookings=meetings.bookings||[];
   for(var i=0;i<rooms.length;i++){
     var room=rooms[i];
-    var rb=bookings.filter(function(b){return b.roomId===room.id&&b.date===date;})
+    var rb=bookings.filter(function(b){return b.roomId===room.id&&b.date===date&&!b.deletedAt;})
+                    .sort(function(a,b){return a.startTime<b.startTime?-1:1;});
+    var deletedRb=bookings.filter(function(b){return b.roomId===room.id&&b.date===date&&b.deletedAt;})
                     .sort(function(a,b){return a.startTime<b.startTime?-1:1;});
     html+='<div class="card"><div class="card-title">🏢 '+esc(room.name)+'（'+(room.capacity||0)+'人）</div>';
     if(rb.length===0){
@@ -1716,6 +1718,16 @@ function renderBookings() {
               '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openBookModal('+b.id+')">編輯</button>'+
               '<button class="btn btn-danger btn-sm" onclick="deleteBooking('+b.id+')">刪除</button></div></div>';
       }
+    }
+    for(var k=0;k<deletedRb.length;k++){
+      var db=deletedRb[k];
+      var daysLeft = Math.max(0, Math.ceil((SOFT_DELETE_GRACE_MS - (Date.now() - new Date(db.deletedAt).getTime())) / (24*60*60*1000)));
+      html+='<div class="booking-item" style="opacity:0.5;filter:grayscale(1)">'+
+            '<div class="booking-time">'+esc(db.startTime)+' - '+esc(db.endTime)+'</div>'+
+            '<div class="booking-info"><div class="booking-topic">'+esc(db.topic)+'</div>'+
+            '<div class="booking-person">👤 '+esc(db.person)+(db.tenant?'　🏢 '+esc(db.tenant):'')+'　<span style="font-weight:700">已刪除（還剩 '+daysLeft+' 天後永久移除）</span></div></div>'+
+            '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="restoreBooking('+db.id+')">復原</button>'+
+            '<button class="btn btn-danger btn-sm" onclick="hardDeleteBooking('+db.id+')">永久刪除</button></div></div>';
     }
     html+='</div>';
   }
