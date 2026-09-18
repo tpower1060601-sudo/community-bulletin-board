@@ -46,7 +46,7 @@
   }
 
   function showRoomNotFound() {
-    document.body.innerHTML = '<div style="color:#fff;background:#000;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:\'Microsoft JhengHei\',sans-serif;gap:16px">'+
+    root.innerHTML = '<div class="rb-slide active" style="align-items:center;justify-content:center;flex-direction:column;color:#fff;background:#000;gap:16px;text-align:center;padding:60px">'+
       '<div style="font-size:48px">⚠️</div>'+
       '<div style="font-size:32px">找不到房間代碼「'+esc(ROOM_ID)+'」</div>'+
       '<div style="font-size:18px;opacity:.6">請確認管理後台的房間清單，或這台螢幕的網址是否正確</div>'+
@@ -101,7 +101,7 @@
 
     return '<div style="width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:60px;background:radial-gradient(ellipse at center, rgba(0,40,80,.5) 0%, transparent 70%), #0c0b09">'+
       '<div style="position:absolute;top:60px;left:0;right:0;text-align:center">'+
-        '<div style="font-size:'+S.roomName+'px;font-weight:900">🏢 '+esc(room.name)+'（'+(room.capacity||0)+'人）</div>'+
+        '<div style="font-size:'+S.roomName+'px;font-weight:900">🏢 '+esc(room.name)+'（'+(parseInt(room.capacity)||0)+'人）</div>'+
         '<div id="rb-clock" style="font-size:'+S.clock+'px;opacity:.6;margin-top:12px"></div>'+
       '</div>'+
       stateHtml + upcomingHtml +
@@ -186,12 +186,12 @@
     }
   }
 
-  function scheduleNext(room, state) {
+  function scheduleNext() {
     var dur = slides[slideIndex].type === 'status' ? STATUS_SLIDE_MS : Math.max(3, parseInt(slides[slideIndex].data.duration) || 7) * 1000;
     var id = setTimeout(function () {
       slideIndex = (slideIndex + 1) % slides.length;
       showSlide(slideIndex);
-      scheduleNext(room, state);
+      scheduleNext();
     }, dur);
     pendingTimers.push(id);
   }
@@ -208,7 +208,7 @@
     });
     slideIndex = 0;
     showSlide(0);
-    scheduleNext(room, state);
+    scheduleNext();
   }
 
   /* ── 初始化：讀取資料、監聽背景更新 ── */
