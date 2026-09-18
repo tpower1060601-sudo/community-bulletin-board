@@ -562,6 +562,7 @@ input:checked + .slider:before{transform:translateX(20px);}
 <script src="../../shared/api.js"></script>
 <script src="../../shared/screenDefs.js"></script>
 <script src="../../shared/floorData.js"></script>
+<script src="../../shared/roomBoardStyle.js"></script>
 <script>
 'use strict';
 function $(id) { return document.getElementById(id); }
@@ -1090,7 +1091,9 @@ function renderAnnPreview() {
   if (!stage || !canvas) return;
 
   var isV = _annPreviewMode === 'v';
-  var W = 1920, H = isV ? 2160 : 1080;
+  var isRoom = _annPreviewMode === 'room';
+  var W = isRoom ? 1080 : 1920;
+  var H = isRoom ? 1920 : (isV ? 2160 : 1080);
   var title   = ($('annTitle')||{}).value || '';
   var type    = ($('annType')||{}).value || 'general';
   var content = (document.getElementById('annContent')||{}).innerHTML || '';
@@ -1098,29 +1101,37 @@ function renderAnnPreview() {
   var img     = _annImgLocalUrl || ($('annImageUrl')||{}).value || '';
   var hasText = !!(title || content.replace(/<[^>]*>/g,'').trim());
 
-  /* 字級與間距對齊 screen2 / screen13 的實際 CSS */
-  var S = isV
+  /* 字級與間距對齊 screen2 / screen13 的實際 CSS；會議室門口螢幕讀共用常數 */
+  var RB = window.RoomBoardStyle ? window.RoomBoardStyle.ann : null;
+  var S = isRoom && RB
+    ? { badge:RB.badge, title:(img?RB.titleWithImg:RB.titleNoImg), body:(img?RB.bodyWithImg:RB.bodyNoImg), date:RB.date, pad:RB.padV+'px '+RB.padH+'px', gapT:RB.gapT, gapB:RB.gapB }
+    : isV
     ? { badge:44, title:(img?96:120), body:(img?60:72), date:40, pad:'60px 80px', gapT:48, gapB:48 }
     : { badge:24, title:64,           body:40,          date:24, pad:'60px 80px', gapT:32, gapB:36 };
 
+  var badgePad = isRoom && RB ? (RB.badgePadV+'px '+RB.badgePadH+'px') : (isV?'16px 40px':'10px 24px');
+  var dateMarginTop = isRoom && RB ? RB.dateMarginTop : (isV?56:40);
   var badgeColor = { general:'#f0a500', urgent:'#ff4d4d', event:'#2ecc71', notice:'#f59e0b' }[type] || '#f0a500';
   var textBlock =
-    '<div style="display:inline-block;padding:'+(isV?'16px 40px':'10px 24px')+';border-radius:60px;font-size:'+S.badge+'px;font-weight:700;letter-spacing:2px;margin-bottom:'+S.gapT+'px;border:1px solid;color:'+badgeColor+';border-color:'+badgeColor+'66;background:'+badgeColor+'1a">'+(ANN_TYPE_LABEL[type]||'公告')+'</div>'+
+    '<div style="display:inline-block;padding:'+badgePad+';border-radius:60px;font-size:'+S.badge+'px;font-weight:700;letter-spacing:2px;margin-bottom:'+S.gapT+'px;border:1px solid;color:'+badgeColor+';border-color:'+badgeColor+'66;background:'+badgeColor+'1a">'+(ANN_TYPE_LABEL[type]||'公告')+'</div>'+
     '<div style="font-size:'+S.title+'px;font-weight:900;line-height:1.4;margin-bottom:'+S.gapB+'px;color:#fff">'+esc(title)+'</div>'+
-    '<div style="font-size:'+S.body+'px;line-height:'+(isV?2.0:2.2)+';color:rgba(255,255,255,.8)">'+content+'</div>'+
-    '<div style="margin-top:'+(isV?56:40)+'px;font-size:'+S.date+'px;color:rgba(255,255,255,.35)">'+today()+'</div>';
+    '<div style="font-size:'+S.body+'px;line-height:'+(isV||isRoom?2.0:2.2)+';color:rgba(255,255,255,.8)">'+content+'</div>'+
+    '<div style="margin-top:'+dateMarginTop+'px;font-size:'+S.date+'px;color:rgba(255,255,255,.35)">'+today()+'</div>';
 
   var inner;
+  var stacked = isV || isRoom; // 直式與會議室門口螢幕都是上圖下文排版
+  var stackMaxWidth = isRoom && RB ? RB.maxWidth : 1720;
+  var stackImgMaxHeight = isRoom && RB ? RB.imgMaxHeight : 900;
   if (img && !hasText) {
     /* 純圖：滿版 */
     inner = '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000">'+
             '<img src="'+esc(img)+'" style="width:100%;height:100%;object-fit:contain">'+
             '</div>';
-  } else if (img && isV) {
-    /* 直式上圖下文 */
-    inner = '<div style="max-width:1720px;width:100%;text-align:left">'+
-            '<div style="width:100%;max-height:900px;display:flex;align-items:center;justify-content:center;margin-bottom:60px">'+
-            '<img src="'+esc(img)+'" style="max-width:100%;max-height:900px;object-fit:contain;border-radius:28px">'+
+  } else if (img && stacked) {
+    /* 直式／會議室：上圖下文 */
+    inner = '<div style="max-width:'+stackMaxWidth+'px;width:100%;text-align:left">'+
+            '<div style="width:100%;max-height:'+stackImgMaxHeight+'px;display:flex;align-items:center;justify-content:center;margin-bottom:60px">'+
+            '<img src="'+esc(img)+'" style="max-width:100%;max-height:'+stackImgMaxHeight+'px;object-fit:contain;border-radius:28px">'+
             '</div><div>'+textBlock+'</div></div>';
   } else if (img) {
     /* 橫式左圖右文 */
@@ -1129,7 +1140,7 @@ function renderAnnPreview() {
             '<img src="'+esc(img)+'" style="max-width:100%;max-height:100%;object-fit:contain;border-radius:20px">'+
             '</div><div style="flex:1;min-width:0">'+textBlock+'</div></div>';
   } else {
-    inner = '<div style="max-width:'+(isV?1720:1400)+'px;width:100%;text-align:'+(isV?'left':'center')+'">'+textBlock+'</div>';
+    inner = '<div style="max-width:'+(stacked?stackMaxWidth:1400)+'px;width:100%;text-align:'+(stacked?'left':'center')+'">'+textBlock+'</div>';
   }
 
   canvas.style.width = W+'px';
@@ -1267,10 +1278,11 @@ function openAnnModal(id, dataset) {
     '<div class="ann-preview-pane">'+
       '<div class="ann-preview-head">'+
         '<label style="margin:0">實際畫面預覽</label>'+
+        (isRoom ? '<span style="font-size:12px;color:var(--text2)">會議室門口螢幕 1080×1920</span>' :
         '<div class="tb-group">'+
           '<button class="preset-btn'+(isV?'':' tb-on')+'" id="annPvH" onclick="setAnnPreviewMode(\'h\')">橫式 1920×1080</button>'+
           '<button class="preset-btn'+(isV?' tb-on':'')+'" id="annPvV" onclick="setAnnPreviewMode(\'v\')">直式 1920×2160</button>'+
-        '</div>'+
+        '</div>')+
       '</div>'+
       '<div class="ann-preview-stage" id="annPreviewStage">'+
         '<div class="ann-preview-canvas" id="annPreviewCanvas"></div>'+
@@ -1278,7 +1290,7 @@ function openAnnModal(id, dataset) {
       '<div style="font-size:11px;color:var(--text2);margin-top:6px">此預覽依大廳實際畫面的字級與版面等比例縮小呈現</div>'+
     '</div>'+
     '</div>';
-  _annPreviewMode = isV ? 'v' : 'h';
+  _annPreviewMode = isRoom ? 'room' : (isV ? 'v' : 'h');
   /* 載入既有內容（HTML 格式） */
   var editor = document.getElementById('annContent');
   if (editor) editor.innerHTML = a.content || '';
