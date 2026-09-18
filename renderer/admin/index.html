@@ -1443,20 +1443,47 @@ function openBookModal(id) {
   var b = (meetings.bookings||[]).find(function(x){ return x.id === id; }) || {};
   var isNew = !b.id;
   var rooms = meetings.rooms || [];
-  var defaultDate = ($('dateFilter')||{}).value || today();
+  var defaultDate = (typeof _selectedCalendarDate !== 'undefined' && _selectedCalendarDate) || today();
+
+  var tenantOpts = tenantFloorList.filter(function(f){ return f.company; }).map(function(f){
+    return f.floor + ' - ' + f.company;
+  });
+  var tenantIsKnown = !!b.tenant && tenantOpts.indexOf(b.tenant) > -1;
+  var tenantSelectValue = b.tenant ? (tenantIsKnown ? b.tenant : '__other__') : '';
+  var tenantManualValue = (b.tenant && !tenantIsKnown) ? b.tenant : '';
+  var tenantOptionsHtml = '<option value="">── 請選擇 ──</option>' +
+    tenantOpts.map(function(t){ return '<option value="'+esc(t)+'"'+(t===tenantSelectValue?' selected':'')+'>'+esc(t)+'</option>'; }).join('') +
+    '<option value="__other__"'+(tenantSelectValue==='__other__'?' selected':'')+'>── 其他（手動輸入）──</option>';
+
+  var paidChecked = isNew ? false : (b.paid !== false);
 
   $('modalTitle').innerText = isNew ? '新增預約' : '編輯預約';
   $('modalBody').innerHTML =
-    '<div class="form-group"><label>會議室</label><select id="bkRoomId">' +
-      rooms.map(function(r){ return '<option value="'+esc(r.id)+'"'+(b.roomId===r.id?' selected':'')+'>'+esc(r.name)+'</option>'; }).join('') +
-    '</select></div>' +
-    '<div class="form-group"><label>日期</label><input type="date" id="bkDate" value="'+esc(b.date||defaultDate)+'"></div>' +
-    '<div class="form-row">' +
-      '<div class="form-group"><label>開始時間</label><input type="time" id="bkStartTime" value="'+esc(b.startTime||'09:00')+'"></div>' +
-      '<div class="form-group"><label>結束時間</label><input type="time" id="bkEndTime" value="'+esc(b.endTime||'10:00')+'"></div>' +
+    '<div class="form-row" style="align-items:start">' +
+      '<div>' +
+        '<div class="form-group"><label>業戶別</label>' +
+          '<select id="bkTenantSelect" onchange="toggleTenantManual()">'+tenantOptionsHtml+'</select>' +
+          '<input type="text" id="bkTenantManual" placeholder="輸入業戶名稱" value="'+esc(tenantManualValue)+'" style="margin-top:8px;display:'+(tenantSelectValue==='__other__'?'block':'none')+'">' +
+        '</div>' +
+        '<div class="form-group"><label>聯絡人</label><input type="text" id="bkPerson" value="'+esc(b.person||'')+'"></div>' +
+        '<div class="form-group"><label>電話</label><input type="text" id="bkPhone" value="'+esc(b.phone||'')+'"></div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="form-group"><label>會議室</label><select id="bkRoomId">' +
+          rooms.map(function(r){ return '<option value="'+esc(r.id)+'"'+(b.roomId===r.id?' selected':'')+'>'+esc(r.name)+'</option>'; }).join('') +
+        '</select></div>' +
+        '<div class="form-group"><label>日期</label><input type="date" id="bkDate" value="'+esc(b.date||defaultDate)+'"></div>' +
+        '<div class="form-row">' +
+          '<div class="form-group"><label>開始時間</label><input type="time" id="bkStartTime" value="'+esc(b.startTime||'09:00')+'"></div>' +
+          '<div class="form-group"><label>結束時間</label><input type="time" id="bkEndTime" value="'+esc(b.endTime||'10:00')+'"></div>' +
+        '</div>' +
+        '<div class="form-group"><label>會議主旨</label><input type="text" id="bkTopic" value="'+esc(b.topic||'')+'"></div>' +
+      '</div>' +
     '</div>' +
-    '<div class="form-group"><label>會議主旨</label><input type="text" id="bkTopic" value="'+esc(b.topic||'')+'"></div>' +
-    '<div class="form-group"><label>聯絡人</label><input type="text" id="bkPerson" value="'+esc(b.person||'')+'"></div>';
+    '<div style="margin-top:4px;padding-top:16px;border-top:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+      '<input type="checkbox" id="bkPaid" style="width:18px;height:18px"'+(paidChecked?' checked':'')+'>' +
+      '<label for="bkPaid" style="margin:0;cursor:pointer">已收取場地費（未勾選會在總表用紅框警示）</label>' +
+    '</div>';
 
   $('modalFooter').innerHTML =
     (isNew ? '' : '<button class="btn btn-warning" onclick="deleteBooking('+id+')">刪除</button>') +
@@ -1466,7 +1493,15 @@ function openBookModal(id) {
   $('modalBackdrop').classList.add('open');
 }
 
+function toggleTenantManual() {
+  var sel = $('bkTenantSelect'), manual = $('bkTenantManual');
+  if (!sel || !manual) return;
+  manual.style.display = (sel.value === '__other__') ? 'block' : 'none';
+}
+
 function saveBooking(id) {
+  var tenantSelect = $('bkTenantSelect').value;
+  var tenant = tenantSelect === '__other__' ? $('bkTenantManual').value.trim() : tenantSelect;
   var updated = {
     id: id || new Date().getTime(),
     roomId: $('bkRoomId').value,
@@ -1474,7 +1509,10 @@ function saveBooking(id) {
     startTime: $('bkStartTime').value,
     endTime: $('bkEndTime').value,
     topic: $('bkTopic').value,
-    person: $('bkPerson').value
+    person: $('bkPerson').value,
+    phone: $('bkPhone').value,
+    tenant: tenant,
+    paid: $('bkPaid').checked
   };
   if (!updated.date || !updated.startTime || !updated.endTime) {
     toast('日期與時間為必填', 'error'); return;
@@ -1492,6 +1530,7 @@ function saveBooking(id) {
   meetings.bookings = list;
   window.api.save('meetings', meetings).then(function(){
     toast('預約已儲存');
+    if (typeof renderCalendar === 'function') renderCalendar();
     renderBookings();
     closeModal();
     triggerBackup();
