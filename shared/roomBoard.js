@@ -31,7 +31,7 @@
 
   /* 找出本房間現在使用中的預約（若有），以及今日剩餘（尚未到期）的預約清單 */
   function computeRoomState(meetings) {
-    var bookings = (meetings.bookings || []).filter(function (b) { return b.roomId === ROOM_ID && b.date === today(); });
+    var bookings = (meetings.bookings || []).filter(function (b) { return b.roomId === ROOM_ID && b.date === today() && !b.deletedAt; });
     var hm = nowHM();
     var current = bookings.filter(function (b) { return b.startTime <= hm && hm < b.endTime; })[0] || null;
     var upcoming = bookings.filter(function (b) { return b.endTime > hm; })
