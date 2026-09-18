@@ -584,6 +584,7 @@ var meetings       = { rooms:[], bookings:[] };
 var meetingAnnouncements = { marquee:'', list:[] };
 var settings       = { windows:[] };
 var _annDataset    = 'announcements'; // 目前 modal 操作的資料集
+var tenantFloorList = []; // 業戶別下拉選單資料來源，獨立於水牌管理分頁的 floorList，主動在 loadAll() 載入
 
 // Toast
 function toast(msg, type) {
@@ -1644,19 +1645,21 @@ function safeGet(k) {
 }
 
 function loadAll() {
-  return Promise.all([safeGet('announcements'),safeGet('announcements_v'),safeGet('meetings'),safeGet('settings'),safeGet('meetingAnnouncements')])
+  return Promise.all([safeGet('announcements'),safeGet('announcements_v'),safeGet('meetings'),safeGet('settings'),safeGet('meetingAnnouncements'),safeGet('floors')])
     .then(function(res){
       if(res[0]) announcements=res[0];
       if(res[1]) announcementsV=res[1];
       if(res[2]) meetings=res[2];
       if(res[3]) settings=res[3];
       if(res[4]) meetingAnnouncements=res[4];
+      tenantFloorList = (res[5] && res[5].length) ? res[5] : window.FloorData.DEFAULT_FLOORS.map(function(f){
+        return { floor:f.floor, company:f.company || '' };
+      });
       // 把 api.js 合併後的 settings（含新視窗）存回 localStorage，確保視窗清單是最新的
       window.api.save('settings', settings);
       if($('topCommunity')) $('topCommunity').innerText=settings.communityName||'社區管理系統';
       renderAnnouncements();
       loadSettingsForm();
-      if($('dateFilter')&&!$('dateFilter').value) $('dateFilter').value=today();
     });
 }
 
@@ -2075,6 +2078,9 @@ function copyBat() {
   window.api.on('floors:updated', function(d){
     floorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
       return { floor:f.floor, company:f.company || '', group:f.group || '' };
+    });
+    tenantFloorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
+      return { floor:f.floor, company:f.company || '' };
     });
     renderFloors();
   });
