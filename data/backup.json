@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T10:41:46.316Z",
+  "_savedAt": "2026-09-18T10:42:37.877Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,6 +597,18 @@
       }
     ],
     "bookings": [
+      {
+        "id": 1789728157875,
+        "roomId": "B",
+        "date": "2026-09-22",
+        "startTime": "14:00",
+        "endTime": "16:00",
+        "topic": "",
+        "person": "",
+        "phone": "",
+        "tenant": "20A - 臺中市不動產",
+        "paid": true
+      },
       {
         "id": 1789728106313,
         "roomId": "A",
