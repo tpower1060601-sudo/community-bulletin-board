@@ -238,13 +238,26 @@ input:checked + .slider:before{transform:translateX(20px);}
       </div>
     </div>
 
-    <!-- Meetings (hidden placeholder) -->
+    <!-- Meetings -->
     <div id="tab-meetings" style="display:none">
       <div class="page-header">
         <div class="page-title">會議室<span>預約</span></div>
         <div style="display:flex;gap:12px;align-items:center">
           <input type="date" id="dateFilter" onchange="renderBookings()" style="width:160px">
           <button class="btn btn-primary" onclick="openBookModal(0)">＋ 新增預約</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">🏢 房間清單</div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:100px">代碼</th><th>房間名稱</th><th style="width:140px">容納人數</th><th style="width:90px">操作</th></tr></thead>
+            <tbody id="roomListBody"></tbody>
+          </table>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:10px">
+          <button class="btn btn-ghost" onclick="addRoomRow()">＋ 新增房間</button>
+          <button class="btn btn-primary" onclick="saveRoomList()">💾 儲存房間清單</button>
         </div>
       </div>
       <div id="bookingCards"></div>
@@ -557,7 +570,7 @@ function showTab(name) {
     if(p) p.style.display=(t===name?'':'none');
     if(n) n.classList.toggle('active', t===name);
   });
-  if(name==='meetings') renderBookings();
+  if(name==='meetings') { renderRoomList(); renderBookings(); }
   if(name==='status')   renderStatus();
   if(name==='layout')   initLayoutEditor();
   if(name==='annv')     renderAnnouncementsV();
@@ -1277,30 +1290,89 @@ function deleteAnn(id) {
   });
 }
 
+/* ══════════════════════════════════════════════════════════════
+   房間清單維護（meetings.rooms）
+   ══════════════════════════════════════════════════════════════ */
+function nextRoomId() {
+  var used = (meetings.rooms||[]).map(function(r){ return r.id; });
+  var code = 65; // 'A'
+  while (used.indexOf(String.fromCharCode(code)) > -1 && code < 91) code++;
+  return code < 91 ? String.fromCharCode(code) : ('R' + Date.now());
+}
+
+function renderRoomList() {
+  var body = $('roomListBody'); if (!body) return;
+  var rooms = meetings.rooms || [];
+  var html = '';
+  rooms.forEach(function(room, i) {
+    html += '<tr>'+
+      '<td style="text-align:center;font-weight:700;color:var(--accent)">'+esc(room.id)+'</td>'+
+      '<td><input type="text" value="'+esc(room.name)+'" oninput="updRoom('+i+',\'name\',this.value)" style="width:100%"></td>'+
+      '<td><input type="number" min="0" value="'+(room.capacity||0)+'" oninput="updRoom('+i+',\'capacity\',parseInt(this.value)||0)" style="width:100%;text-align:center"></td>'+
+      '<td><button class="btn btn-danger btn-sm" onclick="removeRoomRow('+i+')">✕</button></td>'+
+      '</tr>';
+  });
+  body.innerHTML = html || '<tr><td colspan="4" style="text-align:center;padding:30px;color:var(--text2)">尚無房間</td></tr>';
+}
+
+function updRoom(i, field, val) {
+  if (!meetings.rooms[i]) return;
+  meetings.rooms[i][field] = val;
+}
+
+function addRoomRow() {
+  meetings.rooms = meetings.rooms || [];
+  meetings.rooms.push({ id: nextRoomId(), name: '新會議室', capacity: 10 });
+  renderRoomList();
+}
+
+function removeRoomRow(i) {
+  var room = meetings.rooms[i];
+  if (!room) return;
+  var hasBookings = (meetings.bookings||[]).some(function(b){ return b.roomId === room.id; });
+  if (hasBookings && !confirm('「'+room.name+'」還有預約紀錄，確定要刪除這個房間嗎？（預約紀錄不會自動清除，但門口螢幕會顯示「找不到房間」）')) return;
+  meetings.rooms.splice(i, 1);
+  renderRoomList();
+}
+
+function saveRoomList() {
+  window.api.save('meetings', meetings).then(function(){
+    toast('房間清單已儲存');
+    renderRoomList();
+    renderBookings();
+    triggerBackup();
+  });
+}
+
 function renderBookings() {
   var cards=$('bookingCards'); if(!cards) return;
   var date=$('dateFilter').value||today();
   var html='', rooms=meetings.rooms||[], bookings=meetings.bookings||[];
   for(var i=0;i<rooms.length;i++){
     var room=rooms[i];
-    var rb=bookings.filter(function(b){return b.room===room&&b.date===date;});
-    if(rb.length>0){
-      html+='<div class="card"><div class="card-title">🏢 '+esc(room)+'</div>';
+    var rb=bookings.filter(function(b){return b.roomId===room.id&&b.date===date;})
+                    .sort(function(a,b){return a.startTime<b.startTime?-1:1;});
+    html+='<div class="card"><div class="card-title">🏢 '+esc(room.name)+'（'+(room.capacity||0)+'人）</div>';
+    if(rb.length===0){
+      html+='<div style="padding:16px;color:var(--text2);font-size:13px">本日無預約</div>';
+    } else {
       for(var j=0;j<rb.length;j++){
         var b=rb[j];
-        html+='<div class="booking-item"><div class="booking-time">'+b.startTime+' - '+b.endTime+'</div>'+
-              '<div class="booking-info"><div class="booking-topic">'+esc(b.topic)+'</div><div class="booking-person">👤 '+esc(b.person)+'</div></div></div>';
+        html+='<div class="booking-item"><div class="booking-time">'+esc(b.startTime)+' - '+esc(b.endTime)+'</div>'+
+              '<div class="booking-info"><div class="booking-topic">'+esc(b.topic)+'</div><div class="booking-person">👤 '+esc(b.person)+'</div></div>'+
+              '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openBookModal('+b.id+')">編輯</button>'+
+              '<button class="btn btn-danger btn-sm" onclick="deleteBooking('+b.id+')">刪除</button></div></div>';
       }
-      html+='</div>';
     }
+    html+='</div>';
   }
-  cards.innerHTML=html||'<div style="grid-column:1/-1;text-align:center;padding:60px;color:var(--text2)">該日無預約行程</div>';
+  cards.innerHTML=html;
 }
 
 function renderStatus() {
   var grid=$('statusGrid'); if(!grid) return;
   var html='', rooms=meetings.rooms||[];
-  for(var i=0;i<rooms.length;i++) html+='<div class="room-row"><div class="room-name">🏢 '+esc(rooms[i])+'</div></div>';
+  for(var i=0;i<rooms.length;i++) html+='<div class="room-row"><div class="room-name">🏢 '+esc(rooms[i].name)+'</div></div>';
   grid.innerHTML=html||'尚無資料';
 }
 
