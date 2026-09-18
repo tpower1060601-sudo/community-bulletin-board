@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T09:36:47.359Z",
+  "_savedAt": "2026-09-18T10:32:20.175Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -596,7 +596,20 @@
         "capacity": 10
       }
     ],
-    "bookings": []
+    "bookings": [
+      {
+        "id": 1789727540169,
+        "roomId": "B",
+        "date": "2026-09-18",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "topic": "",
+        "person": "",
+        "phone": "",
+        "tenant": "13G",
+        "paid": true
+      }
+    ]
   },
   "screenLayout": [
     {
