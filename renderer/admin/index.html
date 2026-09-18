@@ -1396,6 +1396,13 @@ var _selectedCalendarDate = null;  // 目前展開明細的日期字串（YYYY-M
 var ROOM_COLOR_MAP = { A:'#3b82f6', B:'#22c55e', C:'#f59e0b', D:'#a855f7', E:'#ef4444' };
 function roomColor(roomId) { return ROOM_COLOR_MAP[roomId] || '#6b7280'; }
 
+function roomShortLabel(roomId) {
+  var room = (meetings.rooms||[]).find(function(r){ return r.id === roomId; });
+  if (!room || !room.name) return roomId;
+  var short = room.name.replace(/新?會議室$/, '');
+  return short || roomId;
+}
+
 function isBookingPaid(b) { return b.paid !== false; }
 
 function pad2(n) { return n < 10 ? '0'+n : ''+n; }
@@ -1454,7 +1461,7 @@ function renderCalendar() {
     var hasUnpaid = dayBookings.some(function(b){ return !isBookingPaid(b); });
     var isSelected = dateStr === _selectedCalendarDate;
     var chips = dayBookings.map(function(b){
-      return '<div style="background:'+roomColor(b.roomId)+';color:#fff;border-radius:3px;padding:1px 5px;margin-top:2px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc((b.tenant?b.tenant+'　':'')+b.startTime+'-'+b.endTime)+'">'+esc(b.roomId)+' '+esc(b.startTime)+'-'+esc(b.endTime)+(b.tenant?' '+esc(b.tenant):'')+'</div>';
+      return '<div style="background:'+roomColor(b.roomId)+';color:#fff;border-radius:3px;padding:1px 5px;margin-top:2px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc((b.tenant?b.tenant+'　':'')+b.startTime+'-'+b.endTime)+'">'+esc(roomShortLabel(b.roomId))+' '+esc(b.startTime)+'-'+esc(b.endTime)+(b.tenant?' '+esc(b.tenant):'')+'</div>';
     }).join('');
     var border = hasUnpaid ? '2px solid #ef4444' : (isSelected ? '2px solid var(--accent)' : '1px solid var(--border)');
     var bg = hasUnpaid ? 'rgba(239,68,68,.08)' : (isSelected ? 'rgba(255,255,255,.06)' : 'transparent');
