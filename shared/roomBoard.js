@@ -1,7 +1,7 @@
 /* shared/roomBoard.js — 會議室門口螢幕顯示引擎
    使用前必須先定義全域變數 ROOM_ID（例如 'A'），並依序載入：
    shared/api.js → shared/roomBoardStyle.js → shared/roomBoard.js
-   由 renderer/room-a ~ room-e 五個極簡入口檔案各自帶入自己的 ROOM_ID 使用。 */
+   由 renderer/room01 ~ room05 五個極簡入口檔案各自帶入自己的 ROOM_ID 使用。 */
 (function () {
   'use strict';
 
