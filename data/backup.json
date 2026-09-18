@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T10:43:41.645Z",
+  "_savedAt": "2026-09-18T10:44:25.487Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,6 +597,18 @@
       }
     ],
     "bookings": [
+      {
+        "id": 1789728265485,
+        "roomId": "A",
+        "date": "2026-09-28",
+        "startTime": "18:00",
+        "endTime": "21:00",
+        "topic": "讀書會",
+        "person": "",
+        "phone": "",
+        "tenant": "5F - 也樂居保全(股)公司",
+        "paid": true
+      },
       {
         "id": 1789728221640,
         "roomId": "C",
