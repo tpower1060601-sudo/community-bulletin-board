@@ -178,6 +178,9 @@ input:checked + .slider:before{transform:translateX(20px);}
     <div class="nav-item" id="nav-floors" onclick="showTab('floors')">
       <span class="nav-icon">🏢</span> 水牌管理
     </div>
+    <div class="nav-item" id="nav-meetings" onclick="showTab('meetings')">
+      <span class="nav-icon">📅</span> 會議室預約
+    </div>
     <div class="nav-item" id="nav-layout" onclick="showTab('layout')">
       <span class="nav-icon">🖥️</span> 螢幕排版
     </div>
@@ -1340,6 +1343,84 @@ function saveRoomList() {
     toast('房間清單已儲存');
     renderRoomList();
     renderBookings();
+    triggerBackup();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   預約 CRUD（meetings.bookings）
+   ══════════════════════════════════════════════════════════════ */
+function bookingOverlaps(a, b) {
+  return a.roomId === b.roomId && a.date === b.date &&
+         a.startTime < b.endTime && a.endTime > b.startTime;
+}
+
+function openBookModal(id) {
+  var b = (meetings.bookings||[]).find(function(x){ return x.id === id; }) || {};
+  var isNew = !b.id;
+  var rooms = meetings.rooms || [];
+  var defaultDate = ($('dateFilter')||{}).value || today();
+
+  $('modalTitle').innerText = isNew ? '新增預約' : '編輯預約';
+  $('modalBody').innerHTML =
+    '<div class="form-group"><label>會議室</label><select id="bkRoomId">' +
+      rooms.map(function(r){ return '<option value="'+esc(r.id)+'"'+(b.roomId===r.id?' selected':'')+'>'+esc(r.name)+'</option>'; }).join('') +
+    '</select></div>' +
+    '<div class="form-group"><label>日期</label><input type="date" id="bkDate" value="'+esc(b.date||defaultDate)+'"></div>' +
+    '<div class="form-row">' +
+      '<div class="form-group"><label>開始時間</label><input type="time" id="bkStartTime" value="'+esc(b.startTime||'09:00')+'"></div>' +
+      '<div class="form-group"><label>結束時間</label><input type="time" id="bkEndTime" value="'+esc(b.endTime||'10:00')+'"></div>' +
+    '</div>' +
+    '<div class="form-group"><label>會議主旨</label><input type="text" id="bkTopic" value="'+esc(b.topic||'')+'"></div>' +
+    '<div class="form-group"><label>聯絡人</label><input type="text" id="bkPerson" value="'+esc(b.person||'')+'"></div>';
+
+  $('modalFooter').innerHTML =
+    (isNew ? '' : '<button class="btn btn-warning" onclick="deleteBooking('+id+')">刪除</button>') +
+    '<div style="flex:1"></div>' +
+    '<button class="btn btn-ghost" onclick="closeModal()">取消</button>' +
+    '<button class="btn btn-primary" onclick="saveBooking('+(id||0)+')">儲存</button>';
+  $('modalBackdrop').classList.add('open');
+}
+
+function saveBooking(id) {
+  var updated = {
+    id: id || new Date().getTime(),
+    roomId: $('bkRoomId').value,
+    date: $('bkDate').value,
+    startTime: $('bkStartTime').value,
+    endTime: $('bkEndTime').value,
+    topic: $('bkTopic').value,
+    person: $('bkPerson').value
+  };
+  if (!updated.date || !updated.startTime || !updated.endTime) {
+    toast('日期與時間為必填', 'error'); return;
+  }
+  if (updated.startTime >= updated.endTime) {
+    toast('結束時間必須晚於開始時間', 'error'); return;
+  }
+  var list = meetings.bookings || [];
+  var conflict = list.some(function(b){ return b.id !== updated.id && bookingOverlaps(b, updated); });
+  if (conflict) {
+    toast('這個時段跟同一間會議室的其他預約重疊了', 'error'); return;
+  }
+  var idx = list.findIndex(function(x){ return x.id === updated.id; });
+  if (idx > -1) list[idx] = updated; else list.unshift(updated);
+  meetings.bookings = list;
+  window.api.save('meetings', meetings).then(function(){
+    toast('預約已儲存');
+    renderBookings();
+    closeModal();
+    triggerBackup();
+  });
+}
+
+function deleteBooking(id) {
+  if (!confirm('確定要刪除這筆預約嗎？')) return;
+  meetings.bookings = (meetings.bookings||[]).filter(function(x){ return x.id !== id; });
+  window.api.save('meetings', meetings).then(function(){
+    toast('預約已刪除', 'warning');
+    renderBookings();
+    closeModal();
     triggerBackup();
   });
 }
