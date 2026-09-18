@@ -269,25 +269,35 @@ input:checked + .slider:before{transform:translateX(20px);}
     <div id="tab-meetings" style="display:none">
       <div class="page-header">
         <div class="page-title">會議室<span>預約</span></div>
-        <div style="display:flex;gap:12px;align-items:center">
-          <input type="date" id="dateFilter" onchange="renderBookings()" style="width:160px">
-          <button class="btn btn-primary" onclick="openBookModal(0)">＋ 新增預約</button>
-        </div>
+        <button class="btn btn-primary" onclick="openBookModal(0)">＋ 新增預約</button>
       </div>
       <div class="card">
-        <div class="card-title">🏢 房間清單</div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th style="width:100px">代碼</th><th>房間名稱</th><th style="width:140px">容納人數</th><th style="width:90px">操作</th></tr></thead>
-            <tbody id="roomListBody"></tbody>
-          </table>
+        <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px">
+          <button class="btn btn-ghost btn-sm" onclick="changeCalendarMonth(-1)">◀</button>
+          <div id="calendarLabel" style="font-size:18px;font-weight:700;min-width:120px;text-align:center"></div>
+          <button class="btn btn-ghost btn-sm" onclick="changeCalendarMonth(1)">▶</button>
         </div>
-        <div style="margin-top:12px;display:flex;gap:10px">
-          <button class="btn btn-ghost" onclick="addRoomRow()">＋ 新增房間</button>
-          <button class="btn btn-primary" onclick="saveRoomList()">💾 儲存房間清單</button>
-        </div>
+        <div id="roomColorLegend" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:14px;font-size:12px"></div>
+        <div id="calendarGrid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px"></div>
       </div>
       <div id="bookingCards"></div>
+      <div class="card">
+        <div class="card-title" style="cursor:pointer" onclick="toggleRoomListPanel()">
+          <span id="roomListToggleIcon">▸</span> 房間清單設定
+        </div>
+        <div id="roomListPanel" style="display:none;margin-top:14px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th style="width:100px">代碼</th><th>房間名稱</th><th style="width:140px">容納人數</th><th style="width:90px">操作</th></tr></thead>
+              <tbody id="roomListBody"></tbody>
+            </table>
+          </div>
+          <div style="margin-top:12px;display:flex;gap:10px">
+            <button class="btn btn-ghost" onclick="addRoomRow()">＋ 新增房間</button>
+            <button class="btn btn-primary" onclick="saveRoomList()">💾 儲存房間清單</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Status -->
@@ -600,7 +610,7 @@ function showTab(name) {
     if(p) p.style.display=(t===name?'':'none');
     if(n) n.classList.toggle('active', t===name);
   });
-  if(name==='meetings')    { renderRoomList(); renderBookings(); }
+  if(name==='meetings')    { renderRoomList(); renderCalendar(); renderBookings(); }
   if(name==='status')      renderStatus();
   if(name==='layout')      initLayoutEditor();
   if(name==='annv')        renderAnnouncementsV();
@@ -1378,6 +1388,92 @@ function deleteAnn(id) {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   會議室月曆總表
+   ══════════════════════════════════════════════════════════════ */
+var _calendarYear, _calendarMonth; // _calendarMonth 為 0-11（JS Date 慣例）
+var _selectedCalendarDate = null;  // 目前展開明細的日期字串（YYYY-MM-DD），null = 未展開
+
+var ROOM_COLOR_MAP = { A:'#3b82f6', B:'#22c55e', C:'#f59e0b', D:'#a855f7', E:'#ef4444' };
+function roomColor(roomId) { return ROOM_COLOR_MAP[roomId] || '#6b7280'; }
+
+function isBookingPaid(b) { return b.paid !== false; }
+
+function pad2(n) { return n < 10 ? '0'+n : ''+n; }
+
+function initCalendarState() {
+  if (_calendarYear === undefined) {
+    var now = new Date();
+    _calendarYear = now.getFullYear();
+    _calendarMonth = now.getMonth();
+  }
+}
+
+function changeCalendarMonth(delta) {
+  initCalendarState();
+  _calendarMonth += delta;
+  if (_calendarMonth < 0) { _calendarMonth = 11; _calendarYear--; }
+  if (_calendarMonth > 11) { _calendarMonth = 0; _calendarYear++; }
+  renderCalendar();
+}
+
+function selectCalendarDay(dateStr) {
+  _selectedCalendarDate = dateStr;
+  renderCalendar();
+  renderBookings();
+}
+
+function renderRoomLegend() {
+  var el = $('roomColorLegend'); if (!el) return;
+  var rooms = meetings.rooms || [];
+  el.innerHTML = rooms.map(function(r){
+    return '<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:12px;height:12px;border-radius:3px;background:'+roomColor(r.id)+';display:inline-block"></span>'+esc(r.name)+'</span>';
+  }).join('');
+}
+
+function renderCalendar() {
+  var grid = $('calendarGrid'), label = $('calendarLabel');
+  if (!grid || !label) return;
+  initCalendarState();
+  renderRoomLegend();
+  label.innerText = _calendarYear + '年' + (_calendarMonth+1) + '月';
+
+  var firstDay = new Date(_calendarYear, _calendarMonth, 1);
+  var startWeekday = firstDay.getDay();
+  var daysInMonth = new Date(_calendarYear, _calendarMonth+1, 0).getDate();
+  var bookings = meetings.bookings || [];
+
+  var html = '';
+  var weekdayNames = ['日','一','二','三','四','五','六'];
+  for (var w=0; w<7; w++) html += '<div style="text-align:center;color:var(--text2);font-size:12px;padding:4px 0">'+weekdayNames[w]+'</div>';
+
+  for (var i=0; i<startWeekday; i++) html += '<div></div>';
+
+  for (var d=1; d<=daysInMonth; d++) {
+    var dateStr = _calendarYear+'-'+pad2(_calendarMonth+1)+'-'+pad2(d);
+    var dayBookings = bookings.filter(function(b){ return b.date === dateStr; });
+    var hasUnpaid = dayBookings.some(function(b){ return !isBookingPaid(b); });
+    var isSelected = dateStr === _selectedCalendarDate;
+    var chips = dayBookings.map(function(b){
+      return '<div style="background:'+roomColor(b.roomId)+';color:#fff;border-radius:3px;padding:1px 5px;margin-top:2px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(b.roomId)+' '+esc(b.startTime)+'-'+esc(b.endTime)+'</div>';
+    }).join('');
+    var border = hasUnpaid ? '2px solid #ef4444' : (isSelected ? '2px solid var(--accent)' : '1px solid var(--border)');
+    var bg = hasUnpaid ? 'rgba(239,68,68,.08)' : (isSelected ? 'rgba(255,255,255,.06)' : 'transparent');
+    html += '<div onclick="selectCalendarDay(\''+dateStr+'\')" style="border:'+border+';background:'+bg+';min-height:70px;padding:4px;border-radius:6px;cursor:pointer">'+
+      '<div style="font-size:12px;opacity:.7">'+d+'</div>'+chips+'</div>';
+  }
+
+  grid.innerHTML = html;
+}
+
+function toggleRoomListPanel() {
+  var panel = $('roomListPanel'), icon = $('roomListToggleIcon');
+  if (!panel) return;
+  var open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  if (icon) icon.innerText = open ? '▸' : '▾';
+}
+
+/* ══════════════════════════════════════════════════════════════
    房間清單維護（meetings.rooms）
    ══════════════════════════════════════════════════════════════ */
 function nextRoomId() {
@@ -1542,6 +1638,7 @@ function deleteBooking(id) {
   meetings.bookings = (meetings.bookings||[]).filter(function(x){ return x.id !== id; });
   window.api.save('meetings', meetings).then(function(){
     toast('預約已刪除', 'warning');
+    renderCalendar();
     renderBookings();
     closeModal();
     triggerBackup();
@@ -1550,7 +1647,8 @@ function deleteBooking(id) {
 
 function renderBookings() {
   var cards=$('bookingCards'); if(!cards) return;
-  var date=$('dateFilter').value||today();
+  if (!_selectedCalendarDate) { cards.innerHTML=''; return; }
+  var date=_selectedCalendarDate;
   var html='', rooms=meetings.rooms||[], bookings=meetings.bookings||[];
   for(var i=0;i<rooms.length;i++){
     var room=rooms[i];
@@ -1562,8 +1660,11 @@ function renderBookings() {
     } else {
       for(var j=0;j<rb.length;j++){
         var b=rb[j];
-        html+='<div class="booking-item"><div class="booking-time">'+esc(b.startTime)+' - '+esc(b.endTime)+'</div>'+
-              '<div class="booking-info"><div class="booking-topic">'+esc(b.topic)+'</div><div class="booking-person">👤 '+esc(b.person)+'</div></div>'+
+        var unpaid = !isBookingPaid(b);
+        html+='<div class="booking-item"'+(unpaid?' style="border:2px solid #ef4444"':'')+'>'+
+              '<div class="booking-time">'+esc(b.startTime)+' - '+esc(b.endTime)+'</div>'+
+              '<div class="booking-info"><div class="booking-topic">'+esc(b.topic)+'</div>'+
+              '<div class="booking-person">👤 '+esc(b.person)+(b.tenant?'　🏢 '+esc(b.tenant):'')+(unpaid?'　<span style="color:#ef4444;font-weight:700">⚠ 未繳費</span>':'')+'</div></div>'+
               '<div style="display:flex;gap:6px"><button class="btn btn-ghost btn-sm" onclick="openBookModal('+b.id+')">編輯</button>'+
               '<button class="btn btn-danger btn-sm" onclick="deleteBooking('+b.id+')">刪除</button></div></div>';
       }
@@ -2108,7 +2209,7 @@ function copyBat() {
   window.api.on('announcements:updated', function(d){ announcements = d; renderAnnouncements(); });
   window.api.on('announcements_v:updated', function(d){ announcementsV = d; renderAnnouncementsV(); });
   window.api.on('meetingAnnouncements:updated', function(d){ meetingAnnouncements = d; renderMeetingAnnouncements(); });
-  window.api.on('meetings:updated', function(d){ meetings = d; renderBookings(); });
+  window.api.on('meetings:updated', function(d){ meetings = d; renderRoomList(); renderCalendar(); renderBookings(); });
   window.api.on('settings:updated', function(d){
     settings = d;
     if ($('topCommunity')) $('topCommunity').innerText = settings.communityName || '社區管理系統';
