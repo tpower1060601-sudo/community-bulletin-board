@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-16T04:46:11.434Z",
+  "_savedAt": "2026-09-18T05:47:13.536Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -570,9 +570,31 @@
   },
   "meetings": {
     "rooms": [
-      "會議室A",
-      "會議室B",
-      "會議室C"
+      {
+        "id": "A",
+        "name": "A會議室",
+        "capacity": 40
+      },
+      {
+        "id": "B",
+        "name": "B1會議室",
+        "capacity": 20
+      },
+      {
+        "id": "C",
+        "name": "B2新會議室",
+        "capacity": 20
+      },
+      {
+        "id": "D",
+        "name": "C1新會議室",
+        "capacity": 10
+      },
+      {
+        "id": "E",
+        "name": "C2新會議室",
+        "capacity": 10
+      }
     ],
     "bookings": []
   },
