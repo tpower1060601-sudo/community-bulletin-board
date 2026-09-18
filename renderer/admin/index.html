@@ -610,7 +610,7 @@ function showTab(name) {
     if(p) p.style.display=(t===name?'':'none');
     if(n) n.classList.toggle('active', t===name);
   });
-  if(name==='meetings')    { renderRoomList(); renderCalendar(); renderBookings(); }
+  if(name==='meetings')    { purgeExpiredBookings(); renderRoomList(); renderCalendar(); renderBookings(); }
   if(name==='status')      renderStatus();
   if(name==='layout')      initLayoutEditor();
   if(name==='annv')        renderAnnouncementsV();
@@ -1617,7 +1617,7 @@ function saveBooking(id) {
     toast('結束時間必須晚於開始時間', 'error'); return;
   }
   var list = meetings.bookings || [];
-  var conflict = list.some(function(b){ return b.id !== updated.id && bookingOverlaps(b, updated); });
+  var conflict = list.some(function(b){ return b.id !== updated.id && !b.deletedAt && bookingOverlaps(b, updated); });
   if (conflict) {
     toast('這個時段跟同一間會議室的其他預約重疊了', 'error'); return;
   }
@@ -1634,15 +1634,61 @@ function saveBooking(id) {
 }
 
 function deleteBooking(id) {
-  if (!confirm('確定要刪除這筆預約嗎？')) return;
-  meetings.bookings = (meetings.bookings||[]).filter(function(x){ return x.id !== id; });
+  if (!confirm('確定要刪除這筆預約嗎？（會保留 7 天，期限內可復原）')) return;
+  var b = (meetings.bookings||[]).find(function(x){ return x.id === id; });
+  if (!b) return;
+  b.deletedAt = new Date().toISOString();
   window.api.save('meetings', meetings).then(function(){
-    toast('預約已刪除', 'warning');
+    toast('預約已刪除，7 天內可在明細列表復原', 'warning');
     renderCalendar();
     renderBookings();
     closeModal();
     triggerBackup();
   });
+}
+
+var SOFT_DELETE_GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+
+function restoreBooking(id) {
+  var b = (meetings.bookings||[]).find(function(x){ return x.id === id; });
+  if (!b) return;
+  var conflict = (meetings.bookings||[]).some(function(x){
+    return x.id !== id && !x.deletedAt && bookingOverlaps(x, b);
+  });
+  if (conflict) {
+    toast('這個時段已經被別的預約佔用了，請先調整時間再復原', 'error');
+    return;
+  }
+  delete b.deletedAt;
+  window.api.save('meetings', meetings).then(function(){
+    toast('預約已復原');
+    renderCalendar();
+    renderBookings();
+    triggerBackup();
+  });
+}
+
+function hardDeleteBooking(id) {
+  if (!confirm('確定要永久刪除這筆已刪除的預約嗎？此動作無法復原。')) return;
+  meetings.bookings = (meetings.bookings||[]).filter(function(x){ return x.id !== id; });
+  window.api.save('meetings', meetings).then(function(){
+    toast('已永久刪除', 'warning');
+    renderCalendar();
+    renderBookings();
+    triggerBackup();
+  });
+}
+
+function purgeExpiredBookings() {
+  var now = Date.now();
+  var before = (meetings.bookings||[]).length;
+  meetings.bookings = (meetings.bookings||[]).filter(function(b){
+    if (!b.deletedAt) return true;
+    return (now - new Date(b.deletedAt).getTime()) <= SOFT_DELETE_GRACE_MS;
+  });
+  if (meetings.bookings.length !== before) {
+    window.api.save('meetings', meetings).then(function(){ triggerBackup(); });
+  }
 }
 
 function renderBookings() {
