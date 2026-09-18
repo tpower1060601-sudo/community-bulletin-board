@@ -1454,7 +1454,7 @@ function renderCalendar() {
     var hasUnpaid = dayBookings.some(function(b){ return !isBookingPaid(b); });
     var isSelected = dateStr === _selectedCalendarDate;
     var chips = dayBookings.map(function(b){
-      return '<div style="background:'+roomColor(b.roomId)+';color:#fff;border-radius:3px;padding:1px 5px;margin-top:2px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(b.roomId)+' '+esc(b.startTime)+'-'+esc(b.endTime)+'</div>';
+      return '<div style="background:'+roomColor(b.roomId)+';color:#fff;border-radius:3px;padding:1px 5px;margin-top:2px;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+esc((b.tenant?b.tenant+'　':'')+b.startTime+'-'+b.endTime)+'">'+esc(b.roomId)+' '+esc(b.startTime)+'-'+esc(b.endTime)+(b.tenant?' '+esc(b.tenant):'')+'</div>';
     }).join('');
     var border = hasUnpaid ? '2px solid #ef4444' : (isSelected ? '2px solid var(--accent)' : '1px solid var(--border)');
     var bg = hasUnpaid ? 'rgba(239,68,68,.08)' : (isSelected ? 'rgba(255,255,255,.06)' : 'transparent');
