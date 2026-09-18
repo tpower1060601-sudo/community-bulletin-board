@@ -1669,6 +1669,8 @@ function restoreBooking(id) {
 }
 
 function hardDeleteBooking(id) {
+  var b = (meetings.bookings||[]).find(function(x){ return x.id === id; });
+  if (!b || !b.deletedAt) return;
   if (!confirm('確定要永久刪除這筆已刪除的預約嗎？此動作無法復原。')) return;
   meetings.bookings = (meetings.bookings||[]).filter(function(x){ return x.id !== id; });
   window.api.save('meetings', meetings).then(function(){
