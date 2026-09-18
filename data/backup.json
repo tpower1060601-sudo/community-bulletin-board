@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T10:32:20.175Z",
+  "_savedAt": "2026-09-18T10:38:29.396Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,6 +597,18 @@
       }
     ],
     "bookings": [
+      {
+        "id": 1789727909393,
+        "roomId": "A",
+        "date": "2026-09-18",
+        "startTime": "09:00",
+        "endTime": "12:00",
+        "topic": "",
+        "person": "",
+        "phone": "",
+        "tenant": "15B - 聖昌益整合有限公司",
+        "paid": true
+      },
       {
         "id": 1789727540169,
         "roomId": "B",
