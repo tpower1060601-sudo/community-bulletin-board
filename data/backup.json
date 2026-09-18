@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T10:40:03.669Z",
+  "_savedAt": "2026-09-18T10:40:56.507Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,6 +597,18 @@
       }
     ],
     "bookings": [
+      {
+        "id": 1789728056498,
+        "roomId": "C",
+        "date": "2026-09-20",
+        "startTime": "08:00",
+        "endTime": "14:00",
+        "topic": "",
+        "person": "",
+        "phone": "",
+        "tenant": "1B - 社團法人台灣基督教繁星協會",
+        "paid": true
+      },
       {
         "id": 1789727909393,
         "roomId": "A",
