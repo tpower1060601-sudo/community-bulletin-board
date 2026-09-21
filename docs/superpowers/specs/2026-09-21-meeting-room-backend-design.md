@@ -36,7 +36,7 @@
 │ office 機器（100.95.24.81，Ubuntu，Docker）                │
 │                                                           │
 │  ┌─────────────────────────────────────────────────┐   │
-│  │ qinjia-meetings-app（新 Docker 服務）              │   │
+│  │ qinjia-room-booking（新 Docker 服務）              │   │
 │  │                                                     │   │
 │  │  ┌──────────────┐   ┌──────────────────────────┐ │   │
 │  │  │ FastAPI 後端  │──▶│ PostgreSQL（既有共用實例，  │ │   │
@@ -71,7 +71,7 @@
 
 ## 資料模型
 
-在 office 既有共用 PostgreSQL 新開一個 schema（例如 `qinjia_meetings`），三張表：
+在 office 既有共用 PostgreSQL 新開一個獨立資料庫（`qinjia_room_booking`，比照 qinjia_city_plaza/qinjia_meetings 的既有模式，同一個共用 Postgres 執行個體底下各自一個 DB，不是 schema），三張表：
 
 ```sql
 CREATE TABLE rooms (
@@ -174,7 +174,7 @@ FastAPI，前綴 `/api`，除了 `/api/auth/login` 外其他端點都需要登�
 
 ## 部署與網路
 
-- `qinjia-meetings-app` 比照 `qinjia-finance-app` 的 docker-compose 模式，新增一個容器（FastAPI，綁定僅限 `127.0.0.1` 或 Tailscale IP 的某個 port），沿用既有共用 PostgreSQL 容器（不另開一個資料庫容器）
+- `qinjia-room-booking` 比照 `qinjia-finance-app` 的 docker-compose 模式，新增一個容器（FastAPI，綁定僅限 `127.0.0.1` 或 Tailscale IP 的某個 port），沿用既有共用 PostgreSQL 容器（不另開一個資料庫容器）
 - 上線 SOP 比照 `P:\共用設定\README.md` 第 3 章：確認本機 port 可通 → `cloudflared tunnel route dns shoyubook meetings` → 改 `/etc/cloudflared/config.yml` ingress（fallback 404 必須在最後）→ `sudo systemctl restart cloudflared` → 瀏覽器驗證
 - office 需要把自己的 SSH 公鑰（`shoyufang@shoyufang-All-Series`）加進 `EBA@172.18.0.251` 的 `authorized_keys`，這是對 172.18.0.251 的又一次「唯讀原則例外」，範圍僅限新增一行公鑰，不改動其他任何設定
 
