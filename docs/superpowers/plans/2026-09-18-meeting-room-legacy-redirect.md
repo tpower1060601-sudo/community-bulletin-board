@@ -224,7 +224,7 @@ Expected：兩次 `diff` 都沒有任何輸出（代表遠端檔案內容跟本�
 
 **Files:** 無檔案異動，純驗證。
 
-- [ ] **Step 1: 用瀏覽器逐一開啟舊網址，確認正確轉址到新系統並顯示對應房間**
+- [x] **Step 1: 用瀏覽器逐一開啟舊網址，確認正確轉址到新系統並顯示對應房間**
 
 You have access to `mcp__Claude_Browser__*` tools. 依序對 5 個房間執行以下驗證（範例以 room01 為例，其餘 4 個比照辦理，只改網址跟預期房間名稱）：
 
@@ -248,7 +248,7 @@ Expected：頁面文字內容應該顯示「A會議室」相關資訊（房間�
 
 對 `room02.html`~`room05.html` 重複同樣的檢查，分別預期轉址到 `renderer/room02/`~`renderer/room05/`，並顯示對應房間名稱（B1會議室、B2新會議室、C1新會議室、C2新會議室——實際名稱以管理後台「房間清單設定」目前設定的為準，如果跟這裡預期的不同，以管理後台實際顯示的為準，不是本計畫寫錯）。
 
-- [ ] **Step 2: 確認每個轉址頁本身沒有 console 錯誤**
+- [x] **Step 2: 確認每個轉址頁本身沒有 console 錯誤**
 
 ```
 mcp__Claude_Browser__read_console_messages({ onlyErrors: true })
@@ -256,7 +256,7 @@ mcp__Claude_Browser__read_console_messages({ onlyErrors: true })
 
 Expected：無錯誤（每個房間頁面都檢查一次）。
 
-- [ ] **Step 3: 確認舊系統其他既有功能沒有受影響**
+- [x] **Step 3: 確認舊系統其他既有功能沒有受影響**
 
 ```
 mcp__Claude_Browser__navigate({ url: "http://172.18.0.251/cc71/rwd/view/reservation/board_editor.html" })
@@ -268,7 +268,7 @@ mcp__Claude_Browser__get_page_text({})
 
 Expected：頁面能正常打開、顯示公告編輯器介面內容（不是錯誤頁），證明這次部署沒有影響到 `reservation` 目錄下的其他既有檔案。
 
-- [ ] **Step 4: 回報部署完成，附上復原方式**
+- [x] **Step 4: 回報部署完成，附上復原方式**
 
 跟使用者確認驗證結果都正確之後，明確告知：如果之後發現轉址有問題需要復原，遠端伺服器上的復原方式是（不需要再連這個 session，日後任何人都能照著做）：
 
@@ -277,6 +277,8 @@ ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "copy /Y C:\Progra~2\Apache~1\Apache2.
 ```
 
 （`room02`~`room05` 比照辦理，把檔名數字換掉即可。）
+
+> **✅ 2026-09-21 驗證結果**：5 間全部獨立驗證過（透過真實瀏覽器打舊網址，確認 `window.location.href` 確實轉到 `renderer/room0N/`、頁面內容顯示正確房間名稱、無 console 錯誤）：room01→A會議室(40人)、room02→B1會議室(20人)、room03→B2新會議室(20人)、room04→C1新會議室(10人)、room05→C2新會議室(10人)，皆為【未使用】狀態，無跨房間接錯線。`board_editor.html` 確認未受影響。遠端 5 個 `.bak_20260918` 備份檔確認存在（1,829 bytes，與原始檔一致）。部署完成。
 
 ---
 
