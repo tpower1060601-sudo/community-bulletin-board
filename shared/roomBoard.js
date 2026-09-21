@@ -212,60 +212,94 @@
   }
 
   /* ── 初始化：讀取資料、監聽背景更新 ──
-     有定義 ROOM_DATA_URL 時（例如 172.18.0.251 上離線部署的版本），改成 fetch 同源
-     本機 JSON 檔取得資料，不使用 shared/api.js 的 window.api/window.ghBackup。
-     未定義 ROOM_DATA_URL 時，行為跟原本完全一樣（GitHub Pages 版）。 */
+     有定義 ROOM_DATA_URL 時（例如 172.18.0.251 上離線部署的版本，門口平板連的就是這條路徑），
+     改用最保守的 XMLHttpRequest + callback 讀取同源本機 JSON 檔（刻意不用 fetch/Promise/
+     async-await，因為門口平板的瀏覽器版本未知，不確定支援到哪個 JS 新語法），
+     不使用 shared/api.js 的 window.api/window.ghBackup。
+     未定義 ROOM_DATA_URL 時，行為跟原本完全一樣（GitHub Pages 版，沿用既有 async/await）。 */
   var _meetings = { rooms: [], bookings: [] };
   var _meetingAnnouncements = { marquee: '', list: [] };
   var USE_LOCAL_DATA = typeof ROOM_DATA_URL !== 'undefined' && !!ROOM_DATA_URL;
 
-  function loadLocalData() {
-    return fetch(ROOM_DATA_URL, { cache: 'no-store' })
-      .then(function (res) { return res.json(); })
-      .catch(function () { return null; });
+  function loadLocalDataXhr(callback) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', ROOM_DATA_URL + '?_=' + Date.now(), true);
+      xhr.onreadystatechange = function () {
+        if (xhr.readyState !== 4) return;
+        if (xhr.status !== 200 && xhr.status !== 0) { callback(null); return; }
+        var data = null;
+        try { data = JSON.parse(xhr.responseText); } catch (e) { data = null; }
+        callback(data);
+      };
+      xhr.onerror = function () { callback(null); };
+      xhr.send();
+    } catch (e) {
+      callback(null);
+    }
   }
 
-  async function init() {
+  /* 渲染過程若出任何錯誤，畫面顯示明確錯誤訊息而不是維持空白，方便現場排查 */
+  function safeRenderAll(meetings, announcements) {
+    try {
+      renderAll(meetings, announcements);
+    } catch (e) {
+      if (root) {
+        root.innerHTML = '<div class="rb-slide active" style="align-items:center;justify-content:center;flex-direction:column;color:#fff;background:#000;gap:16px;text-align:center;padding:60px">' +
+          '<div style="font-size:48px">⚠️</div>' +
+          '<div style="font-size:28px">畫面渲染發生錯誤</div>' +
+          '<div style="font-size:16px;opacity:.7;max-width:900px;word-break:break-all">' + esc(String((e && e.message) || e)) + '</div>' +
+          '</div>';
+      }
+    }
+  }
+
+  function initLocal() {
     initDom();
-    if (USE_LOCAL_DATA) {
-      var data = await loadLocalData();
+    loadLocalDataXhr(function (data) {
       if (data) {
         _meetings = data.meetings || _meetings;
         _meetingAnnouncements = data.meetingAnnouncements || _meetingAnnouncements;
       }
-    } else {
-      if (window.ghBackup) await window.ghBackup.autoRestore();
-      var m = await window.api.get('meetings');
-      var a = await window.api.get('meetingAnnouncements');
-      _meetings = m || _meetings;
-      _meetingAnnouncements = a || _meetingAnnouncements;
-    }
-    renderAll(_meetings, _meetingAnnouncements);
+      safeRenderAll(_meetings, _meetingAnnouncements);
+    });
 
-    if (USE_LOCAL_DATA) {
-      /* 本機資料模式：定時重新抓取本機 JSON（同步端會定時覆寫這個檔案）；
-         抓取失敗時完全不更動既有資料，畫面繼續顯示最後一次成功同步的內容 */
-      setInterval(function () {
-        loadLocalData().then(function (data) {
-          if (data) {
-            _meetings = data.meetings || _meetings;
-            _meetingAnnouncements = data.meetingAnnouncements || _meetingAnnouncements;
-            renderAll(_meetings, _meetingAnnouncements);
-          }
-        });
-      }, 60000);
-    } else {
-      /* 狀態每分鐘重新計算一次，不用整頁重新整理即可反映預約開始/結束 */
-      setInterval(function () { renderAll(_meetings, _meetingAnnouncements); }, 60000);
-    }
+    /* 定時重新抓取本機 JSON（同步端會定時覆寫這個檔案）；
+       抓取失敗時完全不更動既有資料，畫面繼續顯示最後一次成功同步的內容 */
+    setInterval(function () {
+      loadLocalDataXhr(function (data) {
+        if (data) {
+          _meetings = data.meetings || _meetings;
+          _meetingAnnouncements = data.meetingAnnouncements || _meetingAnnouncements;
+          safeRenderAll(_meetings, _meetingAnnouncements);
+        }
+      });
+    }, 60000);
+  }
+
+  async function initRemote() {
+    initDom();
+    if (window.ghBackup) await window.ghBackup.autoRestore();
+    var m = await window.api.get('meetings');
+    var a = await window.api.get('meetingAnnouncements');
+    _meetings = m || _meetings;
+    _meetingAnnouncements = a || _meetingAnnouncements;
+    safeRenderAll(_meetings, _meetingAnnouncements);
+
+    /* 狀態每分鐘重新計算一次，不用整頁重新整理即可反映預約開始/結束 */
+    setInterval(function () { safeRenderAll(_meetings, _meetingAnnouncements); }, 60000);
   }
 
   if (!USE_LOCAL_DATA) {
-    window.api.on('meetings:updated', function (d) { _meetings = d; renderAll(_meetings, _meetingAnnouncements); });
-    window.api.on('meetingAnnouncements:updated', function (d) { _meetingAnnouncements = d; renderAll(_meetings, _meetingAnnouncements); });
+    window.api.on('meetings:updated', function (d) { _meetings = d; safeRenderAll(_meetings, _meetingAnnouncements); });
+    window.api.on('meetingAnnouncements:updated', function (d) { _meetingAnnouncements = d; safeRenderAll(_meetings, _meetingAnnouncements); });
   }
 
   window.RoomBoard = { computeRoomState: computeRoomState, isAnnActive: isAnnActive, esc: esc };
 
-  init();
+  if (USE_LOCAL_DATA) {
+    initLocal();
+  } else {
+    initRemote();
+  }
 })();
