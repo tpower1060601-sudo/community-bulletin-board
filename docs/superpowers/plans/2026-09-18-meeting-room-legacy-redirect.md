@@ -47,7 +47,7 @@
 
 **背景**：這 5 個檔案是實際會部署到舊伺服器（172.18.0.251）上、覆蓋掉同名舊檔的內容。放在 `deploy/legacy-room-redirect/` 資料夾裡並 commit 進 repo，作為「舊伺服器目前應該長怎樣」的單一存底來源——之後如果需要重新部署或稽核內容，直接看這個資料夾即可，不需要再連回舊伺服器確認。這個資料夾底下的檔案**只會被部署到外部舊伺服器，不會出現在 GitHub Pages 網站本身**（跟 `renderer/` 底下的檔案是兩回事）。
 
-- [ ] **Step 1: 建立 `room01.html`（對應 A 會議室）**
+- [x] **Step 1: 建立 `room01.html`（對應 A 會議室）**
 
 ```html
 <!DOCTYPE html>
@@ -62,7 +62,7 @@
 </html>
 ```
 
-- [ ] **Step 2: 建立 `room02.html`（對應 B1 會議室）**
+- [x] **Step 2: 建立 `room02.html`（對應 B1 會議室）**
 
 ```html
 <!DOCTYPE html>
@@ -77,7 +77,7 @@
 </html>
 ```
 
-- [ ] **Step 3: 建立 `room03.html`（對應 B2 會議室）**
+- [x] **Step 3: 建立 `room03.html`（對應 B2 會議室）**
 
 ```html
 <!DOCTYPE html>
@@ -92,7 +92,7 @@
 </html>
 ```
 
-- [ ] **Step 4: 建立 `room04.html`（對應 C1 會議室）**
+- [x] **Step 4: 建立 `room04.html`（對應 C1 會議室）**
 
 ```html
 <!DOCTYPE html>
@@ -107,7 +107,7 @@
 </html>
 ```
 
-- [ ] **Step 5: 建立 `room05.html`（對應 C2 會議室）**
+- [x] **Step 5: 建立 `room05.html`（對應 C2 會議室）**
 
 ```html
 <!DOCTYPE html>
@@ -122,7 +122,7 @@
 </html>
 ```
 
-- [ ] **Step 6: 逐一檢查 5 個檔案內容正確、URL 一一對應**
+- [x] **Step 6: 逐一檢查 5 個檔案內容正確、URL 一一對應**
 
 ```bash
 grep -H "url=" deploy/legacy-room-redirect/room0*.html
@@ -130,7 +130,7 @@ grep -H "url=" deploy/legacy-room-redirect/room0*.html
 
 Expected：印出 5 行，`room01.html` 對應 `.../renderer/room01/`，`room02.html` 對應 `.../renderer/room02/`，以此類推到 `room05.html` 對應 `.../renderer/room05/`，網址結尾數字跟檔名數字必須一致（這是最容易手滑打錯的地方，務必逐行核對）。
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add deploy/legacy-room-redirect/
@@ -145,7 +145,7 @@ git commit -m "feat: 新增會議室門口平板轉址頁原始檔，準備部�
 
 **背景**：正式覆蓋前，先在遠端把現有的 `room01.html`~`room05.html` 各自備份一份，檔名加上 `.bak_20260918` 後綴，放在原本同一個資料夾。這樣如果部署後發現有問題要復原，直接把備份檔改名蓋回去即可，不需要再重新設計/重寫。
 
-- [ ] **Step 1: 測試 SSH 連線**
+- [x] **Step 1: 測試 SSH 連線**
 
 ```bash
 ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "echo connected"
@@ -153,7 +153,7 @@ ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "echo connected"
 
 Expected：輸出 `connected`。如果被拒絕（`Permission denied`），停下來——不要嘗試其他金鑰或用密碼硬連，回報使用者確認連線方式是否有變動。
 
-- [ ] **Step 2: 確認遠端目標資料夾存在、目前有這 5 個檔案**
+- [x] **Step 2: 確認遠端目標資料夾存在、目前有這 5 個檔案**
 
 ```bash
 ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "dir C:\Progra~2\Apache~1\Apache2.2\htdocs\cc71\rwd\view\reservation\room0*.html"
@@ -161,7 +161,7 @@ ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "dir C:\Progra~2\Apache~1\Apache2.2\ht
 
 Expected：列出 `room01.html` 到 `room05.html` 這 5 個檔案，都有檔案大小跟修改時間（確認路徑正確、檔案確實存在，避免備份/覆蓋到錯誤路徑）。
 
-- [ ] **Step 3: 備份 5 個現有檔案**
+- [x] **Step 3: 備份 5 個現有檔案**
 
 ```bash
 ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "copy C:\Progra~2\Apache~1\Apache2.2\htdocs\cc71\rwd\view\reservation\room01.html C:\Progra~2\Apache~1\Apache2.2\htdocs\cc71\rwd\view\reservation\room01.html.bak_20260918"
@@ -173,7 +173,7 @@ ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "copy C:\Progra~2\Apache~1\Apache2.2\h
 
 Expected：每一行指令都輸出 `已複製         1 個檔案。`（cmd.exe 的 `copy` 指令成功訊息，中文可能因遠端主機是 Big5 系統顯示成亂碼，只要沒出現 "找不到檔案" 之類的錯誤訊息即算成功）。
 
-- [ ] **Step 4: 確認備份檔案確實存在**
+- [x] **Step 4: 確認備份檔案確實存在**
 
 ```bash
 ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "dir C:\Progra~2\Apache~1\Apache2.2\htdocs\cc71\rwd\view\reservation\room0*.bak_20260918"
@@ -189,7 +189,7 @@ Expected：列出 5 個 `.bak_20260918` 檔案，檔案大小應該跟 Step 2 �
 
 **背景**：確認備份都做好之後，才把 Task 1 建立的 5 個轉址頁透過 SCP 上傳，覆蓋掉舊伺服器上原本的 5 個檔案。
 
-- [ ] **Step 1: 用 SCP 上傳 5 個新檔案**
+- [x] **Step 1: 用 SCP 上傳 5 個新檔案**
 
 ```bash
 scp -i ~/.ssh/id_ed25519 deploy/legacy-room-redirect/room01.html "EBA@172.18.0.251:C:\\Progra~2\\Apache~1\\Apache2.2\\htdocs\\cc71\\rwd\\view\\reservation\\room01.html"
@@ -201,7 +201,7 @@ scp -i ~/.ssh/id_ed25519 deploy/legacy-room-redirect/room05.html "EBA@172.18.0.2
 
 Expected：每一行都印出傳輸進度並在結尾顯示 100% 完成，沒有 `Permission denied`、`No such file or directory` 之類的錯誤。
 
-- [ ] **Step 2: 從遠端把剛上傳的檔案抓回來，逐一比對內容是否跟本機一致**
+- [x] **Step 2: 從遠端把剛上傳的檔案抓回來，逐一比對內容是否跟本機一致**
 
 ```bash
 scp -i ~/.ssh/id_ed25519 "EBA@172.18.0.251:C:\\Progra~2\\Apache~1\\Apache2.2\\htdocs\\cc71\\rwd\\view\\reservation\\room01.html" /tmp/verify_room01.html
@@ -211,6 +211,12 @@ diff deploy/legacy-room-redirect/room05.html /tmp/verify_room05.html
 ```
 
 Expected：兩次 `diff` 都沒有任何輸出（代表遠端檔案內容跟本機來源檔案逐位元組一致）。這裡只抽驗 `room01`／`room05`（第一個跟最後一個）作為代表，不用 5 個全部都下載比對，抽驗兩端已經足以確認 SCP 傳輸過程沒有出錯（例如編碼被轉換、被截斷）。
+
+> **⚠️ 2026-09-21 實際執行紀錄／已知問題**：Step 2 這個「SCP 下載回來 diff」的驗證方法在這台機器上**不可靠，不要照做**。實測結果：Step 1 的 5 個上傳全部成功（用 `ssh ... "dir"` 確認遠端檔案大小/時間戳都已正確更新），但 Step 2 的下載會全部回報 `No such file or directory`——這是本機 OpenSSH 10.x 用戶端預設走 SFTP 協定、對這台機器的 8.3 短路徑（`Progra~2`、`Apache~1`）解析失敗，不是部署真的失敗。**改用這個方法驗證內容**：
+> ```bash
+> ssh -i ~/.ssh/id_ed25519 EBA@172.18.0.251 "type C:\Progra~2\Apache~1\Apache2.2\htdocs\cc71\rwd\view\reservation\room01.html"
+> ```
+> 把輸出內容跟本機 `deploy/legacy-room-redirect/room01.html` 的內容手動比對（room02~05 同理）。這個坑已經記錄進 `P:\共用設定\EBA門禁主機-連線說明.md` 第 6 章「硬限制（踩過的坑）」，之後在這台機器上驗證任何檔案內容都優先用 `ssh ... "type"`，不要用 scp 下載。
 
 ---
 
