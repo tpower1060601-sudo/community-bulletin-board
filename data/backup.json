@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-18T10:46:32.050Z",
+  "_savedAt": "2026-09-21T02:22:33.361Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,6 +597,18 @@
       }
     ],
     "bookings": [
+      {
+        "id": 1789957353354,
+        "roomId": "A",
+        "date": "2026-09-21",
+        "startTime": "13:00",
+        "endTime": "16:00",
+        "topic": "",
+        "person": "",
+        "phone": "",
+        "tenant": "12H - 創客共好商務中心",
+        "paid": true
+      },
       {
         "id": 1789728392048,
         "roomId": "A",
