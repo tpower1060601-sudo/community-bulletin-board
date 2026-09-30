@@ -225,7 +225,7 @@ Yahoo Finance → CORS 封鎖 → Stooq 反爬蟲 → Twelve Data 403（免費�
   - 用 `--kiosk`（非 `--app`）：因為兩台是各自獨立視窗、只對應單一螢幕，不像螢幕牆要跨螢幕，所以能用真正全螢幕無邊框的 kiosk 模式
   - 各自獨立 `--user-data-dir`：`C:\SupermiumFloorA` / `C:\SupermiumFloorB`
 - `close_floorboards.bat`：`taskkill /F /IM chrome.exe`（Supermium 執行檔也叫 chrome.exe）
-- 兩檔案本機留一份在專案根目錄（`C:\webpage\`，**故意不 commit 進 git**，純本機工具），部署一份在該機器 `C:\webpage_tools\`
+- 兩檔案已納入 git（專案根目錄），部署一份在該機器 `C:\webpage_tools\`；管理後台「水牌管理」分頁下方有「水牌機執行檔」區塊可調整參數後重新下載（產生器 `generateFloorBat()`，內容須維持純 ASCII）
 - Windows工作排程器（Task Scheduler）：
   - `FloorboardsOpen`：每天 08:00 執行 `start_floorboards_kiosk.bat`
   - `FloorboardsClose`：每天 21:00 執行 `close_floorboards.bat`

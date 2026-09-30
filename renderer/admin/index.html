@@ -381,6 +381,47 @@ input:checked + .slider:before{transform:translateX(20px);}
           </table>
         </div>
       </div>
+
+      <!-- 水牌機 .bat 產生 -->
+      <div class="card" id="floorBatSection" style="margin-top:16px">
+        <div class="card-title">⚙️ 水牌機執行檔（172.18.0.51）</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.8">
+          產生水牌機用的開機／關機 .bat：兩個獨立 kiosk 全螢幕視窗，左螢幕顯示水牌 A（screen10）、右螢幕顯示水牌 B（screen11）。
+          檔案內容只用純英文（Win7 用舊字碼頁讀 .bat，中文會壞掉）。下載後放到水牌機 <code>C:\webpage_tools\</code>，由工作排程器 08:00 開、21:00 關。
+        </div>
+        <div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:16px">
+          <div class="form-group" style="margin-bottom:0;min-width:420px">
+            <label>瀏覽器執行檔路徑（水牌機上的位置）</label>
+            <input type="text" id="fbBrowserPath" value="C:\webpage_tools\Supermium_portable\Supermium\chrome.exe" oninput="previewFloorBat()">
+          </div>
+          <div class="form-group" style="margin-bottom:0;width:130px">
+            <label>右螢幕 X 座標</label>
+            <input type="number" id="fbRightX" value="1080" oninput="previewFloorBat()">
+          </div>
+          <div class="form-group" style="margin-bottom:0;width:130px">
+            <label>視窗間隔（秒）</label>
+            <input type="number" id="fbWinDelay" value="5" min="0" max="120" oninput="previewFloorBat()">
+          </div>
+        </div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:420px">
+            <div class="card-title" style="margin-top:4px">📄 開機 start_floorboards_kiosk.bat</div>
+            <textarea id="fbStartPreview" readonly style="width:100%;height:170px;font-family:'Consolas','Courier New',monospace;font-size:12px;resize:vertical;line-height:1.6"></textarea>
+            <div style="margin-top:10px;display:flex;gap:12px">
+              <button class="btn btn-primary" onclick="downloadFloorBat('start')">⬇️ 下載開機檔</button>
+              <button class="btn btn-ghost" onclick="copyFloorBat('fbStartPreview')">📋 複製</button>
+            </div>
+          </div>
+          <div style="flex:1;min-width:300px">
+            <div class="card-title" style="margin-top:4px">📄 關機 close_floorboards.bat</div>
+            <textarea id="fbClosePreview" readonly style="width:100%;height:170px;font-family:'Consolas','Courier New',monospace;font-size:12px;resize:vertical;line-height:1.6"></textarea>
+            <div style="margin-top:10px;display:flex;gap:12px">
+              <button class="btn btn-primary" onclick="downloadFloorBat('close')">⬇️ 下載關機檔</button>
+              <button class="btn btn-ghost" onclick="copyFloorBat('fbClosePreview')">📋 複製</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ── 螢幕排版編輯器 ── -->
@@ -559,6 +600,7 @@ var floorList = [];
 var floorEditorInited = false;
 
 function initFloorEditor() {
+  previewFloorBat();
   if (floorEditorInited) { renderFloors(); return; }
   floorEditorInited = true;
   window.api.get('floors').then(function(saved) {
@@ -570,6 +612,55 @@ function initFloorEditor() {
         });
     renderFloors();
   });
+}
+
+/* ── 水牌機 .bat 產生（172.18.0.51，Win7 + Supermium，兩個獨立 kiosk 視窗）──
+   內容一律純 ASCII：Win7 用 Big5 字碼頁解讀 .bat，中文會把命令列切壞。 */
+function generateFloorBat(kind) {
+  if (kind === 'close') {
+    return ['@echo off', 'taskkill /F /IM chrome.exe /T 2>nul', 'echo Done.'].join('\r\n');
+  }
+  var exe   = (($('fbBrowserPath')||{}).value || '').trim() || 'C:\\webpage_tools\\Supermium_portable\\Supermium\\chrome.exe';
+  var rightX = parseInt(($('fbRightX')||{}).value);
+  if (isNaN(rightX)) rightX = 1080;
+  var delay = parseInt(($('fbWinDelay')||{}).value);
+  if (isNaN(delay)) delay = 5;
+  var base = LAY_BASE_URL;
+  return [
+    '@echo off',
+    'set CHROME="' + exe + '"',
+    'set FLAGS=--no-first-run --no-default-browser-check --disable-translate --disable-infobars',
+    '',
+    'rem Left monitor - screen10 (floors 1-14)',
+    'start "" %CHROME% %FLAGS% --user-data-dir="C:\\SupermiumFloorA" --window-position=0,0 --window-size=1080,1920 --kiosk "' + base + 'screen10/"',
+    'timeout /t ' + delay + ' /nobreak',
+    '',
+    'rem Right monitor - screen11 (floors 15+)',
+    'start "" %CHROME% %FLAGS% --user-data-dir="C:\\SupermiumFloorB" --window-position=' + rightX + ',0 --window-size=1080,1920 --kiosk "' + base + 'screen11/"'
+  ].join('\r\n');
+}
+function previewFloorBat() {
+  var a = $('fbStartPreview'), b = $('fbClosePreview');
+  if (a) a.value = generateFloorBat('start');
+  if (b) b.value = generateFloorBat('close');
+}
+function downloadFloorBat(kind) {
+  var name = kind === 'close' ? 'close_floorboards.bat' : 'start_floorboards_kiosk.bat';
+  var blob = new Blob([generateFloorBat(kind)], { type:'application/octet-stream' });
+  var url  = URL.createObjectURL(blob);
+  var a    = document.createElement('a');
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(name + ' 已下載 ✓');
+}
+function copyFloorBat(id) {
+  var pre = $(id);
+  if (!pre) return;
+  pre.select();
+  try { document.execCommand('copy'); toast('已複製到剪貼簿 ✓'); }
+  catch(e) { toast('請手動選取後複製', 'error'); }
 }
 
 function floorBoard(floor) {
