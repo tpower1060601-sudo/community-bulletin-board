@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-09-24T04:38:57.397Z",
+  "_savedAt": "2026-10-05T02:27:04.758Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -141,12 +141,12 @@
         "duration": 7,
         "content": "",
         "imageUrl": "https://tpower1060601-sudo.github.io/community-bulletin-board/data/images/1790224594832_ChatGPT_Image_Sep_24__2026__12_15_36_PM.png",
-        "alwaysValid": true,
+        "alwaysValid": false,
         "startDate": "",
         "startTime": "",
-        "endDate": "",
+        "endDate": "2026-10-04",
         "endTime": "",
-        "date": "2026-09-24"
+        "date": "2026-10-05"
       },
       {
         "id": 1789533268411,
