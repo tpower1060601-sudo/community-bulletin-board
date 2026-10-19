@@ -1,3 +1,9 @@
 node_modules/ 
 
 .superpowers/
+
+# 個人本機工具，不進公開 repo
+備份Claude設定到GitHub.bat
+從GitHub還原Claude設定.bat
+preview-colors.html
+排程工具/
