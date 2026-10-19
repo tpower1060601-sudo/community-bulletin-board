@@ -37,6 +37,22 @@ html, body { width:100%; height:100%; overflow:hidden; background:#000; }
   // 補幾次延遲重新校正，避免縮放比例鎖死在錯誤的暫時尺寸上。
   [300, 1000, 3000].forEach(function(delay) { setTimeout(fit, delay); });
 })();
+
+/* iframe 看門狗：每 5 分鐘檢查一次，只有「同源可讀、已載入完成但 body 或 title 是空的」（錯誤頁）才重設 src，
+   正常運作的 iframe 不會被重載；跨源或讀取失敗的一律略過 */
+setInterval(function() {
+  var frames = document.querySelectorAll('.fb-frame');
+  for (var i = 0; i < frames.length; i++) {
+    var f = frames[i];
+    var src = f.getAttribute('src');
+    if (!src) continue;
+    try {
+      var doc = f.contentDocument;
+      if (!doc || doc.readyState !== 'complete') continue;
+      if (!doc.body || !doc.body.innerHTML.trim() || !doc.title) f.src = src;
+    } catch (e) { /* 跨源：讀不到就不處理 */ }
+  }
+}, 5 * 60 * 1000);
 </script>
 </body>
 </html>

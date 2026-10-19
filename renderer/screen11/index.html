@@ -45,7 +45,7 @@ var STAGGER  = 180;   // 每列翻牌間隔毫秒
 var PG=12,bd=document.getElementById('bd'),pgs=[],sl=[],DATA=[],cur=0;
 /* 重新載入資料時要能中止舊的翻牌排程，否則會有兩組動畫同時跑 */
 var _tm=[];
-function T(fn,ms){var id=setTimeout(fn,ms);_tm.push(id);return id;}
+function T(fn,ms){var id=setTimeout(function(){var k=_tm.indexOf(id);if(k>-1)_tm.splice(k,1);fn();},ms);_tm.push(id);return id;}
 function clearT(){_tm.forEach(clearTimeout);_tm=[];}
 function buildSlots(){
   bd.innerHTML='';sl=[];
@@ -78,7 +78,10 @@ function start(rows){
 }
 /* 只取屬於這塊水牌的樓層 */
 function pick(all){return (all||[]).filter(function(f){var n=window.FloorData.floorNum(f.floor);return n >= 15;});}
-function apply(saved){var all=(saved&&saved.length)?saved:window.FloorData.DEFAULT_FLOORS;start(pick(all));}
+/* api.get('floors') 沒設定過也回 []，與「管理員清空」無法區分，所以直接看 localStorage 有沒有 bbs_floors：
+   從未設定過才用預設假資料；設定過但是空陣列＝管理員清空，顯示空白水牌 */
+function hasFloorsKey(){try{return localStorage.getItem('bbs_floors')!==null;}catch(e){return false;}}
+function apply(saved){var all;if(saved&&saved.length)all=saved;else if(saved==null||!hasFloorsKey())all=window.FloorData.DEFAULT_FLOORS;else all=[];start(pick(all));}
 function load(){return window.api.get('floors').then(apply);}
 if(window.ghBackup&&window.ghBackup.autoRestore)window.ghBackup.autoRestore().then(load,load);else load();
 /* 後台儲存後（或 GitHub 輪詢抓到新版本）自動套用，不必重開瀏覽器 */

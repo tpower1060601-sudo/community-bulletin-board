@@ -315,9 +315,10 @@ function tick() {
   var h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
   document.getElementById('clock').textContent =
     [h,m,s].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
-  // 每整分鐘檢查自動切換
-  if (s === 0) autoUpdate();
+  // 分鐘數改變就檢查自動切換（不用 s === 0：主執行緒被卡住跳過 0 秒時會漏掉）
+  if (m !== lastMin) { lastMin = m; autoUpdate(); }
 }
+var lastMin = new Date().getMinutes();
 setInterval(tick, 1000); tick();
 
 // 初始化

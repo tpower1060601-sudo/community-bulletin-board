@@ -171,7 +171,11 @@ function calcSunTimes(date) {
   const decl = 0.4093 * Math.sin(2 * Math.PI / 365 * (doy - 81));
   const cosHA = -Math.tan(latR) * Math.tan(decl);
   const ha = Math.acos(Math.max(-1, Math.min(1, cosHA)));
-  const noon = 12 - 120.67 / 15 + 8;
+  /* 均時差（equation of time，分鐘）：Spencer 1971 傅立葉近似，誤差約 30 秒內 */
+  const B = 2 * Math.PI * (doy - 1) / 365;
+  const eot = 229.18 * (0.000075 + 0.001868 * Math.cos(B) - 0.032077 * Math.sin(B)
+            - 0.014615 * Math.cos(2 * B) - 0.040849 * Math.sin(2 * B));
+  const noon = 12 - 120.67 / 15 + 8 - eot / 60;
   const srH = noon - ha * 12 / Math.PI;
   const ssH = noon + ha * 12 / Math.PI;
   function toTs(h) {
@@ -214,7 +218,8 @@ const BG = {
 };
 
 /* ── 背景動畫 ── */
-function clearFx() { document.getElementById('bg-fx').innerHTML = ''; }
+let thunderTimer = null;
+function clearFx() { clearTimeout(thunderTimer); document.getElementById('bg-fx').innerHTML = ''; }
 function injectStyle(id, css) {
   if (document.getElementById(id)) return;
   const s = document.createElement('style'); s.id = id; s.textContent = css; document.head.appendChild(s);
@@ -287,9 +292,11 @@ function startThunder() {
     const f = mkEl('div',{position:'absolute',inset:'0',background:'rgba(180,210,255,.06)',animation:'ltFl .2s ease-out forwards'});
     document.getElementById('bg-fx').appendChild(f);
     setTimeout(()=>f.remove(),400);
-    setTimeout(flash, 5000+Math.random()*9000);
+    thunderTimer = setTimeout(flash, 5000+Math.random()*9000);
   }
-  setTimeout(flash, 2500);
+  /* 閃電只保留一條排程鏈；clearFx 會停掉它，重複 render 不會累積 */
+  clearTimeout(thunderTimer);
+  thunderTimer = setTimeout(flash, 2500);
 }
 function applyBg(m) {
   clearFx();
@@ -399,7 +406,10 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
   const icon    = ICONS[cur.weather[0].icon] || '🌡️';
   const main    = cur.weather[0].main;
   const desc    = cur.weather[0].description;
-  const compass = degToCompass(extra.windDeg);
+  const compass = extra.windDeg == null ? '--' : degToCompass(extra.windDeg);
+  /* 缺值（null）一律顯示 '--'，不要變成 0 或 -99 */
+  const fv = v => (v == null || isNaN(v)) ? '--' : v;
+  const fr = v => (v == null || isNaN(v)) ? '--' : Math.round(v);
   const sunArc  = buildDayNight(extra.sunrise, extra.sunset, Date.now() / 1000);
 
   applyBg(main.toLowerCase());
@@ -420,19 +430,19 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
         <div class="current">
           <div class="center-block">
             <div class="weather-icon">${icon}</div>
-            <div class="temp-main">${Math.round(cur.main.temp)}<span class="temp-unit">°C</span></div>
+            <div class="temp-main">${fr(cur.main.temp)}<span class="temp-unit">°C</span></div>
             <div class="desc">${desc}</div>
-            <div class="hl">最高 <span class="hi">${dayHigh}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${dayLow}°C</span></div>
+            <div class="hl">最高 <span class="hi">${fv(dayHigh)}°C</span>&nbsp;／&nbsp;最低 <span class="lo">${fv(dayLow)}°C</span></div>
             <div class="wind-row">
               <div class="stat"><div class="stat-lbl">🧭 風向</div><div class="stat-val">${compass}</div></div>
               <div class="stat"><div class="stat-lbl">💨 陣風</div><div class="stat-val">${extra.windGust != null ? extra.windGust.toFixed(1) : '—'}<span class="stat-unit"> m/s</span></div></div>
             </div>
           </div>
           <div class="stats">
-            <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${cur.main.humidity}<span class="stat-unit">%</span></div></div>
-            <div class="stat"><div class="stat-lbl">🌡️ 體感</div><div class="stat-val">${Math.round(cur.main.feels_like)}<span class="stat-unit">°C</span></div></div>
-            <div class="stat"><div class="stat-lbl">🔵 氣壓</div><div class="stat-val">${cur.main.pressure}<span class="stat-unit"> hPa</span></div></div>
-            <div class="stat"><div class="stat-lbl">💨 風速</div><div class="stat-val">${cur.wind.speed}<span class="stat-unit"> m/s</span></div></div>
+            <div class="stat"><div class="stat-lbl">💧 濕度</div><div class="stat-val">${fv(cur.main.humidity)}<span class="stat-unit">%</span></div></div>
+            <div class="stat"><div class="stat-lbl">🌡️ 體感</div><div class="stat-val">${fr(cur.main.feels_like)}<span class="stat-unit">°C</span></div></div>
+            <div class="stat"><div class="stat-lbl">🔵 氣壓</div><div class="stat-val">${fv(cur.main.pressure)}<span class="stat-unit"> hPa</span></div></div>
+            <div class="stat"><div class="stat-lbl">💨 風速</div><div class="stat-val">${fv(cur.wind.speed)}<span class="stat-unit"> m/s</span></div></div>
             <div class="stat"><div class="stat-lbl">👁️ 能見度</div><div class="stat-val">${((cur.visibility||0)/1000).toFixed(1)}<span class="stat-unit"> km</span></div></div>
             <div class="stat"><div class="stat-lbl">☁️ 雲量</div><div class="stat-val">${extra.clouds}<span class="stat-unit">%</span></div></div>
           </div>
@@ -453,11 +463,12 @@ function render(cur, forecast, dayHigh, dayLow, extra) {
   clockEl = document.getElementById('clockEl');
   tick();
   chartData = forecast;
-  requestAnimationFrame(() => { const c = document.getElementById('fChart'); if (c) drawChart(c, chartData); });
+  requestAnimationFrame(() => { const c = document.getElementById('fChart'); if (c && chartData.length) drawChart(c, chartData); });
   // Emoji 轉圖片（相容 Windows 7）
   if (window.twemoji) twemoji.parse(document.getElementById('layout'), { folder: 'svg', ext: '.svg' });
   // 啟動 CWA 圖資輪播
   startCwaCarousel();
+  onWeatherOk();
 }
 
 /* ── CWA 中央氣象局 API ── */
@@ -475,23 +486,25 @@ async function fetchWeatherCWA() {
 
     /* ── 觀測站（PascalCase）── */
     const we       = obsData.records.Station[0].WeatherElement;
-    const temp     = parseFloat(we.AirTemperature);
-    const humidity = parseFloat(we.RelativeHumidity);
-    const windSpeed= parseFloat(we.WindSpeed);
-    const windDir  = parseFloat(we.WindDirection);
-    const pressure = parseFloat(we.AirPressure);
+    /* CWA 缺值以 -99 / -999 等負值表示；一律轉成 null，畫面顯示 '--' */
+    const cwaNum = v => { const n = parseFloat(v); return (isNaN(n) || n <= -99) ? null : n; };
+    const temp     = cwaNum(we.AirTemperature);
+    const humidity = cwaNum(we.RelativeHumidity);
+    const windSpeed= cwaNum(we.WindSpeed);
+    const windDir  = cwaNum(we.WindDirection);
+    const pressure = cwaNum(we.AirPressure);
     const desc     = we.Weather || '—';
-    const dHigh    = we.DailyExtreme?.DailyHigh?.TemperatureInfo?.AirTemperature;
-    const dLow     = we.DailyExtreme?.DailyLow?.TemperatureInfo?.AirTemperature;
-    const dailyHigh= dHigh != null ? parseFloat(dHigh) : temp;
-    const dailyLow = dLow  != null ? parseFloat(dLow)  : temp;
+    const dHigh    = cwaNum(we.DailyExtreme?.DailyHigh?.TemperatureInfo?.AirTemperature);
+    const dLow     = cwaNum(we.DailyExtreme?.DailyLow?.TemperatureInfo?.AirTemperature);
+    const dailyHigh= dHigh != null ? dHigh : temp;
+    const dailyLow = dLow  != null ? dLow  : temp;
     const visRaw   = String(we.VisibilityDescription || '');
-    const visibility = visRaw.includes('>') ? 30000 : (parseFloat(visRaw) || 10) * 1000;
-    const gust     = parseFloat(we.GustInfo?.PeakGustSpeed || '') || null;
+    const visibility = visRaw.includes('>') ? 30000 : (cwaNum(visRaw) || 10) * 1000;
+    const gust     = cwaNum(we.GustInfo?.PeakGustSpeed) || null;
 
     /* ── 預報（PascalCase + 中文 ElementName）── */
     const loc = fcData.records?.Locations?.[0]?.Location?.[0];
-    let wxCode = '04', forecastPts = [], feelsLike = calcFeelsLike(temp, humidity, windSpeed);
+    let wxCode = '04', forecastPts = [], feelsLike = temp == null ? null : calcFeelsLike(temp, humidity, windSpeed);
 
     if (loc && loc.WeatherElement) {
       // 用 includes 比對中文以避免精確字串差異
@@ -508,8 +521,8 @@ async function fetchWeatherCWA() {
       }
       if (atEl && atEl.Time[0]) {
         const v = atEl.Time[0].ElementValue[0];
-        const at = parseFloat(v.MaxApparentTemperature || v.MinApparentTemperature || v.ApparentTemperature);
-        if (!isNaN(at)) feelsLike = at;
+        const at = cwaNum(v.MaxApparentTemperature || v.MinApparentTemperature || v.ApparentTemperature);
+        if (at != null) feelsLike = at;
       }
       const popSlots = popEl ? popEl.Time : [];
       const now = Date.now();
@@ -518,8 +531,8 @@ async function fetchWeatherCWA() {
           const st = new Date(t.StartTime);
           if (st.getTime() < now - 1800000) return;
           const v = t.ElementValue[0];
-          const tVal = parseFloat(v.Temperature || v.AirTemperature);
-          if (isNaN(tVal)) return;
+          const tVal = cwaNum(v.Temperature || v.AirTemperature);
+          if (tVal == null) return;
           let pop = 0;
           popSlots.forEach(p => {
             const ps = new Date(p.StartTime), pe = new Date(p.EndTime);
@@ -536,10 +549,13 @@ async function fetchWeatherCWA() {
     }
 
     const nowDate = new Date();
-    const pts = [{
-      time: String(nowDate.getHours()).padStart(2,'0') + ':' + String(nowDate.getMinutes()).padStart(2,'0'),
-      temp, pop: parseFloat(we.Now?.Precipitation || 0) > 0 ? 0.7 : 0
-    }, ...forecastPts];
+    const pts = forecastPts.slice();
+    if (temp != null) {   /* 觀測溫度缺值時不放進圖表 */
+      pts.unshift({
+        time: String(nowDate.getHours()).padStart(2,'0') + ':' + String(nowDate.getMinutes()).padStart(2,'0'),
+        temp, pop: parseFloat(we.Now?.Precipitation || 0) > 0 ? 0.7 : 0
+      });
+    }
 
     const sunTimes = calcSunTimes(new Date());
     const isDay    = Date.now()/1000 >= sunTimes.sunrise && Date.now()/1000 <= sunTimes.sunset;
@@ -562,8 +578,10 @@ async function fetchWeatherCWA() {
     }
     const iconCode = iconKey + (isDay ? 'd' : 'n');
     const allTemps = pts.map(p => p.temp);
-    const fcHigh   = Math.round(Math.max(...allTemps, dailyHigh));
-    const fcLow    = Math.round(Math.min(...allTemps, dailyLow));
+    if (dailyHigh != null) allTemps.push(dailyHigh);
+    if (dailyLow  != null) allTemps.push(dailyLow);
+    const fcHigh   = allTemps.length ? Math.round(Math.max(...allTemps)) : null;
+    const fcLow    = allTemps.length ? Math.round(Math.min(...allTemps)) : null;
 
     const cur = {
       name: 'CWA_XITUN',
@@ -578,9 +596,7 @@ async function fetchWeatherCWA() {
       windDeg: windDir, windGust: gust, pressure, clouds: cur.clouds.all
     });
   } catch(e) {
-    console.error('[CWA]', e);
-    document.getElementById('layout').innerHTML =
-      `<div class="no-key">⚠️ 中央氣象局資料取得失敗<br><small style="opacity:.45">${e.message}</small></div>`;
+    onWeatherFail('⚠️ 中央氣象局資料取得失敗', e);
   }
 }
 
@@ -732,8 +748,38 @@ async function fetchWeather() {
     };
     render(cur, pts, dayHigh, dayLow, extra);
   } catch(e) {
-    document.getElementById('layout').innerHTML = `<div class="no-key">⚠️ 無法取得天氣資料<br><small style="opacity:.45">${e.message}</small></div>`;
+    onWeatherFail('⚠️ 無法取得天氣資料', e);
   }
+}
+
+/* ── 失敗處理：有舊資料就保留畫面，只在角落提示；失敗後 1 分鐘重試，指數退避至 10 分鐘 ── */
+let hasData = false, failCount = 0, retryTimer = null;
+function onWeatherFail(title, e) {
+  console.error('[weather]', e);
+  failCount++;
+  const delay = Math.min(60000 * Math.pow(2, failCount - 1), 600000);
+  clearTimeout(retryTimer);
+  retryTimer = setTimeout(doFetch, delay);
+  if (hasData) {
+    let el = document.getElementById('staleNote');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'staleNote';
+      el.style.cssText = 'position:fixed;left:14px;top:6px;z-index:50;font-size:14px;color:rgba(255,255,255,.5)';
+      document.body.appendChild(el);
+    }
+    const t = new Date(Date.now() + delay);
+    el.textContent = '資料更新失敗，' + String(t.getHours()).padStart(2,'0') + ':' + String(t.getMinutes()).padStart(2,'0') + ' 重試';
+  } else {
+    document.getElementById('layout').innerHTML =
+      `<div class="no-key">${title}<br><small style="opacity:.45">${e.message}</small></div>`;
+  }
+}
+function onWeatherOk() {
+  hasData = true; failCount = 0;
+  clearTimeout(retryTimer);
+  const el = document.getElementById('staleNote');
+  if (el) el.remove();
 }
 
 window.addEventListener('resize', () => {
@@ -742,6 +788,7 @@ window.addEventListener('resize', () => {
 });
 
 function doFetch() {
+  clearTimeout(retryTimer);   /* 避免定時輪詢與退避重試同時各打一次 */
   if (settings.cwaKey && settings.cwaKey.startsWith('CWA-')) {
     fetchWeatherCWA();
   } else {

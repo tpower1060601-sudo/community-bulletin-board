@@ -107,12 +107,23 @@ function playFile(idx) {
   player.src = src;
   player.load();
   player.play().catch(() => {});
-  document.getElementById('vidName').textContent = decodeURIComponent(name);
+  let label = name;
+  try { label = decodeURIComponent(name); } catch (e) { /* 網址含非法 % 編碼時直接顯示原字串 */ }
+  document.getElementById('vidName').textContent = label;
   document.getElementById('vidCounter').textContent = `${current+1} / ${files.length}`;
 }
 
 player.addEventListener('ended', () => { playFile(current + 1); });
-player.addEventListener('error', () => { setTimeout(() => playFile(current + 1), 1000); });
+/* 連續失敗次數達影片總數 = 全部都壞（多半是斷網），退避 60 秒再試，避免每秒無限迴圈 */
+let failCount = 0, errTimer = null;
+player.addEventListener('playing', () => { failCount = 0; });
+player.addEventListener('error', () => {
+  failCount++;
+  let wait = 1000;
+  if (failCount >= files.length) { wait = 60000; failCount = 0; }
+  clearTimeout(errTimer);
+  errTimer = setTimeout(() => playFile(current + 1), wait);
+});
 player.addEventListener('timeupdate', () => {
   if (!player.duration) return;
   const pct = (player.currentTime / player.duration) * 100;

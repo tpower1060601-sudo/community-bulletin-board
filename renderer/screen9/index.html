@@ -36,8 +36,28 @@ function onYouTubeIframeAPIReady() {
   if (currentId) loadPlayer(currentId);
 }
 
+var errTimer = null;
+
+/* 載入 YouTube iframe API；30 秒內沒載入（斷網或被擋）就重新插入腳本再試。
+   不用整頁重載：斷網時重載會停在瀏覽器錯誤頁，之後就沒有程式能再恢復 */
+function loadYtApi() {
+  if (window.YT && YT.Player) return;
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  tag.onerror = function() { tag.remove(); };
+  document.head.appendChild(tag);
+  setTimeout(function() {
+    if (window.YT && YT.Player) return;
+    tag.remove();
+    loadYtApi();
+  }, 30000);
+}
+
 function loadPlayer(id) {
   var wrap = document.getElementById('wrap');
+  clearTimeout(errTimer);
+  // 重建前先銷毀舊 player，避免殘留 iframe 與事件
+  if (player) { try { player.destroy(); } catch (x) {} player = null; }
   wrap.innerHTML = '<div id="yt-player"></div>';
   player = new YT.Player('yt-player', {
     videoId: id,
@@ -62,6 +82,11 @@ function loadPlayer(id) {
         if (q !== 'hd1080' && q !== 'hd2160' && q !== 'highres') {
           e.target.setPlaybackQuality('hd1080');
         }
+      },
+      onError: function() {
+        // 影片不可用或網路錯誤：60 秒後重建播放器（直播中斷、暫時性錯誤多半會自行恢復）
+        clearTimeout(errTimer);
+        errTimer = setTimeout(function() { if (currentId) loadPlayer(currentId); }, 60000);
       },
       onStateChange: function(e) {
         if (e.data === YT.PlayerState.PLAYING) {
@@ -93,9 +118,7 @@ async function init() {
   if (window.ghBackup) await window.ghBackup.autoRestore();
   var s = await window.api.get('settings');
   currentId = s.youtubeId2 || '';
-  var tag = document.createElement('script');
-  tag.src = 'https://www.youtube.com/iframe_api';
-  document.head.appendChild(tag);
+  loadYtApi();
   if (window.YT && YT.Player && currentId) loadPlayer(currentId);
 }
 

@@ -94,6 +94,22 @@ window.api.on('screenLayout:updated', function(layout) {
   [300, 1000, 3000].forEach(function(delay) { setTimeout(fit, delay); });
 })();
 
+/* iframe 看門狗：每 5 分鐘檢查一次，只有「同源可讀、已載入完成但 body 或 title 是空的」（錯誤頁）才重設 src，
+   正常運作的 iframe 不會被重載；跨源或讀取失敗的一律略過 */
+setInterval(function() {
+  var frames = document.querySelectorAll('.wall-frame');
+  for (var i = 0; i < frames.length; i++) {
+    var f = frames[i];
+    var src = f.getAttribute('src');
+    if (!src) continue;   // 還在等錯開載入的計時器
+    try {
+      var doc = f.contentDocument;
+      if (!doc || doc.readyState !== 'complete') continue;
+      if (!doc.body || !doc.body.innerHTML.trim() || !doc.title) f.src = src;
+    } catch (e) { /* 跨源：讀不到就不處理 */ }
+  }
+}, 5 * 60 * 1000);
+
 init();
 </script>
 </body>

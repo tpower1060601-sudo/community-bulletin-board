@@ -157,6 +157,11 @@ function render() {
     return;
   }
 
+  /* 空狀態時被隱藏的元素，有圖片後要恢復（清掉 inline display 回到 CSS 預設） */
+  document.querySelector('.overlay').style.display = '';
+  document.querySelector('.bottom-bar').style.display = '';
+  document.querySelector('.progress').style.display = '';
+
   container.innerHTML = files.map((src, i) => `
     <div class="slide${i===0?' active':''}${i%2?' alt':''}" data-i="${i}">
       <img src="${src}" alt="slide ${i+1}" draggable="false">

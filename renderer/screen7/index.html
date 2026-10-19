@@ -327,9 +327,17 @@ function parseXmlTitles(xmlText) {
 
 /* ── 單次請求 ── */
 async function tryOne(proxyIdx, feedUrl) {
-  const res = await fetch(PROXIES[proxyIdx](feedUrl), { cache: 'no-cache' });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  const text = await res.text();
+  /* 15 秒逾時：斷網或 proxy 卡住時不要讓請求永遠懸著 */
+  const ctrl = new AbortController();
+  const abortTimer = setTimeout(() => ctrl.abort(), 15000);
+  let text;
+  try {
+    const res = await fetch(PROXIES[proxyIdx](feedUrl), { cache: 'no-cache', signal: ctrl.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    text = await res.text();
+  } finally {
+    clearTimeout(abortTimer);
+  }
   if (proxyIdx === 0) {
     const data = JSON.parse(text);
     if (data.status === 'ok' && data.items && data.items.length)
@@ -348,7 +356,9 @@ async function tryOne(proxyIdx, feedUrl) {
 }
 
 /* ── 拉取並更新 ── */
+const retryTimers = {};   /* 每列只保留一個待執行的重試計時器 */
 async function fetchRow(ri) {
+  clearTimeout(retryTimers[ri]);   /* 5 分鐘輪詢進來時，取消尚未觸發的舊重試，避免重試鏈累積 */
   for (const feedUrl of FEEDS[ri]) {
     for (let pi = 0; pi < PROXIES.length; pi++) {
       try {
@@ -358,7 +368,8 @@ async function fetchRow(ri) {
     }
   }
   /* 全部失敗：保留現有內容，30 秒後重試 */
-  setTimeout(() => fetchRow(ri), 30000);
+  clearTimeout(retryTimers[ri]);
+  retryTimers[ri] = setTimeout(() => fetchRow(ri), 30000);
 }
 
 /* ── 渲染跑馬燈 ── */
