@@ -32,7 +32,7 @@
    → autoRestore 自動從 GitHub 還原 localStorage
 
 3. 進入管理後台確認設定正確
-   → 若需強制覆蓋：管理後台 → 備份與還原 → 強制從 GitHub 還原
+   → 若需強制覆蓋：管理後台 → 系統設定 → 「⬇️ 從 GitHub 還原」（會放棄本機尚未備份的修改）
 ```
 
 ### ⚠️ GitHub Token 非常重要
