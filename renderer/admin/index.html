@@ -132,6 +132,7 @@ input:checked + .slider:before{transform:translateX(20px);}
 .toast.show{transform:translateX(0);}
 .toast.success{border-left:4px solid var(--green);}
 .toast.error{border-left:4px solid var(--red);}
+.toast.warning{border-left:4px solid #f59e0b;}
 .status-grid{display:grid;grid-template-columns:1fr;gap:24px;padding-bottom:40px;}
 .room-row{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;}
 .room-name{font-size:16px;font-weight:800;color:var(--accent);}
@@ -577,8 +578,31 @@ var tenantFloorList = []; // 業戶別下拉選單資料來源，獨立於水牌
 function toast(msg, type) {
   var el = $('toast'); if(!el) return;
   el.innerText = msg; el.className = 'toast '+(type||'success')+' show';
-  setTimeout(function(){ if(el) el.classList.remove('show'); }, 3000);
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ if(el) el.classList.remove('show'); }, type==='error' ? 8000 : 3000);
 }
+
+/* 輸入框有使用者還沒存的內容時（dataset.dirty），定時重繪與雲端同步都不要覆蓋它 */
+document.addEventListener('input', function(e){
+  if (e.target && e.target.id && /^marquee(V)?Input$/.test(e.target.id)) e.target.dataset.dirty = '1';
+});
+function syncInput(el, val) {
+  if (el && el.dataset.dirty !== '1') el.value = val;
+}
+
+/* 存檔失敗（例如瀏覽器儲存空間滿了）時明確告知，並讓後續的「已儲存」流程不要執行 */
+(function(){
+  var rawSave = window.api.save;
+  window.api.save = function(key, data, opts) {
+    return rawSave(key, data, opts).then(function(r){
+      if (!r || !r.ok) {
+        toast('❌ 儲存失敗：瀏覽器儲存空間不足或被封鎖，這次修改沒有存下來', 'error');
+        throw new Error('api.save failed: ' + key);
+      }
+      return r;
+    });
+  };
+})();
 
 // Tabs
 function showTab(name) {
@@ -793,7 +817,7 @@ function isAnnActive(a) {
 
 function renderAnnouncements() {
   var body=$('annBody'); if(!body) return;
-  if($('marqueeInput')) $('marqueeInput').value=announcements.marquee||'';
+  syncInput($('marqueeInput'), announcements.marquee||'');
   var html='', list=announcements.list||[];
   for(var i=0;i<list.length;i++){
     var a=list[i];
@@ -831,7 +855,7 @@ function moveAnn(id, dir, dataset) {
 
 function renderAnnouncementsV() {
   var body=$('annVBody'); if(!body) return;
-  if($('marqueeVInput')) $('marqueeVInput').value=announcementsV.marquee||'';
+  syncInput($('marqueeVInput'), announcementsV.marquee||'');
   var html='', list=announcementsV.list||[];
   for(var i=0;i<list.length;i++){
     var a=list[i];
@@ -853,7 +877,7 @@ function renderAnnouncementsV() {
 
 function saveMarqueeV() {
   announcementsV.marquee=$('marqueeVInput').value;
-  window.api.save('announcements_v', announcementsV).then(function(){ toast('跑馬燈已存'); triggerBackup(); });
+  window.api.save('announcements_v', announcementsV).then(function(){ delete $('marqueeVInput').dataset.dirty; toast('跑馬燈已存'); triggerBackup(); });
 }
 
 /* ── 公告圖片上傳（GitHub API） ───────────────────────────────── */
@@ -1507,8 +1531,9 @@ function loadAll() {
       tenantFloorList = (res[3] && res[3].length) ? res[3] : window.FloorData.DEFAULT_FLOORS.map(function(f){
         return { floor:f.floor, company:f.company || '' };
       });
-      // 把 api.js 合併後的 settings（含新視窗）存回 localStorage，確保視窗清單是最新的
-      window.api.save('settings', settings);
+      // 把 api.js 合併後的 settings（含新視窗）存回 localStorage，確保視窗清單是最新的。
+      // silent：這不是使用者修改，不要標成待備份；讀取失敗（res[2] 為空）時絕不能拿預設值去覆蓋
+      if(res[2]) window.api.save('settings', settings, { silent: true });
       if($('topCommunity')) $('topCommunity').innerText=settings.communityName||'社區管理系統';
       renderAnnouncements();
       loadSettingsForm();
@@ -1555,7 +1580,7 @@ function saveSettings() {
 
 function saveMarquee() {
   announcements.marquee=$('marqueeInput').value;
-  window.api.save('announcements',announcements).then(function(){ toast('跑馬燈已存'); triggerBackup(); });
+  window.api.save('announcements',announcements).then(function(){ delete $('marqueeInput').dataset.dirty; toast('跑馬燈已存'); triggerBackup(); });
 }
 
 /* ── GitHub 備份 ─────────────────────────────────────────────────────── */
@@ -1604,16 +1629,28 @@ function doForceRestore() {
   });
 }
 
+/* 連續操作（例如連按上移/下移）在 2 秒內合併成一次備份，
+   避免一次操作產生好幾個 backup commit、互相搶 sha 造成 409 */
+var _backupTimer = null;
 function triggerBackup() {
   if(!window.ghBackup.token()){
     setGhStatus('warn','⚠️ 未設定 GitHub Token，資料僅存本機');
-    toast('⚠️ 未設定 GitHub Token，公告只存在這台電腦','warning');
+    toast('⚠️ 未設定 GitHub Token，修改只存在這台電腦','warning');
     return;
   }
-  window.ghBackup.save().then(function(r){
-    if(r.ok) setGhStatus('ok','✅ 自動備份：'+new Date().toLocaleTimeString('zh-TW'));
-    else      setGhStatus('err','❌ 自動備份失敗');
-  });
+  setGhStatus('warn','⏳ 準備備份…');
+  clearTimeout(_backupTimer);
+  _backupTimer = setTimeout(function(){
+    window.ghBackup.save().then(function(r){
+      if(r.ok) {
+        setGhStatus('ok','✅ 自動備份：'+new Date().toLocaleTimeString('zh-TW'));
+      } else {
+        setGhStatus('err','❌ 自動備份失敗');
+        toast('❌ 備份到 GitHub 失敗' + (r.status ? '（' + r.status + '）' : '') +
+              '：修改仍保存在這台電腦，下次存檔會再試；若持續失敗請檢查 Token', 'error');
+      }
+    });
+  }, 2000);
 }
 
 function closeModal() {
@@ -1914,9 +1951,23 @@ function copyBat() {
 
   // 每分鐘自動刷新公告狀態欄（待發布 / 顯示中 / 已結束）
   setInterval(function(){
+    if ($('modalBackdrop') && $('modalBackdrop').classList.contains('open')) return; // 編輯視窗開著時不重繪
     renderAnnouncements();
     renderAnnouncementsV();
   }, 60000);
+
+  /* 正在看「系統設定」或「水牌管理」分頁時，雲端同步來的新資料先暫存，
+     離開分頁時才套用，避免把使用者還沒按儲存的輸入洗掉 */
+  var _pendingRemote = {};
+  function tabVisible(name) { var p = $('tab-' + name); return p && p.style.display !== 'none'; }
+  var _origShowTab = showTab;
+  showTab = function(name) {
+    var prev = ['settings','floors'].filter(tabVisible);
+    _origShowTab(name);
+    prev.forEach(function(t){
+      if (t !== name && _pendingRemote[t]) { var fn = _pendingRemote[t]; delete _pendingRemote[t]; fn(); }
+    });
+  };
 
   /* 背景輪詢（每分鐘檢查 GitHub 是否有新版本）偵測到更新時，
      只會靜默寫入 localStorage，畫面上顯示的列表不會自動跟著換新。
@@ -1924,19 +1975,29 @@ function copyBat() {
      這個分頁也能自動反映出來，不用手動按「強制從 GitHub 還原」。 */
   window.api.on('announcements:updated', function(d){ announcements = d; renderAnnouncements(); });
   window.api.on('announcements_v:updated', function(d){ announcementsV = d; renderAnnouncementsV(); });
-  window.api.on('settings:updated', function(d){
-    settings = d;
-    if ($('topCommunity')) $('topCommunity').innerText = settings.communityName || '社區管理系統';
-    loadSettingsForm();
+  window.api.on('settings:updated', function(d, meta){
+    if (meta && meta.source === 'local') return; // 本分頁自己存的，各存檔函式已自行更新畫面
+    function apply(){
+      settings = d;
+      if ($('topCommunity')) $('topCommunity').innerText = settings.communityName || '社區管理系統';
+      loadSettingsForm();
+    }
+    if (tabVisible('settings')) { _pendingRemote.settings = apply; toast('雲端有新的系統設定，離開此分頁後套用', 'warning'); }
+    else apply();
   });
-  window.api.on('floors:updated', function(d){
-    floorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
-      return { floor:f.floor, company:f.company || '', group:f.group || '' };
-    });
-    tenantFloorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
-      return { floor:f.floor, company:f.company || '' };
-    });
-    renderFloors();
+  window.api.on('floors:updated', function(d, meta){
+    if (meta && meta.source === 'local') return;
+    function apply(){
+      floorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
+        return { floor:f.floor, company:f.company || '', group:f.group || '' };
+      });
+      tenantFloorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
+        return { floor:f.floor, company:f.company || '' };
+      });
+      renderFloors();
+    }
+    if (tabVisible('floors')) { _pendingRemote.floors = apply; toast('雲端有新的水牌資料，離開此分頁後套用', 'warning'); }
+    else apply();
   });
 })();
 </script>

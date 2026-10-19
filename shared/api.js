@@ -90,17 +90,40 @@
   /* ── Event bus ────────────────────────────────────────────────────────── */
   const listeners = Object.create(null);
 
+  // source：'local'＝本分頁自己 api.save；'remote'＝雲端輪詢或其他分頁寫入
+  function emit(key, data, source) {
+    const cbs = listeners[key + ':updated'];
+    if (cbs) cbs.forEach(function (cb) { try { cb(data, { source: source }); } catch (e) { console.error(e); } });
+  }
+
+  // 其他分頁 / 同源 iframe 寫入 localStorage 時，瀏覽器會自動送真正的 storage 事件過來。
+  // 本分頁自己的寫入由 api.save / poll 直接呼叫 emit()，不再額外派送合成事件
+  // （以前兩條路都會觸發，同一個監聽器每次更新跑兩遍）。
   window.addEventListener('storage', function (e) {
-    if (!e.key || !e.key.startsWith(PREFIX)) return;
+    if (!e.key || e.key.indexOf(PREFIX) !== 0 || !e.newValue) return;
     const dataKey = e.key.slice(PREFIX.length);
-    const cbs = listeners[dataKey + ':updated'];
-    if (cbs && e.newValue) {
-      try {
-        const data = JSON.parse(e.newValue);
-        cbs.forEach(function (cb) { cb(data); });
-      } catch (ex) { /* ignore */ }
-    }
+    if (DATA_KEYS.indexOf(dataKey) === -1) return;
+    try { emit(dataKey, JSON.parse(e.newValue), 'remote'); } catch (ex) { /* ignore */ }
   });
+
+  /* ── 尚未備份的本機修改（dirty） ─────────────────────────────────────────
+     api.save 改了資料就記下 key 與時間；備份成功後才清掉。
+     輪詢到雲端新版時，dirty 的 key 不會被覆蓋，避免剛存的編輯被舊版蓋回去。 */
+  const GH_DIRTY_KEY = 'bbs_gh_dirty';
+  function getDirty() {
+    try { return JSON.parse(localStorage.getItem(GH_DIRTY_KEY) || '{}') || {}; } catch (e) { return {}; }
+  }
+  function setDirty(map) {
+    try {
+      if (Object.keys(map).length) localStorage.setItem(GH_DIRTY_KEY, JSON.stringify(map));
+      else localStorage.removeItem(GH_DIRTY_KEY);
+    } catch (e) { /* ignore */ }
+  }
+  function markDirty(key) {
+    const m = getDirty();
+    m[key] = Date.now();
+    setDirty(m);
+  }
 
   /* ── GitHub 備份模組 ──────────────────────────────────────────────────── */
   const GH_REPO = 'tpower1060601-sudo/community-bulletin-board';
@@ -112,63 +135,96 @@
   window.ghBackup = {
     _api: 'https://api.github.com/repos/' + GH_REPO + '/contents/' + GH_FILE,
     _raw: 'https://raw.githubusercontent.com/' + GH_REPO + '/main/' + GH_FILE,
+    // raw.githubusercontent.com 有流量限制（會 429），失敗時改讀 GitHub Pages（約晚 1~2 分鐘部署）
+    _pages: 'https://tpower1060601-sudo.github.io/community-bulletin-board/' + GH_FILE,
 
     token: function () { return localStorage.getItem(GH_TOKEN_KEY) || ''; },
     setToken: function (t) { localStorage.setItem(GH_TOKEN_KEY, t); },
     lastBackup: function () { return localStorage.getItem(GH_LAST_KEY) || ''; },
+    /** 有沒有還沒成功備份的本機修改 */
+    hasPending: function () { return Object.keys(getDirty()).length > 0; },
 
-    /** 從 GitHub 讀取備份（公開 raw URL，不需 token） */
+    /** 從 GitHub 讀取備份（公開網址，不需 token） */
     load: function () {
-      return fetch(this._raw + '?t=' + Date.now())
-        .then(function (r) { return r.ok ? r.json() : null; })
-        .catch(function () { return null; });
+      var self = this;
+      function get(url) {
+        return fetch(url + '?t=' + Date.now(), { cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; });
+      }
+      return get(self._raw).then(function (b) { return b || get(self._pages); });
     },
 
-    /** 把所有 bbs_ 資料寫入 GitHub data/backup.json */
+    /** 把所有 bbs_ 資料寫入 GitHub data/backup.json。
+     *  同一時間只會有一個上傳在跑；跑的期間再呼叫會排在後面合併成一次。 */
     save: function () {
+      var self = this;
+      if (self._running) {
+        if (!self._queued) {
+          self._queued = self._running.then(function () {
+            self._queued = null;
+            return self.save();
+          });
+        }
+        return self._queued;
+      }
+      self._running = self._saveOnce().then(function (r) {
+        self._running = null;
+        return r;
+      });
+      return self._running;
+    },
+
+    _saveOnce: function () {
       var self = this;
       var token = this.token();
       if (!token) return Promise.resolve({ ok: false, reason: 'no-token' });
 
+      var dirtyAtStart = getDirty();
       var allData = { _savedAt: new Date().toISOString() };
       DATA_KEYS.forEach(function (k) {
         var v = localStorage.getItem(PREFIX + k);
         if (v) { try { allData[k] = JSON.parse(v); } catch (e) {} }
       });
-
       var content = btoa(unescape(encodeURIComponent(JSON.stringify(allData, null, 2))));
+      var headers = { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' };
 
-      // 先取得現有檔案 SHA（更新檔案用）
-      return fetch(self._api, {
-        headers: { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github.v3+json' }
-      })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .catch(function () { return null; })
-      .then(function (existing) {
-        var body = {
-          message: 'backup: ' + new Date().toISOString(),
-          content: content
-        };
-        if (existing && existing.sha) body.sha = existing.sha;
+      function attempt(retriesLeft) {
+        // sha 一定要拿最新的（no-store），否則別台電腦剛推過時會拿到舊 sha → 409
+        return fetch(self._api + '?t=' + Date.now(), { headers: headers, cache: 'no-store' })
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; })
+          .then(function (existing) {
+            var body = { message: 'backup: ' + allData._savedAt, content: content };
+            if (existing && existing.sha) body.sha = existing.sha;
+            return fetch(self._api, {
+              method: 'PUT',
+              headers: Object.assign({ 'Content-Type': 'application/json' }, headers),
+              body: JSON.stringify(body)
+            });
+          })
+          .then(function (r) {
+            if (r.ok) return { ok: true };
+            // 409/422：sha 過期（另一個上傳剛完成），重新取 sha 再試
+            if ((r.status === 409 || r.status === 422) && retriesLeft > 0) return attempt(retriesLeft - 1);
+            return { ok: false, status: r.status };
+          });
+      }
 
-        return fetch(self._api, {
-          method: 'PUT',
-          headers: {
-            'Authorization': 'token ' + token,
-            'Content-Type': 'application/json',
-            'Accept': 'application/vnd.github.v3+json'
-          },
-          body: JSON.stringify(body)
-        });
-      })
-      .then(function (r) {
-        if (r && r.ok) {
+      return attempt(2).then(function (res) {
+        if (res.ok) {
           localStorage.setItem(GH_LAST_KEY, new Date().toISOString());
-          return { ok: true };
+          // 這份就是雲端最新版，輪詢看到同一個 _savedAt 就不會再把它當新版本套回來
+          localStorage.setItem(GH_KNOWN_AT_KEY, allData._savedAt);
+          // 只清掉這次已經上傳的修改；上傳期間又改過的 key 保留 dirty
+          var now = getDirty();
+          Object.keys(dirtyAtStart).forEach(function (k) {
+            if (now[k] === dirtyAtStart[k]) delete now[k];
+          });
+          setDirty(now);
         }
-        return { ok: false, status: r ? r.status : 0 };
-      })
-      .catch(function (e) { return { ok: false, reason: e.message }; });
+        return res;
+      }).catch(function (e) { return { ok: false, reason: e.message }; });
     },
 
     /** 如果 localStorage 完全沒有資料，從 GitHub 自動還原 */
@@ -183,22 +239,25 @@
         DATA_KEYS.forEach(function (k) {
           if (backup[k]) localStorage.setItem(PREFIX + k, JSON.stringify(backup[k]));
         });
+        if (backup._savedAt) localStorage.setItem(GH_KNOWN_AT_KEY, backup._savedAt);
         return { restored: true, savedAt: backup._savedAt || '' };
       });
     },
 
-    /** 強制從 GitHub 覆蓋本地資料（手動還原） */
+    /** 強制從 GitHub 覆蓋本地資料（手動還原，會放棄尚未備份的修改） */
     forceRestore: function () {
       return this.load().then(function (backup) {
         if (!backup) return { restored: false };
         DATA_KEYS.forEach(function (k) {
           if (backup[k]) localStorage.setItem(PREFIX + k, JSON.stringify(backup[k]));
         });
+        setDirty({});
+        if (backup._savedAt) localStorage.setItem(GH_KNOWN_AT_KEY, backup._savedAt);
         return { restored: true, savedAt: backup._savedAt || '' };
       });
     },
 
-    /** 自動輪詢 GitHub，偵測新版本後自動還原並廣播更新 */
+    /** 自動輪詢 GitHub，偵測新版本後只套用「有變動」的資料、只通知那些 key */
     startAutoPoll: function (intervalMs) {
       var self = this;
       intervalMs = intervalMs || 60000;
@@ -209,25 +268,20 @@
           var known = localStorage.getItem(GH_KNOWN_AT_KEY) || '';
           if (backup._savedAt === known) return;
 
-          // 有新版本，還原所有資料並廣播更新
-          console.log('[api] 偵測到 GitHub 新版本：' + backup._savedAt + '，自動同步…');
+          var dirty = getDirty();
+          var applied = [];
           DATA_KEYS.forEach(function (k) {
             if (backup[k] == null) return;
-            localStorage.setItem(PREFIX + k, JSON.stringify(backup[k]));
-            // 觸發 on() 監聽器
-            var cbs = listeners[k + ':updated'];
-            if (cbs) cbs.forEach(function (cb) { try { cb(backup[k]); } catch (e) {} });
-            // 觸發跨分頁 storage 事件（同頁分頁同步用）
-            try {
-              window.dispatchEvent(new StorageEvent('storage', {
-                key: PREFIX + k,
-                newValue: JSON.stringify(backup[k]),
-                storageArea: localStorage,
-              }));
-            } catch (e) {}
+            if (dirty[k]) return; // 本機有還沒備份的修改，不要用雲端版本蓋掉
+            var next = JSON.stringify(backup[k]);
+            if (localStorage.getItem(PREFIX + k) === next) return; // 沒變就不通知，畫面不必重載
+            try { localStorage.setItem(PREFIX + k, next); } catch (e) { console.error('[api] localStorage write error:', e); return; }
+            applied.push(k);
+            emit(k, backup[k], 'remote');
           });
           localStorage.setItem(GH_KNOWN_AT_KEY, backup._savedAt);
-        }).catch(function () {});
+          if (applied.length) console.log('[api] 已套用 GitHub 新版本 ' + backup._savedAt + '：' + applied.join(', '));
+        }).catch(function (e) { console.error('[api] poll error:', e); });
       }
 
       setInterval(poll, intervalMs);
@@ -245,19 +299,13 @@
       return Promise.resolve(lsGet(key));
     },
 
-    save: function (key, data) {
+    /** opts.silent：只寫入本機（例如補上新視窗清單），不算使用者修改、不通知監聽器 */
+    save: function (key, data, opts) {
+      const changed = localStorage.getItem(PREFIX + key) !== JSON.stringify(data);
       const ok = lsSet(key, data);
-      if (ok) {
-        const cbs = listeners[key + ':updated'];
-        if (cbs) cbs.forEach(function (cb) { cb(data); });
-
-        try {
-          window.dispatchEvent(new StorageEvent('storage', {
-            key: PREFIX + key,
-            newValue: JSON.stringify(data),
-            storageArea: localStorage,
-          }));
-        } catch (e) { /* ignore */ }
+      if (ok && !(opts && opts.silent)) {
+        if (changed) markDirty(key);
+        emit(key, data, 'local');
       }
       return Promise.resolve({ ok: ok });
     },
