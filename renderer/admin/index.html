@@ -1624,14 +1624,18 @@ function closeModal() {
 // Web-mode login (localStorage password check)
 function doLogin() {
   var pw=$('loginPw').value;
-  var stored=settings.adminPassword||'admin';
-  if(pw===stored){
-    sessionStorage.setItem('adm_auth','1');
-    $('loginOverlay').classList.remove('open');
-    loadAll();
-  } else {
-    $('loginErr').innerText='密碼錯誤';
-  }
+  /* 登入前 settings 還是預設值 {windows:[]}，必須先讀出已存的設定，
+     否則後台改過的密碼永遠不會被比對，只認 'admin' */
+  window.api.get('settings').then(function(saved){
+    var stored=(saved && saved.adminPassword) || 'admin';
+    if(pw===stored){
+      sessionStorage.setItem('adm_auth','1');
+      $('loginOverlay').classList.remove('open');
+      loadAll();
+    } else {
+      $('loginErr').innerText='密碼錯誤';
+    }
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
