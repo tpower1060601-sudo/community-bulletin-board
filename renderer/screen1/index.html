@@ -188,6 +188,9 @@ html, body {
   letter-spacing:2px; line-height:1.9;
   overflow:hidden;
 }
+/* 後台公告是富文字（execCommand 產生的 font/span）。保留粗體與顏色，
+   字級一律跟版面走，避免 <font size=7> 撐爆 34px 的設計 */
+.ac-content * { font-size:inherit !important; line-height:inherit !important; }
 .ac-dots {
   display:flex; gap:12px; margin-top:40px;
 }
@@ -376,7 +379,8 @@ let _rawAnnList=[];   // 完整清單（含未到期、已結束），用於排�
 /* ── 排程過濾 ── */
 function rocToWestern(d){ var p=d.split('-'),y=+p[0]; return (y<1900?y+1911:y)+'-'+p[1]+'-'+p[2]; }
 function isAnnActive(a){
-  if(a.alwaysValid!==false) return true;
+  if(a.alwaysValid!==false && !a.startDate) return true;
+  if(a.alwaysValid) return true;
   const now=Date.now();
   const start=a.startDate?new Date(rocToWestern(a.startDate)+'T'+(a.startTime||'00:00')).getTime():0;
   const end  =a.endDate  ?new Date(rocToWestern(a.endDate)  +'T'+(a.endTime  ||'23:59:59')).getTime():Infinity;
@@ -384,7 +388,21 @@ function isAnnActive(a){
 }
 function filterActive(list){ return (list||[]).filter(isAnnActive); }
 
+// 公告內容：後台存的是 HTML（富文字）；舊資料可能是純文字，照舊跳脫並把換行轉 <br>
+function annBodyHtml(content){
+  const c=content||'';
+  // 有些公告是 HTML 混著換行字元，換行一樣轉成 <br>
+  return (/<[a-z][\s\S]*>/i.test(c) ? c : escHtml(c)).replace(/\n/g,'<br>');
+}
+
+let _annSig='';
 function renderAnnouncements(list){
+  // 每分鐘的排程重新過濾會呼叫這裡；清單沒變就不要重建，否則輪播每 60 秒被歸零，
+  // 一輪超過 60 秒的公告（例如 6 則 × 15 秒）後面幾則永遠輪不到
+  const sig=JSON.stringify(list||[]);
+  if(sig===_annSig) return;
+  _annSig=sig;
+  const prevId=(annList[annIdx]||{}).id;
   hasAnn = list && list.length > 0;
   document.getElementById('ann-area').innerHTML='';
   document.getElementById('identity-area').classList.toggle('show',!hasAnn);
@@ -395,7 +413,7 @@ function renderAnnouncements(list){
   document.getElementById('ann-area').innerHTML = list.map((ann,i)=>{
     const img=ann.imageUrl||ann.image||'';
     const title=escHtml(ann.title||'');
-    const body=escHtml(ann.content||'').replace(/\n/g,'<br>');
+    const body=annBodyHtml(ann.content);
     const dots=list.map((_,j)=>`<div class="ac-dot${j===0?' active':''}" id="acd_${i}_${j}"></div>`).join('');
     if(img){
       return `<div class="ann-card${i===0?' active':''}" id="ac${i}">
@@ -419,7 +437,10 @@ function renderAnnouncements(list){
     }
   }).join('');
 
+  // 內容有變動時，盡量停在原本正在顯示的那則公告
+  const keep=list.findIndex(a=>a.id!=null && a.id===prevId);
   annIdx=0;
+  if(keep>0){ annIdx=keep-1; nextAnn(); }
   resetPbar(annInterval);
   if(annTimer)clearInterval(annTimer);
   annTimer=setInterval(nextAnn, annInterval);
@@ -446,6 +467,7 @@ function nextAnn(){
 let newsIdx=0, newsTimer=null, schedTimer=null;
 function renderNews(list){
   const wrap=document.getElementById('newsWrap');
+  if(!wrap) return; // 快訊區塊已隨底部列一起移除
   if(!list||!list.length){
     wrap.innerHTML='<div class="news-item active">歡迎蒞臨親家市政廣場，祝您工作愉快！</div>';
     return;
@@ -469,6 +491,9 @@ function renderNews(list){
 ──────────────────────────────────────────────────── */
 function setMarquee(text){
   const t=text||'歡迎光臨親家市政廣場';
+  // 底部跑馬燈已在 d044f97 移除；元素不存在時直接略過，否則 init 在這裡拋錯，
+  // 後面的公告整段都不會顯示
+  if(!document.getElementById('mseg1')) return;
   document.getElementById('mseg1').textContent=t;
   document.getElementById('mseg2').textContent=t;
   const dur=Math.max(20,t.length*0.5);
