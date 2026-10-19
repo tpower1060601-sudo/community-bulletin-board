@@ -79,12 +79,6 @@ td{padding:14px;border-bottom:1px solid var(--border);font-size:14px;}
 input:checked + .slider{background-color:var(--accent);}
 input:checked + .slider:before{transform:translateX(20px);}
 
-#bookingCards{display:grid;grid-template-columns:repeat(auto-fill, minmax(350px, 1fr));gap:20px;}
-.booking-item{display:flex;align-items:center;gap:16px;padding:12px 16px;border-radius:12px;background:rgba(15,23,42,0.5);margin-bottom:10px;border-left:4px solid var(--accent);}
-.booking-time{font-size:14px;font-weight:700;color:var(--accent);min-width:100px;}
-.booking-info{flex:1;}
-.booking-topic{font-size:15px;font-weight:600;}
-.booking-person{font-size:12px;color:var(--text2);}
 
 .modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
 .modal-backdrop.open{display:flex;}
@@ -133,8 +127,6 @@ input:checked + .slider:before{transform:translateX(20px);}
 .toast.success{border-left:4px solid var(--green);}
 .toast.error{border-left:4px solid var(--red);}
 .toast.warning{border-left:4px solid #f59e0b;}
-.status-grid{display:grid;grid-template-columns:1fr;gap:24px;padding-bottom:40px;}
-.room-row{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px;}
 .room-name{font-size:16px;font-weight:800;color:var(--accent);}
 .win-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
 .win-card{background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;}
@@ -239,12 +231,6 @@ input:checked + .slider:before{transform:translateX(20px);}
       </div>
     </div>
 
-    <!-- Status -->
-    <div id="tab-status" style="display:none">
-      <div class="page-header"><div class="page-title">即時<span>狀態</span></div><div id="statusDate"></div></div>
-      <div class="status-grid" id="statusGrid"></div>
-    </div>
-
     <!-- News & Windows -->
     <div id="tab-news" style="display:none">
       <div class="page-header"><div class="page-title">視窗與<span>媒體</span></div><button class="btn btn-success" onclick="saveSettings()">儲存配置</button></div>
@@ -291,16 +277,6 @@ input:checked + .slider:before{transform:translateX(20px);}
         <div class="form-row">
           <div class="form-group"><label>天氣 API Key（OpenWeather，備用）</label><input type="text" id="sWeatherApiKey"></div>
           <div class="form-group"><label>城市（英文，OpenWeather 備用）</label><input type="text" id="sWeatherCity"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>FMP Key 1（<a href="https://financialmodelingprep.com/developer/docs" target="_blank" style="color:var(--accent)">Financial Modeling Prep</a>）</label><input type="text" id="sFmpKey1" placeholder="第 1 組 FMP API Key"></div>
-          <div class="form-group"><label>FMP Key 2</label><input type="text" id="sFmpKey2" placeholder="第 2 組 FMP API Key"></div>
-          <div class="form-group"><label>FMP Key 3</label><input type="text" id="sFmpKey3" placeholder="第 3 組 FMP API Key"></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Twelve Data Key 1（<a href="https://twelvedata.com" target="_blank" style="color:var(--accent)">Twelve Data</a>）</label><input type="text" id="sTdKey1" placeholder="第 1 組 API Key"></div>
-          <div class="form-group"><label>Twelve Data Key 2</label><input type="text" id="sTdKey2" placeholder="第 2 組 API Key"></div>
-          <div class="form-group"><label>Twelve Data Key 3</label><input type="text" id="sTdKey3" placeholder="第 3 組 API Key"></div>
         </div>
         <div class="card">
           <div class="card-title">🏢 會議室網址設定</div>
@@ -572,7 +548,6 @@ var announcements  = { marquee:'', list:[] };
 var announcementsV = { marquee:'', list:[] };
 var settings       = { windows:[] };
 var _annDataset    = 'announcements'; // 目前 modal 操作的資料集
-var tenantFloorList = []; // 業戶別下拉選單資料來源，獨立於水牌管理分頁的 floorList，主動在 loadAll() 載入
 
 // Toast
 function toast(msg, type) {
@@ -606,7 +581,7 @@ function syncInput(el, val) {
 
 // Tabs
 function showTab(name) {
-  ['announcements','annv','status','news','settings','layout','floors'].forEach(function(t){
+  ['announcements','annv','news','settings','layout','floors'].forEach(function(t){
     var p=$('tab-'+t), n=$('nav-'+t);
     if(p) p.style.display=(t===name?'':'none');
     if(n) n.classList.toggle('active', t===name);
@@ -1523,12 +1498,6 @@ function loadSettingsForm() {
   if($('sCommunityName')) $('sCommunityName').value=settings.communityName||'';
   if($('sCwaKey'))        $('sCwaKey').value=settings.cwaKey||'';
   if($('sWeatherApiKey'))    $('sWeatherApiKey').value=settings.weatherApiKey||'';
-  if($('sFmpKey1'))  $('sFmpKey1').value=settings.fmpKey1||'';
-  if($('sFmpKey2'))  $('sFmpKey2').value=settings.fmpKey2||'';
-  if($('sFmpKey3'))  $('sFmpKey3').value=settings.fmpKey3||'';
-  if($('sTdKey1'))   $('sTdKey1').value=settings.tdKey1||'';
-  if($('sTdKey2'))   $('sTdKey2').value=settings.tdKey2||'';
-  if($('sTdKey3'))   $('sTdKey3').value=settings.tdKey3||'';
   if($('sWeatherCity'))   $('sWeatherCity').value=settings.weatherCity||'';
   if($('sSlideInterval')) $('sSlideInterval').value=settings.slideInterval||6;
   if($('sMeetingsUrl'))   $('sMeetingsUrl').value=settings.meetingsUrl||'';
@@ -1576,9 +1545,6 @@ function loadAll() {
       if(res[0]) announcements=res[0];
       if(res[1]) announcementsV=res[1];
       if(res[2]) settings=res[2];
-      tenantFloorList = (res[3] && res[3].length) ? res[3] : window.FloorData.DEFAULT_FLOORS.map(function(f){
-        return { floor:f.floor, company:f.company || '' };
-      });
       // 把 api.js 合併後的 settings（含新視窗）存回 localStorage，確保視窗清單是最新的。
       // silent：這不是使用者修改，不要標成待備份；讀取失敗（res[2] 為空）時絕不能拿預設值去覆蓋
       if(res[2]) window.api.save('settings', settings, { silent: true });
@@ -1592,12 +1558,8 @@ function saveSettings() {
   settings.communityName=($('sCommunityName')||{}).value||settings.communityName;
   settings.cwaKey=($('sCwaKey')||{}).value||'';
   settings.weatherApiKey=($('sWeatherApiKey')||{}).value||'';
-  settings.fmpKey1=($('sFmpKey1')||{}).value||'';
-  settings.fmpKey2=($('sFmpKey2')||{}).value||'';
-  settings.fmpKey3=($('sFmpKey3')||{}).value||'';
-  settings.tdKey1=($('sTdKey1')||{}).value||'';
-  settings.tdKey2=($('sTdKey2')||{}).value||'';
-  settings.tdKey3=($('sTdKey3')||{}).value||'';
+  // screen3/screen12 已改用 TradingView 嵌入，FMP / Twelve Data 金鑰不再使用，存檔時一併從設定（與公開備份）移除
+  ['fmpKey1','fmpKey2','fmpKey3','tdKey1','tdKey2','tdKey3','twelveDataKey'].forEach(function(k){ delete settings[k]; });
   settings.weatherCity=($('sWeatherCity')||{}).value||'';
   settings.slideInterval=parseInt(($('sSlideInterval')||{}).value)||6;
   settings.adminPort=parseInt(($('sAdminPort')||{}).value)||8080;
@@ -2045,9 +2007,6 @@ function copyBat() {
     function apply(){
       floorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
         return { floor:f.floor, company:f.company || '', group:f.group || '' };
-      });
-      tenantFloorList = (d && d.length) ? d : window.FloorData.DEFAULT_FLOORS.map(function(f){
-        return { floor:f.floor, company:f.company || '' };
       });
       renderFloors();
     }
