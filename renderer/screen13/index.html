@@ -201,6 +201,7 @@ const TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活�
 let data = { marquee:'', list:[] };
 let current = 0, timer = null, schedTimer = null;
 let activeList = [];
+let lastSig = null;   // 上次渲染的公告內容簽章
 
 function getDuration(idx) {
   const a = activeList[idx];
@@ -235,9 +236,11 @@ function render() {
   const dotsEl   = document.getElementById('dots');
 
   // 比較新舊清單 ID 是否有變化，沒變化就不重建 DOM、不重置輪播位置
-  const newIds = active.map(a => a.id).join(',');
-  const oldIds = activeList.map(a => a.id).join(',');
-  if (newIds === oldIds) return;  // 完全相同 → 不重置
+  // 比對整份內容（不只 id）：只改標題/內容/圖片/秒數時 id 不變，舊寫法會誤判沒變而不更新。
+  // lastSig 初始為 null，首次載入就沒有公告時也會走到「暫無公告」。
+  const sig = JSON.stringify(active);
+  if (sig === lastSig) return;  // 完全相同 → 不重置
+  lastSig = sig;
 
   if (!active.length) {
     slidesEl.innerHTML = '<div style="color:rgba(255,255,255,.2);font-size:40px;text-align:center;margin-top:40%">暫無公告</div>';
