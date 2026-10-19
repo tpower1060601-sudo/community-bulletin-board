@@ -116,91 +116,6 @@ html, body {
 }
 
 /* ══════════════════════════════
-   中央公告區
-══════════════════════════════ */
-#ann-area {
-  position:fixed; z-index:15;
-  top:140px; left:80px; right:80px; bottom:160px;
-  display:flex; align-items:center; justify-content:center;
-  pointer-events:none;
-}
-
-/* 公告卡片 */
-.ann-card {
-  position:absolute; inset:0;
-  display:flex; gap:0;
-  opacity:0; transition:opacity 1.2s ease;
-  pointer-events:none;
-}
-.ann-card.active { opacity:1; }
-
-/* 有圖版：左圖右文 */
-.ac-img {
-  width:780px; flex-shrink:0; border-radius:20px 0 0 20px; overflow:hidden;
-  box-shadow:0 0 60px rgba(0,0,0,0.7);
-}
-.ac-img img {
-  width:100%; height:100%; object-fit:cover;
-  transition:transform 12s ease-in-out;
-}
-.ann-card.active .ac-img img { transform:scale(1.07); }
-
-.ac-body {
-  flex:1;
-  background:rgba(2,6,23,0.88);
-  backdrop-filter:blur(16px);
-  border:1px solid rgba(245,158,11,0.25);
-  border-left:none;
-  border-radius:0 20px 20px 0;
-  padding:60px 70px;
-  display:flex; flex-direction:column; justify-content:center;
-  box-shadow:0 0 60px rgba(0,0,0,0.7);
-}
-
-/* 無圖版：純文字寬卡 */
-.ac-body-full {
-  width:1400px;
-  background:rgba(2,6,23,0.88);
-  backdrop-filter:blur(16px);
-  border:1px solid rgba(245,158,11,0.25);
-  border-radius:20px;
-  padding:70px 100px;
-  display:flex; flex-direction:column; justify-content:center;
-  box-shadow:0 0 60px rgba(0,0,0,0.7);
-}
-
-.ac-tag {
-  display:inline-flex; align-items:center; gap:10px;
-  background:rgba(245,158,11,0.12);
-  border:1px solid rgba(245,158,11,0.35);
-  border-radius:6px; padding:6px 20px;
-  font-size:18px; letter-spacing:5px; color:var(--gold);
-  margin-bottom:28px; width:fit-content;
-}
-.ac-title {
-  font-size:64px; font-weight:900; color:#fff;
-  letter-spacing:4px; line-height:1.25;
-  margin-bottom:30px;
-  text-shadow:0 2px 10px rgba(0,0,0,0.5);
-}
-.ac-content {
-  font-size:34px; color:rgba(255,255,255,0.85);
-  letter-spacing:2px; line-height:1.9;
-  overflow:hidden;
-}
-/* 後台公告是富文字（execCommand 產生的 font/span）。保留粗體與顏色，
-   字級一律跟版面走，避免 <font size=7> 撐爆 34px 的設計 */
-.ac-content * { font-size:inherit !important; line-height:inherit !important; }
-.ac-dots {
-  display:flex; gap:12px; margin-top:40px;
-}
-.ac-dot {
-  width:10px; height:10px; border-radius:50%;
-  background:rgba(255,255,255,0.2); transition:all .4s;
-}
-.ac-dot.active { width:32px; border-radius:5px; background:var(--gold); }
-
-/* ══════════════════════════════
    建案大字（無公告時）
 ══════════════════════════════ */
 #identity-area {
@@ -275,11 +190,9 @@ html, body {
   </div>
 </div>
 
-<!-- 公告區 -->
-<div id="ann-area"></div>
 
-<!-- 無公告時：建案大字 -->
-<div id="identity-area">
+<!-- 建案大字 -->
+<div id="identity-area" class="show">
   <div class="id-main" id="communityName2">親家市政廣場</div>
   <div class="id-sub">台中市西屯區・亞太新核心・七期智慧商辦</div>
 </div>
@@ -348,11 +261,13 @@ function goBg(idx){
   bgIdx=((idx%bgSlides.length)+bgSlides.length)%bgSlides.length;
   document.getElementById('bg'+bgIdx)?.classList.add('active');
   dotsEl.children[bgIdx]?.classList.add('active');
+  resetPbar(bgInterval); // 進度條跟著照片輪播走
 }
 
 function startBgTimer(){
   if(bgTimer)clearInterval(bgTimer);
   bgTimer=setInterval(()=>goBg(bgIdx+1), bgInterval);
+  resetPbar(bgInterval);
 }
 
 /* ────────────────────────────────────────────────────
@@ -370,199 +285,45 @@ function resetPbar(dur){
 }
 
 /* ────────────────────────────────────────────────────
-   公告輪播
-──────────────────────────────────────────────────── */
-let annList=[], annIdx=0, annTimer=null, annInterval=12000;
-let hasAnn=false;
-let _rawAnnList=[];   // 完整清單（含未到期、已結束），用於排程重新檢查
-
-/* ── 排程過濾 ── */
-function rocToWestern(d){ var p=d.split('-'),y=+p[0]; return (y<1900?y+1911:y)+'-'+p[1]+'-'+p[2]; }
-function isAnnActive(a){
-  if(a.alwaysValid!==false && !a.startDate) return true;
-  if(a.alwaysValid) return true;
-  const now=Date.now();
-  const start=a.startDate?new Date(rocToWestern(a.startDate)+'T'+(a.startTime||'00:00')).getTime():0;
-  const end  =a.endDate  ?new Date(rocToWestern(a.endDate)  +'T'+(a.endTime  ||'23:59:59')).getTime():Infinity;
-  return now>=start && now<=end;
-}
-function filterActive(list){ return (list||[]).filter(isAnnActive); }
-
-// 公告內容：後台存的是 HTML（富文字）；舊資料可能是純文字，照舊跳脫並把換行轉 <br>
-function annBodyHtml(content){
-  const c=content||'';
-  // 有些公告是 HTML 混著換行字元，換行一樣轉成 <br>
-  return (/<[a-z][\s\S]*>/i.test(c) ? c : escHtml(c)).replace(/\n/g,'<br>');
-}
-
-let _annSig='';
-function renderAnnouncements(list){
-  // 每分鐘的排程重新過濾會呼叫這裡；清單沒變就不要重建，否則輪播每 60 秒被歸零，
-  // 一輪超過 60 秒的公告（例如 6 則 × 15 秒）後面幾則永遠輪不到
-  const sig=JSON.stringify(list||[]);
-  if(sig===_annSig) return;
-  _annSig=sig;
-  const prevId=(annList[annIdx]||{}).id;
-  hasAnn = list && list.length > 0;
-  document.getElementById('ann-area').innerHTML='';
-  document.getElementById('identity-area').classList.toggle('show',!hasAnn);
-
-  if(!hasAnn){ resetPbar(bgInterval); return; }
-
-  annList=list; annIdx=0;
-  document.getElementById('ann-area').innerHTML = list.map((ann,i)=>{
-    const img=ann.imageUrl||ann.image||'';
-    const title=escHtml(ann.title||'');
-    const body=annBodyHtml(ann.content);
-    const dots=list.map((_,j)=>`<div class="ac-dot${j===0?' active':''}" id="acd_${i}_${j}"></div>`).join('');
-    if(img){
-      return `<div class="ann-card${i===0?' active':''}" id="ac${i}">
-        <div class="ac-img"><img src="${escAttr(img)}" alt="" loading="lazy"></div>
-        <div class="ac-body">
-          <div class="ac-tag">◆ 社區公告</div>
-          <div class="ac-title">${title}</div>
-          <div class="ac-content">${body}</div>
-          <div class="ac-dots">${dots}</div>
-        </div>
-      </div>`;
-    } else {
-      return `<div class="ann-card${i===0?' active':''}" id="ac${i}">
-        <div class="ac-body-full">
-          <div class="ac-tag">◆ 社區公告</div>
-          <div class="ac-title">${title}</div>
-          <div class="ac-content">${body}</div>
-          <div class="ac-dots">${dots}</div>
-        </div>
-      </div>`;
-    }
-  }).join('');
-
-  // 內容有變動時，盡量停在原本正在顯示的那則公告
-  const keep=list.findIndex(a=>a.id!=null && a.id===prevId);
-  annIdx=0;
-  if(keep>0){ annIdx=keep-1; nextAnn(); }
-  resetPbar(annInterval);
-  if(annTimer)clearInterval(annTimer);
-  annTimer=setInterval(nextAnn, annInterval);
-}
-
-function nextAnn(){
-  document.getElementById('ac'+annIdx)?.classList.remove('active');
-  const prevIdx=annIdx;
-  annIdx=(annIdx+1)%annList.length;
-  document.getElementById('ac'+annIdx)?.classList.add('active');
-  // 更新指示點
-  annList.forEach((_,i)=>{
-    annList.forEach((_2,j)=>{
-      const d=document.getElementById(`acd_${i}_${j}`);
-      if(d)d.classList.toggle('active',j===annIdx);
-    });
-  });
-  resetPbar(annInterval);
-}
-
-/* ────────────────────────────────────────────────────
-   快訊
-──────────────────────────────────────────────────── */
-let newsIdx=0, newsTimer=null, schedTimer=null;
-function renderNews(list){
-  const wrap=document.getElementById('newsWrap');
-  if(!wrap) return; // 快訊區塊已隨底部列一起移除
-  if(!list||!list.length){
-    wrap.innerHTML='<div class="news-item active">歡迎蒞臨親家市政廣場，祝您工作愉快！</div>';
-    return;
-  }
-  wrap.innerHTML=list.map((n,i)=>`<div class="news-item${i===0?' active':''}" id="ni${i}">${escHtml(n.title||n)}</div>`).join('');
-  if(newsTimer)clearInterval(newsTimer);
-  newsIdx=0;
-  newsTimer=setInterval(()=>{
-    const p=document.getElementById('ni'+newsIdx);
-    if(p){p.classList.remove('active');p.classList.add('exit');}
-    newsIdx=(newsIdx+1)%list.length;
-    setTimeout(()=>{
-      if(p)p.classList.remove('exit');
-      document.getElementById('ni'+newsIdx)?.classList.add('active');
-    },620);
-  },7000);
-}
-
-/* ────────────────────────────────────────────────────
-   跑馬燈
-──────────────────────────────────────────────────── */
-function setMarquee(text){
-  const t=text||'歡迎光臨親家市政廣場';
-  // 底部跑馬燈已在 d044f97 移除；元素不存在時直接略過，否則 init 在這裡拋錯，
-  // 後面的公告整段都不會顯示
-  if(!document.getElementById('mseg1')) return;
-  document.getElementById('mseg1').textContent=t;
-  document.getElementById('mseg2').textContent=t;
-  const dur=Math.max(20,t.length*0.5);
-  document.getElementById('mtrack').style.animationDuration=dur+'s';
-}
-
-/* ────────────────────────────────────────────────────
    工具
 ──────────────────────────────────────────────────── */
-function escHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);}
 function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
 
 /* ────────────────────────────────────────────────────
    初始化
+   screen1 只做建築照片輪播＋建案名稱，不顯示公告（2026-10-19 依使用者要求移除）。
+   公告請用 screen2（橫式）或 screen13（直立）。
 ──────────────────────────────────────────────────── */
+function setCommunityName(name){
+  if(!name) return;
+  document.getElementById('communityName').textContent=name;
+  document.getElementById('communityName2').textContent=name;
+}
+
 async function init(){
   if(window.ghBackup) await window.ghBackup.autoRestore();
-  const [ann,sett,news]=await Promise.all([
-    window.api.get('announcements'),
-    window.api.get('settings'),
-    window.api.get('news')
-  ]);
+  const sett=await window.api.get('settings');
 
-  if(sett.communityName){
-    document.getElementById('communityName').textContent=sett.communityName;
-    document.getElementById('communityName2').textContent=sett.communityName;
-  }
-
-  annInterval=(sett.slideInterval||12)*1000;
-  bgInterval=annInterval;
+  setCommunityName(sett.communityName);
+  bgInterval=(sett.slideInterval||12)*1000;
 
   // 合併：建案照片 + 管理後台上傳的圖片
   const extra=(sett.imageUrls||[]).filter(Boolean);
-  const allPhotos=[...BUILDING_PHOTOS,...extra];
-  buildBgSlides(allPhotos);
-
-  setMarquee(ann.marquee);
-  renderNews(news);
-  _rawAnnList = ann.list||[];
-  renderAnnouncements(filterActive(_rawAnnList));
-
-  // 每分鐘重新過濾（自動上下架）
-  schedTimer = setInterval(()=> renderAnnouncements(filterActive(_rawAnnList)), 60000);
+  buildBgSlides([...BUILDING_PHOTOS,...extra]);
 }
 
 window.addEventListener('beforeunload', () => {
   if (clockTimer)  clearInterval(clockTimer);
   if (bgTimer)     clearInterval(bgTimer);
-  if (annTimer)    clearInterval(annTimer);
-  if (newsTimer)   clearInterval(newsTimer);
-  if (schedTimer)  clearInterval(schedTimer);
 });
 
 /* ────────────────────────────────────────────────────
    即時更新
 ──────────────────────────────────────────────────── */
-window.api.on('announcements:updated',ann=>{
-  setMarquee(ann.marquee);
-  _rawAnnList = ann.list||[];
-  renderAnnouncements(filterActive(_rawAnnList));
-});
 window.api.on('settings:updated',s=>{
-  if(s.communityName){
-    document.getElementById('communityName').textContent=s.communityName;
-    document.getElementById('communityName2').textContent=s.communityName;
-  }
+  setCommunityName(s.communityName);
   if(s.slideInterval){
-    annInterval=s.slideInterval*1000;
-    bgInterval=annInterval;
+    bgInterval=s.slideInterval*1000;
     startBgTimer();
   }
   if(s.imageUrls){
@@ -570,7 +331,6 @@ window.api.on('settings:updated',s=>{
     buildBgSlides([...BUILDING_PHOTOS,...extra]);
   }
 });
-window.api.on('news:updated',n=>renderNews(n));
 
 init();
 </script>

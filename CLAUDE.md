@@ -75,7 +75,7 @@ C:\webpage\
 ├── .nojekyll               # GitHub Pages 必要空白檔
 ├── 上傳到GitHub.bat         # 一鍵上傳腳本（⚠️ 用 git add .，會連未追蹤檔一起推上公開 repo）
 └── renderer/
-    ├── screen1/   大廳公佈欄（全螢幕建築照片輪播＋公告卡片，富文字呈現）
+    ├── screen1/   大廳公佈欄（全螢幕建築照片輪播＋建案名稱，不顯示公告）
     ├── screen2/   公告欄 B（投影片公告輪播）
     ├── screen3/   全球市場儀表板（TradingView 嵌入元件）
     ├── screen4/   即時天氣（中央氣象署 CWA，OpenWeather 備援）
@@ -115,29 +115,21 @@ FMP / Twelve Data 金鑰（`fmpKey1~3`、`tdKey1~3`、`twelveDataKey`）已不�
 ### 原設計
 時鐘 + 快訊跑馬燈 + 會議室 iframe
 
-### 現在設計
-全螢幕照片輪播（Ken Burns 動畫）＋ 公告卡片覆蓋。底部跑馬燈列已在 commit d044f97 移除（程式裡的 `setMarquee` / `renderNews` 找不到元素時會直接略過）。
+### 現在設計（2026-10-19 起不顯示公告）
+全螢幕照片輪播（Ken Burns 動畫）＋ 建案名稱大字，**不顯示公告**（使用者要求移除；公告請用 screen2 橫式或 screen13 直立）。
+底部跑馬燈列已在 commit d044f97 移除，快訊、跑馬燈、公告的程式碼也已一併刪除。進度條跟著照片輪播走。
 
 ```
 ┌─────────────── HEADER ────────────────────────────────────────┐
 │  🏢 親家市政廣場管理委員會                    時鐘 / 日期        │
 ├──────────────────── 全螢幕照片 ───────────────────────────────┤
 │  背景：12 張親家市政廣場高清照片（chingjia.com）輪播           │
-│        + 管理後台上傳的額外圖片                               │
+│        + 管理後台「圖片網址清單」追加的圖片                     │
 │                                                               │
-│  【有公告時】：半透明卡片覆蓋於照片上                          │
-│    左：公告附圖（560px）                                       │
-│    右：公告標題（64px）+ 內容（34px，富文字）                   │
-│                                                               │
-│  【無公告時】：建案名稱大字置中                                │
+│  建案名稱大字（communityName）＋ 副標                           │
 └────────────────────────────────────────────────────────────────┘
 ```
-
-### 公告呈現注意事項（2026-10-19 修正）
-- 後台公告內容是富文字 HTML（execCommand 產生的 `<font>`/`<span>`），screen1 以 HTML 呈現，保留粗體與顏色；
-  CSS `.ac-content *{font-size:inherit !important}` 讓字級統一跟版面走，避免 `<font size=7>` 撐爆。
-- 每分鐘的排程重新過濾只在「清單內容有變」時才重建，否則輪播每 60 秒被歸零，一輪超過 60 秒的公告後面幾則永遠輪不到。
-- 2026-10-19 之前 screen1 因為呼叫已移除的跑馬燈元素而在 init 拋錯，**實際上一直沒有顯示任何公告**。
+- 輪播秒數用 settings.slideInterval。
 
 ### 照片來源
 - 12 張高清原圖來自 `https://www.chingjia.com/portfolio-content.php?index_id=46`
@@ -223,7 +215,7 @@ kioskGuard 每 30 分鐘先 XHR 確認自己的網址回 200 才 `location.reloa
 ## localStorage 結構
 | key | 說明 |
 |---|---|
-| `bbs_announcements` | 橫式公告 `{ marquee: '', list: [...] }`（screen1、screen2） |
+| `bbs_announcements` | 橫式公告 `{ marquee: '', list: [...] }`（screen2） |
 | `bbs_announcements_v` | 直立公告 `{ marquee: '', list: [...] }`（screen13） |
 | `bbs_settings` | 所有設定（communityName, cwaKey, weatherApiKey, youtubeId, imageUrls, windows, adminPassword...） |
 | `bbs_floors` | 水牌樓層名錄 `[{floor, company, group}]`（screen10/11） |
