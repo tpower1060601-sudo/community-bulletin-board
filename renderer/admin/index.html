@@ -884,14 +884,57 @@ function saveMarqueeV() {
 var GH_IMG_REPO = 'tpower1060601-sudo/community-bulletin-board';
 var GH_IMG_API  = 'https://api.github.com/repos/' + GH_IMG_REPO + '/contents/';
 
+/* 上傳前先縮圖：圖片會永久進 git，手機原圖動輒 5~10MB 會讓 repo 與 Pages 部署越來越肥。
+   長邊縮到 1920px（大廳螢幕的解析度），JPEG 重新壓縮；GIF 不動（會失去動畫），但限制大小。 */
+var IMG_MAX_EDGE = 1920;
+var IMG_MAX_GIF_BYTES = 5 * 1024 * 1024;
+function prepareImage(file) {
+  return new Promise(function(resolve) {
+    if (!/^image\//.test(file.type || '')) { toast('只能上傳圖片檔', 'error'); return resolve(null); }
+    if (file.type === 'image/gif') {
+      if (file.size > IMG_MAX_GIF_BYTES) { toast('GIF 動畫超過 5MB，請先壓縮後再上傳', 'error'); return resolve(null); }
+      return resolve(file);
+    }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+      URL.revokeObjectURL(url);
+      var w = img.naturalWidth, h = img.naturalHeight;
+      var scale = Math.min(1, IMG_MAX_EDGE / Math.max(w, h));
+      if (scale === 1 && file.size <= 800 * 1024) return resolve(file); // 已經夠小，原檔上傳
+      var c = document.createElement('canvas');
+      c.width = Math.round(w * scale); c.height = Math.round(h * scale);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      // PNG 可能有透明背景，保留 PNG；其他一律轉 JPEG
+      var type = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+      c.toBlob(function(blob) {
+        if (!blob || blob.size >= file.size) return resolve(file); // 壓了反而更大就用原檔
+        var name = file.name.replace(/\.[^.]+$/, '') + (type === 'image/png' ? '.png' : '.jpg');
+        resolve(new File([blob], name, { type: type }));
+      }, type, 0.85);
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
 function uploadAnnImage(file) {
   var token = localStorage.getItem('bbs_gh_token') || '';
   if (!token) {
-    toast('請先在「備份與還原」頁面設定 GitHub Token', 'warning');
+    toast('請先在「系統設定」頁面設定 GitHub Token', 'warning');
     return Promise.resolve(null);
   }
+  return prepareImage(file).then(function(prepared) {
+    if (!prepared) return null;
+    return uploadPreparedImage(prepared, token);
+  });
+}
+
+function uploadPreparedImage(file, token) {
   return new Promise(function(resolve) {
     var reader = new FileReader();
+    // 讀檔失敗也要 resolve，否則「儲存」按鈕會一直鎖住
+    reader.onerror = function() { toast('讀取圖片檔失敗', 'error'); resolve(null); };
     reader.onload = function(e) {
       var b64 = e.target.result.split(',')[1];
       var safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -941,8 +984,12 @@ function setAnnSaveLocked(locked, label) {
   btn.textContent = locked ? (label || '圖片上傳中…') : '儲存';
 }
 
+/* 每次選檔或關閉視窗都換一個序號；上傳完成時序號不同就丟掉結果，
+   避免舊的上傳寫進另一則公告，或連續選兩張時被先完成的那張蓋掉 */
+var _annUploadSeq = 0;
 function handleAnnImageUpload(input) {
   var file = input.files[0]; if (!file) return;
+  var seq = ++_annUploadSeq;
   var status = document.getElementById('annImageStatus');
   if (status) status.textContent = '上傳中…';
   _annImageUploading = true;
@@ -957,6 +1004,7 @@ function handleAnnImageUpload(input) {
   renderAnnPreview();
 
   uploadAnnImage(file).then(function(url) {
+    if (seq !== _annUploadSeq) return; // 已經選了別張或關掉視窗
     _annImageUploading = false;
     setAnnSaveLocked(false);
     if (!url) {
@@ -1307,7 +1355,7 @@ function openAnnModal(id, dataset) {
         '<img id="annImageThumb" style="max-height:72px;max-width:160px;border-radius:8px;object-fit:contain;border:1px solid var(--border)">'+
         '<button class="btn btn-danger btn-sm" onclick="clearAnnImage()">✕ 移除</button>'+
       '</div>'+
-      '<div style="font-size:11px;color:var(--text2);margin-top:6px">需先在「備份與還原」設定 GitHub Token 才能上傳</div>'+
+      '<div style="font-size:11px;color:var(--text2);margin-top:6px">需先在「系統設定」設定 GitHub Token 才能上傳</div>'+
     '</div>'+
     '<div style="background:rgba(255,255,255,0.05);padding:16px;border-radius:8px;margin-top:4px">'+
       '<div class="switch-group" style="margin-bottom:12px"><span>一直有效（常駐）</span>'+
@@ -1654,6 +1702,10 @@ function triggerBackup() {
 }
 
 function closeModal() {
+  // 作廢進行中的圖片上傳，並解除儲存鎖，下次開視窗不會卡住
+  _annUploadSeq++;
+  _annImageUploading = false;
+  setAnnSaveLocked(false);
   $('modalBackdrop').classList.remove('open');
   document.querySelector('.modal').classList.remove('modal-wide');
 }
@@ -1855,8 +1907,9 @@ function getBatBrowserPath() {
   return LAY_BROWSER_PATHS[sel] || LAY_BROWSER_PATHS.edge;
 }
 function generateBatContent() {
-  var initDelay = parseInt(($('batInitDelay')||{}).value) || 15;
-  var winDelay  = parseInt(($('batWinDelay') ||{}).value) || 10;
+  // 用 isNaN 而非 ||：使用者填 0 是合法值，不能被當成「沒填」
+  var initDelay = parseInt(($('batInitDelay')||{}).value); if (isNaN(initDelay)) initDelay = 15;
+  var winDelay  = parseInt(($('batWinDelay') ||{}).value); if (isNaN(winDelay))  winDelay  = 10;
   var exePath   = getBatBrowserPath();
   var bsel = ($('browserSelect')||{}).value || 'edge';
   var varName = bsel==='chrome' ? 'CHROME' : bsel==='supermium' ? 'BROWSER' : 'EDGE';
@@ -1874,7 +1927,7 @@ function generateBatContent() {
 
   if (mode === 'wall') {
     var wallUrl = LAY_BASE_URL + 'wall/';
-    lines.push(':: 螢幕牆模式（單一視窗，5760x2160，涵蓋全部螢幕位置，iframe 拼接）');
+    lines.push('rem Screen wall mode - one 5760x2160 window, screens tiled with iframes');
     lines.push('start "" %' + varName + '% %FLAGS% --user-data-dir="C:\\EdgeWall" --window-position=-1920,-1080 --window-size=5760,2160 --app="' + wallUrl + '"');
     return lines.join('\r\n');
   }
@@ -1891,7 +1944,7 @@ function generateBatContent() {
   });
 
   if (!sorted.length) {
-    lines.push(':: 尚未配置任何螢幕');
+    lines.push('rem No screens configured');
     return lines.join('\r\n');
   }
 
@@ -1899,8 +1952,10 @@ function generateBatContent() {
   sorted.forEach(function(w, i) {
     var def = SCREEN_DEFS.find(function(s){ return s.id===w.screenId; });
     if (!def) return;
-    var rowLabel = w.physY===-1080 ? '上排' : (w.physY===0 ? '下排' : 'Y:'+w.physY);
-    if (rowLabel !== lastRow) { lines.push(':: ' + rowLabel); lastRow = rowLabel; }
+    // .bat 註解一律英文：舊版 Windows 以 Big5 讀 .bat，中文註解會把命令列切壞
+    var rowLabel = w.physY===-1080 ? 'Top row' : (w.physY===0 ? 'Bottom row' : 'Y:'+w.physY);
+    if (rowLabel !== lastRow) { lines.push('rem ' + rowLabel); lastRow = rowLabel; }
+    lines.push('rem ' + def.id);
     var url = LAY_BASE_URL + def.id + '/';
     var userDir = 'C:\\EdgeP' + (i + 1);
     var isNonStd = def.h > 1080;
