@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Floorboard loader</title>
+<!-- Local start page for the floorboard machine (172.18.0.51), deployed to C:\webpage_tools\.
+     Opened as file:///C:/webpage_tools/floor_loader.html#screen10 by start_floorboards_kiosk.bat.
+     It waits until GitHub Pages answers 200, then navigates to the real page, so the kiosk
+     never gets stuck on a browser error page when the network is not ready at 08:00.
+     Keep it ES5 and self-contained. -->
+<style>
+html,body{margin:0;height:100%;background:#050505;color:#8a7a5a;font-family:'Microsoft JhengHei',sans-serif}
+#m{position:absolute;top:50%;width:100%;text-align:center;font-size:42px;margin-top:-60px}
+#s{font-size:24px;margin-top:24px;color:#5a5040}
+</style>
+</head>
+<body>
+<div id="m">&#x6A13;&#x5C64;&#x544A;&#x793A;&#x724C;&#x8F09;&#x5165;&#x4E2D;&#x2026;<div id="s"></div></div>
+<script>
+(function () {
+  var BASE = 'https://tpower1060601-sudo.github.io/community-bulletin-board/renderer/';
+  var screen = (location.hash || '').replace('#', '') || 'screen10';
+  if (!/^screen\d+$/.test(screen)) screen = 'screen10';
+  var target = BASE + screen + '/';
+  var tries = 0;
+  function check() {
+    tries++;
+    document.getElementById('s').innerHTML = '&#x9023;&#x7DDA;&#x6AA2;&#x67E5; #' + tries;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', target + '?_ld=' + new Date().getTime(), true);
+    xhr.timeout = 20000;
+    xhr.onload = function () {
+      if (xhr.status === 200) location.replace(target);
+      else setTimeout(check, 10000);
+    };
+    xhr.onerror = xhr.ontimeout = function () { setTimeout(check, 10000); };
+    try { xhr.send(); } catch (e) { setTimeout(check, 10000); }
+  }
+  check();
+})();
+</script>
+</body>
+</html>

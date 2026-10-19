@@ -618,25 +618,39 @@ function initFloorEditor() {
    內容一律純 ASCII：Win7 用 Big5 字碼頁解讀 .bat，中文會把命令列切壞。 */
 function generateFloorBat(kind) {
   if (kind === 'close') {
-    return ['@echo off', 'taskkill /F /IM chrome.exe /T 2>nul', 'echo Done.'].join('\r\n');
+    /* 先正常關閉（不加 /F），等 10 秒，關不掉才強制：強制關閉會讓 Supermium 記成當機，
+       隔天早上以當機復原模式啟動 */
+    return [
+      '@echo off',
+      'rem Ask Supermium to close normally first so it does not record a crash',
+      'taskkill /IM chrome.exe >nul 2>nul',
+      'ping -n 11 127.0.0.1 >nul',
+      'taskkill /F /IM chrome.exe /T >nul 2>nul',
+      'echo Done.'
+    ].join('\r\n');
   }
   var exe   = (($('fbBrowserPath')||{}).value || '').trim() || 'C:\\webpage_tools\\Supermium_portable\\Supermium\\chrome.exe';
   var rightX = parseInt(($('fbRightX')||{}).value);
   if (isNaN(rightX)) rightX = 1080;
   var delay = parseInt(($('fbWinDelay')||{}).value);
   if (isNaN(delay)) delay = 5;
-  var base = LAY_BASE_URL;
+  /* 不直接開 GitHub Pages：先開水牌機本機的 floor_loader.html（deploy/floorboards/），
+     它確認網路通了才轉過去，避免早上網路未就緒時卡在瀏覽器錯誤頁 */
   return [
     '@echo off',
+    'rem Clear the crash flag so Supermium does not start in crash-recovery mode',
+    'powershell -NoProfile -ExecutionPolicy Bypass -File "C:\\webpage_tools\\fix_floor_exit.ps1"',
     'set CHROME="' + exe + '"',
-    'set FLAGS=--no-first-run --no-default-browser-check --disable-translate --disable-infobars',
+    'set FLAGS=--no-first-run --no-default-browser-check --disable-translate --disable-infobars --hide-crash-restore-bubble',
+    'rem Local loader waits until GitHub Pages is reachable, then opens the real page',
+    'set LOADER=file:///C:/webpage_tools/floor_loader.html',
     '',
     'rem Left monitor - screen10 (floors 1-14)',
-    'start "" %CHROME% %FLAGS% --user-data-dir="C:\\SupermiumFloorA" --window-position=0,0 --window-size=1080,1920 --kiosk "' + base + 'screen10/"',
+    'start "" %CHROME% %FLAGS% --user-data-dir="C:\\SupermiumFloorA" --window-position=0,0 --window-size=1080,1920 --kiosk "%LOADER%#screen10"',
     'timeout /t ' + delay + ' /nobreak',
     '',
     'rem Right monitor - screen11 (floors 15+)',
-    'start "" %CHROME% %FLAGS% --user-data-dir="C:\\SupermiumFloorB" --window-position=' + rightX + ',0 --window-size=1080,1920 --kiosk "' + base + 'screen11/"'
+    'start "" %CHROME% %FLAGS% --user-data-dir="C:\\SupermiumFloorB" --window-position=' + rightX + ',0 --window-size=1080,1920 --kiosk "%LOADER%#screen11"'
   ].join('\r\n');
 }
 function previewFloorBat() {
