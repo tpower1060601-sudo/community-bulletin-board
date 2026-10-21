@@ -191,6 +191,10 @@ kioskGuard 每 30 分鐘先 XHR 確認自己的網址回 200 才 `location.reloa
 ---
 
 ## screen7 即時新聞注意事項
+- **主要資料來源是自架轉接 `https://news.shoyubook.com/rows`**（2026-10-21 起）：office 主機 docker `bbs-news-proxy`（port 8003，專案 `C:\projects\bbs-news-proxy`，Cloudflare Tunnel 子網域），每 5 分鐘在伺服器端抓好 5 列標題。CORS 只放行本站與 `localhost:8765`，只抓 `feeds.json` 的固定來源。
+- 起因：rss2json（403）、corsproxy.io（401 需付費）、allorigins（常逾時）三個免費轉接站 2026-10 全部失效，畫面長時間停在「連線中…」。三者仍留作自架服務失敗時的備援。
+- **改新聞來源時，screen7 的 `FEEDS` 與 office 上 `~/bbs-news-proxy/feeds.json` 要同步修改**（後者改完 `docker restart bbs-news-proxy`）。
+- 標題內容沒變就不重畫，跑馬燈不會每 5 分鐘從頭開始。
 - rss2json proxy **不可加 count= 參數**（付費功能，免費會回傳 error）
 - 正確用法：`https://api.rss2json.com/v1/api.json?rss_url=...`
 - 台灣財經用 Yahoo Finance：`https://tw.news.yahoo.com/rss/finance`（已驗證）

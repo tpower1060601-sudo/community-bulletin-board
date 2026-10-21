@@ -357,13 +357,43 @@ async function tryOne(proxyIdx, feedUrl) {
 
 /* ── 拉取並更新 ── */
 const retryTimers = {};   /* 每列只保留一個待執行的重試計時器 */
+/* 自架新聞轉接（office 主機 bbs-news-proxy，C:\projects\bbs-news-proxy）：
+   伺服器每 5 分鐘抓好 5 列標題，這裡只讀一個網址，通常 1 秒內出現。
+   2026-10 起 rss2json / allorigins / corsproxy.io 都失效，只留作備援。 */
+const NEWS_API = 'https://news.shoyubook.com/rows';
+async function tryApi(ri) {
+  const ctrl = new AbortController();
+  const abortTimer = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(NEWS_API, { cache: 'no-store', signal: ctrl.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const row = data.rows && data.rows[ri];
+    return (row && row.titles) || [];
+  } finally {
+    clearTimeout(abortTimer);
+  }
+}
+
+const lastTitles = {};   /* 內容沒變就不重畫，跑馬燈不會每 5 分鐘從頭開始 */
+function showTitles(ri, titles) {
+  const sig = JSON.stringify(titles);
+  if (lastTitles[ri] === sig) return;
+  lastTitles[ri] = sig;
+  renderTicker(ri, titles);
+}
+
 async function fetchRow(ri) {
   clearTimeout(retryTimers[ri]);   /* 5 分鐘輪詢進來時，取消尚未觸發的舊重試，避免重試鏈累積 */
+  try {
+    const titles = await tryApi(ri);
+    if (titles.length) { showTitles(ri, titles); return; }
+  } catch(e) { /* 自架服務失敗，改走免費轉接站 */ }
   for (const feedUrl of FEEDS[ri]) {
     for (let pi = 0; pi < PROXIES.length; pi++) {
       try {
         const titles = await tryOne(pi, feedUrl);
-        if (titles.length) { renderTicker(ri, titles); return; }
+        if (titles.length) { showTitles(ri, titles); return; }
       } catch(e) { /* 繼續 */ }
     }
   }
