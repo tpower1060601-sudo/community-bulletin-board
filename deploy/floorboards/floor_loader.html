@@ -20,7 +20,8 @@ html,body{margin:0;height:100%;background:#050505;color:#8a7a5a;font-family:'Mic
 (function () {
   var BASE = 'https://tpower1060601-sudo.github.io/community-bulletin-board/renderer/';
   var screen = (location.hash || '').replace('#', '') || 'screen10';
-  if (!/^screen\d+$/.test(screen)) screen = 'screen10';
+  // also used by the lobby PC (172.18.0.208) with #wall
+  if (!/^(screen\d+|wall)$/.test(screen)) screen = 'screen10';
   var target = BASE + screen + '/';
   var tries = 0;
   function check() {

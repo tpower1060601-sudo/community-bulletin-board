@@ -6,7 +6,10 @@
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
 body { background:#000; height:100vh; overflow:hidden; }
-#yt-player { position:absolute; top:0; left:0; width:100%; height:100%; border:none; }
+/* 播放器內部開成 2 倍大（3840x2160）再縮小一半顯示：YouTube 依播放器實際高度挑畫質，
+   放在螢幕牆裡若被縮放到 1080 以下就會只給 720p；開大後一定挑來源最高的 1080p */
+#yt-player { position:absolute; top:0; left:0; width:200%; height:200%; border:none;
+             transform:scale(0.5); transform-origin:0 0; }
 .placeholder {
   display:flex; flex-direction:column; align-items:center; justify-content:center;
   height:100vh; background:#04080f; color:rgba(255,255,255,0.2);

@@ -1889,8 +1889,13 @@ function generateBatContent() {
 
   if (mode === 'wall') {
     var wallUrl = LAY_BASE_URL + 'wall/';
-    lines.push('rem Screen wall mode - one 5760x2160 window, screens tiled with iframes');
-    lines.push('start "" %' + varName + '% %FLAGS% --user-data-dir="C:\\EdgeWall" --window-position=-1920,-1080 --window-size=5760,2160 --app="' + wallUrl + '"');
+    /* 與大廳電腦（172.18.0.208）實際使用的 start_display.bat 一致：
+       等網路通再開、啟動前清當機旗標、--app 視窗上移 30px 把標題列推出螢幕外，頁面才是 1:1 不縮放 */
+    lines.push('rem Clear the crash flag left by the nightly force-close (C:\\webpage\\fix_floor_exit.ps1)');
+    lines.push('powershell -NoProfile -ExecutionPolicy Bypass -File "C:\\webpage\\fix_floor_exit.ps1" C:\\EdgeWall');
+    lines.push('rem Screen wall mode - one 5760x2160 window, screens tiled with iframes.');
+    lines.push('rem The --app title bar (~30px) is pushed above the top monitors so the page is exactly 5760x2160.');
+    lines.push('start "" %' + varName + '% %FLAGS% --hide-crash-restore-bubble --user-data-dir="C:\\EdgeWall" --window-position=-1920,-1110 --window-size=5760,2190 --app="' + wallUrl + '"');
     return lines.join('\r\n');
   }
 
