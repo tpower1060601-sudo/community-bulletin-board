@@ -260,6 +260,8 @@ kioskGuard 每 30 分鐘先 XHR 確認自己的網址回 200 才 `location.reloa
   - 兩者都設定登入模式為**「僅限互動」**（`/it`），因為 GUI 程式必須在使用者已登入的桌面工作階段才能顯示畫面，透過 SSH 或非互動工作階段啟動 kiosk 瀏覽器視窗會卡住沒有畫面（Session 0 隔離問題）
   - 前提：`Myuser` 需持續保持登入狀態（`console` session `使用中`），且電腦不關機
 
+- 每晚 21:00 關閉是配合機器固定時間關螢幕的**正常作息，不是崩潰**；Preferences 裡的 `Crashed` 只是強制結束留下的旗標。
+
 ### .bat 檔中文編碼注意事項
 Windows 7／WES7 用舊字碼頁（Big5）解讀 `.bat`，若檔案內含全形符號（中文括號、破折號）當註解，會把命令列切壞、產生亂碼指令。**跨機器部署的 `.bat` 檔一律只用純 ASCII 英文（含註解）**，不要用中文 `::` 或 `rem` 註解。
 
@@ -267,6 +269,15 @@ Windows 7／WES7 用舊字碼頁（Big5）解讀 `.bat`，若檔案內含全形�
 - **TightVNC**：系統匣圖示（`tvncontrol` Run 機碼）已移除、背景服務 `tvnserver` 已停用（`sc config tvnserver start= disabled`），VNC 遠端連線功能已完全關閉。原登錄檔設定備份於 `C:\webpage_tools\Run_backup_before_change.reg`
 - **AisWatcher.exe**：從共用啟動資料夾移出，備份於 `C:\webpage_tools\disabled_startup_items\`
 - **AnyDesk**：使用者確認在用，保留不動
+
+## 大廳電腦（172.18.0.208，ADVANTECH-PC）
+- 完整連線說明：`G:\我的雲端硬碟\Claude專區\NotebookLM\ADVANTECH-連線說明.md`（SSH `Advantech@172.18.0.208` 金鑰免密，Windows Embedded 7 + Supermium 144，6 面 SAMPO 1920×1080）
+- **實際是螢幕牆模式**：`C:\webpage\start_display.bat` 只開 1 個 `--app` 視窗載入 `renderer/wall/`，profile `C:\EdgeWall`。repo 根目錄的 `start_display.bat`／`close_browsers.bat` 就是部署在這台的版本。
+- 排程：`自動打開瀏覽器` 08:00、`自動關閉瀏覽器` 21:00、`開機自動執行`（登入時），皆「僅互動」。**每晚關閉是配合螢幕關閉的正常作息，不是崩潰。**
+- 2026-10-21：
+  - `--app` 標題列約 30px 讓整面牆被壓縮、YouTube 只給 720p → 視窗改 `--window-position=-1920,-1110 --window-size=5760,2190` 把標題列推出螢幕外（待重開後截圖確認）。
+  - screen8/9 播放器內部開 3840×2160 再縮半，確保拿到 1080p。
+  - 開機前先 ping GitHub Pages、執行 `fix_floor_exit.ps1 C:\EdgeWall` 清當機旗標；關閉先正常結束再強制。
 
 ### `renderer/floorboards/index.html` 目前未使用
 專案裡有一個用 iframe 把 screen10+screen11 合併成單一網頁的版本（跨螢幕視窗），但實際部署時改用「兩個獨立 kiosk 視窗」方案（可用 `--kiosk` 做到真正全螢幕，合併版因跨螢幕限制只能用 `--app`、會保留一條標題列）。這個檔案先保留在 repo 裡，未刪除。
