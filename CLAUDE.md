@@ -271,7 +271,7 @@ Windows 7／WES7 用舊字碼頁（Big5）解讀 `.bat`，若檔案內含全形�
 - **AnyDesk**：使用者確認在用，保留不動
 
 ## 大廳電腦（172.18.0.208，ADVANTECH-PC）
-- 完整連線說明：`G:\我的雲端硬碟\Claude專區\NotebookLM\ADVANTECH-連線說明.md`（SSH `Advantech@172.18.0.208` 金鑰免密，Windows Embedded 7 + Supermium 144，6 面 SAMPO 1920×1080）
+- 完整連線說明：`G:\我的雲端硬碟\Claude專區\NotebookLM\ADVANTECH_佈告欄機連線說明.md`（SSH `Advantech@172.18.0.208` 金鑰免密，Windows Embedded 7 + Supermium 144，6 面 SAMPO 1920×1080）
 - **實際是螢幕牆模式**：`C:\webpage\start_display.bat` 只開 1 個 `--app` 視窗載入 `renderer/wall/`，profile `C:\EdgeWall`。repo 根目錄的 `start_display.bat`／`close_browsers.bat` 就是部署在這台的版本。
 - 排程：`自動打開瀏覽器` 08:00、`自動關閉瀏覽器` 21:00、`開機自動執行`（登入時），皆「僅互動」。**每晚關閉是配合螢幕關閉的正常作息，不是崩潰。**
 - 2026-10-21：
