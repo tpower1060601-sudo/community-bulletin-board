@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-10-20T02:59:28.398Z",
+  "_savedAt": "2026-10-22T08:37:05.972Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -423,7 +423,7 @@
     "weatherCity": "Taichung",
     "newsEnabled": false,
     "newsSource": "",
-    "youtubeId": "CXQ-maBSxa4",
+    "youtubeId": "DdK-8EN3pak",
     "youtubeId2": "lM2pZZf8Kag",
     "meetingsUrl": "",
     "meetingsZoom": 1,
@@ -502,12 +502,12 @@
       {
         "id": "CXQ-maBSxa4",
         "note": "非凡財經24H",
-        "active": true
+        "active": false
       },
       {
-        "id": "V1p33hqPrUk",
-        "note": "東森51頻道24H",
-        "active": false
+        "id": "DdK-8EN3pak",
+        "note": "颱風監視",
+        "active": true
       },
       {
         "id": "6IquAgfvYmc",
@@ -597,18 +597,11 @@
         "active": false
       },
       {
-        "id": "",
+        "id": "DdK-8EN3pak",
         "note": "admin",
         "active": false
       }
-    ],
-    "twelveDataKey": "df6c942b65d046fdbfbb05315aae7277",
-    "fmpKey1": "2qdVJ052MQr3CmpI1jdOMGyGi9NFWcd6",
-    "fmpKey2": "RIWsVBTkjpIXOkgXL4tOTygwHMLfcSyD",
-    "fmpKey3": "X2NXmfOL4HavGiduvQT5roJprIfsvlRi",
-    "tdKey1": "df6c942b65d046fdbfbb05315aae7277",
-    "tdKey2": "cd837e6cde0249fd975dadb46f6b5057",
-    "tdKey3": "430ea40903944d0fba816e70624de7f2"
+    ]
   },
   "meetings": {
     "rooms": [
