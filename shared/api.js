@@ -266,7 +266,9 @@
         self.load().then(function (backup) {
           if (!backup || !backup._savedAt) return;
           var known = localStorage.getItem(GH_KNOWN_AT_KEY) || '';
-          if (backup._savedAt === known) return;
+          // 只接受「比已知更新」的雲端版本（_savedAt 是 ISO 字串，可直接比大小）。
+          // 用 !== 的話，剛備份成功後若讀到還沒更新完的舊版（讀取端有延遲），會把舊版當新版套回來，剛改的設定就被蓋回去。
+          if (backup._savedAt <= known) return;
 
           var dirty = getDirty();
           var applied = [];
