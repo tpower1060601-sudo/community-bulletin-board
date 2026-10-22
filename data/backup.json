@@ -1,5 +1,5 @@
 {
-  "_savedAt": "2026-10-22T08:37:05.972Z",
+  "_savedAt": "2026-10-22T08:39:42.649Z",
   "announcements": {
     "marquee": "歡迎光臨親家市政廣場，敬請共同維護環境整潔。",
     "list": [
@@ -597,7 +597,7 @@
         "active": false
       },
       {
-        "id": "DdK-8EN3pak",
+        "id": "",
         "note": "admin",
         "active": false
       }
