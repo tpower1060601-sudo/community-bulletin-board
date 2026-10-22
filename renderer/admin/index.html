@@ -63,6 +63,36 @@ td{padding:14px;border-bottom:1px solid var(--border);font-size:14px;}
 .form-row > .form-group{margin-bottom:0;}
 
 .tag{padding:4px 10px;border-radius:6px;font-size:11px;font-weight:800;text-transform:uppercase;}
+/* YouTube 頻道清單（視窗與媒體分頁） */
+.yt-hint{font-size:13px;color:var(--text2);margin:-8px 0 14px;}
+.yt-recheck{margin-left:auto;text-transform:none;font-weight:600;}
+.yt-row{border:1px solid var(--border);border-radius:12px;margin-bottom:8px;background:rgba(15,23,42,0.5);overflow:hidden;}
+.yt-row:hover{border-color:rgba(255,255,255,0.25);}
+.yt-row.act{background:rgba(56,189,248,0.12);border-color:var(--accent);}
+.yt-main{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;}
+.yt-rad{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,0.35);flex:none;display:flex;align-items:center;justify-content:center;font-size:12px;color:#001;}
+.yt-row.act .yt-rad{background:var(--accent);border-color:var(--accent);}
+.yt-nm{flex:1;min-width:0;}
+.yt-nm b{display:block;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.yt-nm span{font-size:12px;color:var(--text2);font-family:Consolas,monospace;}
+.yt-light{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:rgba(255,255,255,0.06);color:var(--text2);white-space:nowrap;}
+.yt-light i{width:8px;height:8px;border-radius:50%;background:#64748b;display:inline-block;}
+.yt-light.live{color:#34d399;background:rgba(16,185,129,0.14);} .yt-light.live i{background:#10b981;}
+.yt-light.video{color:#7dd3fc;background:rgba(56,189,248,0.14);} .yt-light.video i{background:#38bdf8;}
+.yt-light.ended{color:#fbbf24;background:rgba(245,158,11,0.14);} .yt-light.ended i{background:#f59e0b;}
+.yt-light.dead{color:#fb7185;background:rgba(244,63,94,0.16);} .yt-light.dead i{background:#f43f5e;}
+.yt-light.loading i{animation:ytpulse 1s ease-in-out infinite;}
+@keyframes ytpulse{0%,100%{opacity:.25}50%{opacity:1}}
+.yt-play{font-size:12px;font-weight:800;padding:3px 10px;border-radius:6px;background:var(--accent);color:#00212e;white-space:nowrap;}
+.yt-edit{background:none;border:none;color:var(--text2);font-size:12px;padding:6px 8px;border-radius:6px;}
+.yt-edit:hover{background:rgba(255,255,255,0.08);color:#fff;}
+.yt-form{display:none;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 14px 46px;}
+.yt-row.editing .yt-form{display:grid;}
+.yt-form label{font-size:12px;color:var(--text2);margin-bottom:4px;display:block;}
+.yt-add{background:none;border:1px dashed var(--border);color:var(--accent);border-radius:10px;padding:10px 14px;width:100%;font-size:13px;font-weight:700;}
+.yt-add:hover{background:rgba(56,189,248,0.08);}
+.yt-alert{background:rgba(244,63,94,0.14);border:1px solid rgba(244,63,94,0.5);color:#fecdd3;border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:13px;}
+.yt-unsaved{font-size:12px;color:var(--orange);margin:0 0 10px;}
 .tag-general{background:rgba(255,255,255,0.1);color:#fff;}
 .tag-urgent{background:rgba(244,63,94,0.15);color:var(--red);}
 .tag-event{background:rgba(16,185,129,0.15);color:var(--green);}
@@ -256,13 +286,15 @@ input:checked + .slider:before{transform:translateX(20px);}
         <div id="videoSlots"></div>
       </div>
       <div class="card">
-        <div class="card-title">📺 YouTube 頻道 1（screen8）</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">勾選該列即設為使用中的頻道 ID</div>
+        <div class="card-title">📺 YouTube 頻道 1（screen8）<button type="button" class="btn btn-ghost btn-sm yt-recheck" onclick="refreshYtStatus(true)">重新檢查</button></div>
+        <div class="yt-hint">點選一列，設為目前播放的頻道；按「儲存配置」後生效。燈號每 10 分鐘更新一次。</div>
+        <div id="ytAlert1"></div>
         <div id="ytSlots1"></div>
       </div>
       <div class="card">
-        <div class="card-title">📺 YouTube 頻道 2（screen9）</div>
-        <div style="font-size:12px;color:var(--text2);margin-bottom:10px">勾選該列即設為使用中的頻道 ID</div>
+        <div class="card-title">📺 YouTube 頻道 2（screen9）<button type="button" class="btn btn-ghost btn-sm yt-recheck" onclick="refreshYtStatus(true)">重新檢查</button></div>
+        <div class="yt-hint">點選一列，設為目前播放的頻道；按「儲存配置」後生效。燈號每 10 分鐘更新一次。</div>
+        <div id="ytAlert2"></div>
         <div id="ytSlots2"></div>
       </div>
       <div class="card"><div class="card-title">🖥️ 視窗管理</div><div id="windowControls"></div></div>
@@ -1478,20 +1510,134 @@ function renderVideoSlots() {
   el.innerHTML=html;
 }
 
+/* ── YouTube 頻道清單 ─────────────────────────────────────────────────
+   資料格式不變：仍是 10 個槽 { id, note, active }，saveSettings() 照舊從 yt{ch}Id{i}／yt{ch}Note{i}／
+   yt{ch}r{i} 讀值。畫面上每個有內容的槽顯示成一列（點一下設為播放中），編輯用的輸入框收在鉛筆展開的表單裡。
+   燈號由 office 上的 bbs-news-proxy（/yt/status）代查 YouTube；查不到時一律「無法判斷」，不會誤報失效。 */
+var YT_API = 'https://news.shoyubook.com/yt/status';
+var ytStatus = {};          // 影片 ID → { state, reason, title }
+var ytFetchedAt = 0;
+var ytFetching = false;
+var ytExtra = { 1:{}, 2:{} }; // 按「新增頻道」展開的空白槽
+var YT_LABEL = { live:'直播中', video:'影片', ended:'已結束', dead:'已失效', unknown:'無法判斷', loading:'檢查中' };
+
+function ytVal(ch, kind, i) { var el=$('yt'+ch+kind+i); return el ? el.value.trim() : ''; }
+function ytValidId(id) { return /^[A-Za-z0-9_-]{11}$/.test(id); }
+
+function ytLightHtml(id) {
+  if (!id) return '';
+  var st = ytStatus[id];
+  var key = st ? st.state : (ytValidId(id) ? 'loading' : 'unknown');
+  var tip = !ytValidId(id) ? 'ID 格式不對（應為 11 個英數字元）'
+          : !st ? '正在檢查…'
+          : (st.reason || '') + (st.title ? '　YouTube 標題：' + st.title + '（僅供參考）' : '');
+  return '<span class="yt-light ' + key + '" title="' + esc(tip) + '"><i></i>' + YT_LABEL[key] + '</span>';
+}
+
 function renderYtSlots(ch) {
   var el=$('ytSlots'+ch); if(!el) return;
   var slots=(settings['youtubeSlots'+ch])||[];
   while(slots.length<10) slots.push({});
-  var html='<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;margin-bottom:6px;font-size:11px;color:var(--text2);letter-spacing:1px"><span style="text-align:center">啟用</span><span>頻道 ID</span><span>備註</span></div>';
+  var html='', hidden=0;
   for(var i=0;i<10;i++){
     var s=slots[i]||{};
-    html+='<div style="display:grid;grid-template-columns:36px 1fr 1fr;gap:8px;margin-bottom:8px;align-items:center">'+
-      '<div style="text-align:center"><input type="radio" name="yt'+ch+'" id="yt'+ch+'r'+i+'" value="'+i+'"'+(s.active?' checked':'')+'></div>'+
-      '<input type="text" id="yt'+ch+'Id'+i+'" placeholder="例如: KyT4qSK8lJo" value="'+esc(s.id||'')+'">'+
-      '<input type="text" id="yt'+ch+'Note'+i+'" placeholder="備註（頻道名稱）" value="'+esc(s.note||'')+'">'+
-      '</div>';
+    var shown = !!(s.id||s.note) || ytExtra[ch][i];
+    if(!shown) hidden++;
+    html+='<div class="yt-row'+(s.active&&s.id?' act':'')+(ytExtra[ch][i]?' editing':'')+'" id="yt'+ch+'row'+i+'"'+(shown?'':' style="display:none"')+'>'+
+      '<input type="radio" name="yt'+ch+'" id="yt'+ch+'r'+i+'" value="'+i+'"'+(s.active?' checked':'')+' style="display:none">'+
+      '<div class="yt-main" onclick="ytPick('+ch+','+i+')">'+
+        '<span class="yt-rad" id="yt'+ch+'rad'+i+'">'+(s.active&&s.id?'✓':'')+'</span>'+
+        '<span class="yt-nm"><b id="yt'+ch+'nm'+i+'"></b><span id="yt'+ch+'idv'+i+'"></span></span>'+
+        '<span id="yt'+ch+'light'+i+'"></span>'+
+        '<span class="yt-play" id="yt'+ch+'play'+i+'" style="display:none">播放中</span>'+
+        '<button type="button" class="yt-edit" onclick="event.stopPropagation();ytToggleEdit('+ch+','+i+')" title="編輯名稱與影片 ID" aria-label="編輯">✎ 編輯</button>'+
+      '</div>'+
+      '<div class="yt-form">'+
+        '<div><label for="yt'+ch+'Note'+i+'">頻道名稱（備註）</label><input type="text" id="yt'+ch+'Note'+i+'" placeholder="例如：非凡財經24H" value="'+esc(s.note||'')+'" oninput="ytSyncRow('+ch+','+i+')"></div>'+
+        '<div><label for="yt'+ch+'Id'+i+'">影片 ID（網址 watch?v= 後面那 11 碼）</label><input type="text" id="yt'+ch+'Id'+i+'" placeholder="例如：KyT4qSK8lJo" value="'+esc(s.id||'')+'" oninput="ytSyncRow('+ch+','+i+')" onchange="ytIdChanged()"></div>'+
+      '</div>'+
+    '</div>';
   }
+  html+='<button type="button" class="yt-add" id="yt'+ch+'add" onclick="ytAdd('+ch+')"'+(hidden?'':' style="display:none"')+'>＋ 新增頻道（還有 <span id="yt'+ch+'left">'+hidden+'</span> 個空位）</button>';
   el.innerHTML=html;
+  for(var j=0;j<10;j++) ytSyncRow(ch,j);
+  ytUpdateView(ch);
+  if(ch===2) refreshYtStatus(false);
+}
+
+function ytSyncRow(ch,i){
+  var id=ytVal(ch,'Id',i), note=ytVal(ch,'Note',i);
+  var nm=$('yt'+ch+'nm'+i), iv=$('yt'+ch+'idv'+i), lt=$('yt'+ch+'light'+i);
+  if(nm) nm.textContent = note || (id ? '（未命名）' : '（新頻道，請按編輯填入）');
+  if(iv) iv.textContent = id || '尚未填影片 ID';
+  if(lt) lt.innerHTML = ytLightHtml(id);
+}
+
+function ytPick(ch,i){
+  if(!ytVal(ch,'Id',i)){ toast('這一列還沒有影片 ID，請先按「編輯」填入','warning'); ytToggleEdit(ch,i,true); return; }
+  var r=$('yt'+ch+'r'+i); if(r) r.checked=true;
+  ytUpdateView(ch);
+}
+
+function ytToggleEdit(ch,i,on){
+  var row=$('yt'+ch+'row'+i); if(!row) return;
+  row.classList.toggle('editing', typeof on==='boolean' ? on : !row.classList.contains('editing'));
+}
+
+function ytAdd(ch){
+  for(var i=0;i<10;i++){
+    var row=$('yt'+ch+'row'+i);
+    if(row && row.style.display==='none'){ ytExtra[ch][i]=true; row.style.display=''; row.classList.add('editing'); ytUpdateView(ch); var f=$('yt'+ch+'Note'+i); if(f) f.focus(); return; }
+  }
+}
+
+function ytIdChanged(){ ytFetchedAt=0; refreshYtStatus(false); }
+
+/* 更新「播放中」標示、提醒框（目前播放的頻道失效／尚未儲存） */
+function ytUpdateView(ch){
+  var activeI=-1, hidden=0;
+  for(var i=0;i<10;i++){
+    var r=$('yt'+ch+'r'+i), row=$('yt'+ch+'row'+i);
+    var on = !!(r && r.checked && ytVal(ch,'Id',i));
+    if(on) activeI=i;
+    if(row){ row.classList.toggle('act', on); if(row.style.display==='none') hidden++; }
+    var rad=$('yt'+ch+'rad'+i); if(rad) rad.textContent = on ? '✓' : '';
+    var pl=$('yt'+ch+'play'+i); if(pl) pl.style.display = on ? '' : 'none';
+  }
+  var left=$('yt'+ch+'left'); if(left) left.textContent=hidden;
+  var add=$('yt'+ch+'add'); if(add) add.style.display = hidden ? '' : 'none';
+  var box=$('ytAlert'+ch); if(!box) return;
+  var msg='';
+  var activeId = activeI>=0 ? ytVal(ch,'Id',activeI) : '';
+  var st = activeId ? ytStatus[activeId] : null;
+  if(st && (st.state==='dead'||st.state==='ended')){
+    msg+='<div class="yt-alert">目前播放的頻道「'+esc(ytVal(ch,'Note',activeI)||activeId)+'」'+(st.state==='dead'?'已失效':'直播已結束')+'，畫面會停在錯誤頁。請改選其他頻道，或更新它的影片 ID。</div>';
+  }
+  var saved = ch===1 ? settings.youtubeId : settings.youtubeId2;
+  if(activeId && activeId!==(saved||'')) msg+='<div class="yt-unsaved">已改選頻道，尚未儲存。請按右上角「儲存配置」。</div>';
+  box.innerHTML=msg;
+}
+
+/* 向 office 的檢查服務查詢所有已填的影片 ID。force=true 為使用者按「重新檢查」（服務端同一個 ID 最短 60 秒才重查）。 */
+function refreshYtStatus(force){
+  var ids=[];
+  [1,2].forEach(function(ch){ for(var i=0;i<10;i++){ var id=ytVal(ch,'Id',i); if(ytValidId(id) && ids.indexOf(id)<0) ids.push(id); } });
+  if(!ids.length || ytFetching) return;
+  var missing = ids.some(function(id){ return !ytStatus[id]; });
+  if(!force && !missing && Date.now()-ytFetchedAt < 5*60*1000) { ytPaintAll(); return; }
+  ytFetching=true;
+  if(force) ids.forEach(function(id){ delete ytStatus[id]; });
+  ytPaintAll();
+  var ctrl=new AbortController(), tm=setTimeout(function(){ ctrl.abort(); }, 30000);
+  fetch(YT_API+'?ids='+encodeURIComponent(ids.join(','))+(force?'&force=1':''), { signal: ctrl.signal, cache:'no-store' })
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(d){ var res=(d&&d.results)||{}; ids.forEach(function(id){ ytStatus[id]=res[id]||{state:'unknown',reason:'檢查服務沒有回應此影片'}; }); ytFetchedAt=Date.now(); })
+    .catch(function(e){ ids.forEach(function(id){ if(!ytStatus[id]) ytStatus[id]={state:'unknown',reason:'無法連線到檢查服務（'+(e&&e.name==='AbortError'?'逾時':e.message)+'）'}; }); })
+    .then(function(){ clearTimeout(tm); ytFetching=false; ytPaintAll(); });
+}
+
+function ytPaintAll(){
+  [1,2].forEach(function(ch){ for(var i=0;i<10;i++) ytSyncRow(ch,i); ytUpdateView(ch); });
 }
 
 function loadSettingsForm() {

@@ -202,6 +202,14 @@ kioskGuard 每 30 分鐘先 XHR 確認自己的網址回 200 才 `location.reloa
 
 ---
 
+## 後台 YouTube 頻道清單（視窗與媒體分頁，2026-10-22 改版）
+- 每個頻道（screen8 / screen9 各 10 槽）顯示成一列：點一列設為播放中，鉛筆展開編輯名稱與影片 ID，空白槽收合成「＋新增頻道」。
+- **資料格式沒變**：`settings.youtubeSlots1/2`＝10 個 `{id,note,active}`，加上 `youtubeId`／`youtubeId2`；`saveSettings()` 仍讀 `yt{ch}Id{i}`、`yt{ch}Note{i}`、`yt{ch}r{i}` 這組元素 id（刻意保留，改版面時不要動它們的 id）。
+- **燈號**：向 `https://news.shoyubook.com/yt/status` 查詢（office 的 `bbs-news-proxy`，見該專案 README），狀態 `live／ended／video／dead／unknown`。連不上或拿不準一律灰色「無法判斷」，不顯示紅色。目前播放的頻道若是 `dead`／`ended`，卡片上方會出現紅色警示。
+- 測試辦法：存檔不改動任何東西，前後 `youtubeSlots1/2`、`youtubeId*` 必須完全相同。
+
+---
+
 ## admin 登入
 - 網頁版（GitHub Pages）：預設密碼 `admin`（可在系統設定修改）
 - 密碼存在 `localStorage` 的 `bbs_settings.adminPassword`，登入時先讀出設定再比對（2026-10-19 前改過的密碼其實沒生效，一直只認 `admin`）
