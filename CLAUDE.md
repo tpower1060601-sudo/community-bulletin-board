@@ -275,7 +275,7 @@ Windows 7／WES7 用舊字碼頁（Big5）解讀 `.bat`，若檔案內含全形�
 - **實際是螢幕牆模式**：`C:\webpage\start_display.bat` 只開 1 個 `--app` 視窗載入 `renderer/wall/`，profile `C:\EdgeWall`。repo 根目錄的 `start_display.bat`／`close_browsers.bat` 就是部署在這台的版本。
 - 排程：`自動打開瀏覽器` 08:00、`自動關閉瀏覽器` 21:00、`開機自動執行`（登入時），皆「僅互動」。**每晚關閉是配合螢幕關閉的正常作息，不是崩潰。**
 - 2026-10-21：
-  - `--app` 標題列約 30px 讓整面牆被壓縮、YouTube 只給 720p → 視窗改 `--window-position=-1920,-1110 --window-size=5760,2190` 把標題列推出螢幕外（待重開後截圖確認）。
+  - `--app` 標題列約 30px 讓整面牆被壓縮、YouTube 只給 720p → 視窗改 `--window-position=-1920,-1110 --window-size=5760,2190` 把標題列推出螢幕外。10/22 實測標題列已消失，但**底部仍有約 17px 黑邊**（實際邊框上 36px／下 18px／左右各 3px）；正確值應為 `--window-position=-1923,-1116 --window-size=5766,2214`，使用者決定先維持現狀，待有機會重開再改並同步 `start_display.bat` 與後台產生器。
   - screen8/9 播放器內部開 3840×2160 再縮半，確保拿到 1080p。
   - 開機前先 ping GitHub Pages、執行 `fix_floor_exit.ps1 C:\EdgeWall` 清當機旗標；關閉先正常結束再強制。
 
