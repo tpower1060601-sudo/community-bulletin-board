@@ -2,86 +2,61 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<title>股市熱力圖</title>
+<title>梯間公告</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-:root { --accent:#f59e0b; --bg:#0a0e1a; }
+:root { --accent:#f59e0b; --bg:#0a0e1a; --head-h:68px; }
 body {
   background: var(--bg);
   color: #fff;
   font-family: 'Microsoft JhengHei','PingFang TC',sans-serif;
   height: 100vh;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr 2fr;   /* 左 1/3 公告、右 2/3 財經 */
   user-select: none;
 }
+.col { display:flex; flex-direction:column; min-width:0; min-height:0; overflow:hidden; }
+.col-ann { border-right: 2px solid rgba(245,158,11,.35); background:#0c0b09; }
 
-/* Header */
+/* ── 標題列（左右等高對齊） ── */
 .header {
   flex-shrink: 0;
-  height: 68px;
+  height: var(--head-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 36px;
+  gap: 16px;
+  padding: 0 28px;
   background: rgba(0,0,0,0.5);
   border-bottom: 2px solid var(--accent);
 }
-.header-left { display:flex; align-items:center; gap:20px; }
+.header-left { display:flex; align-items:center; gap:16px; min-width:0; }
 .header-icon { font-size:30px; line-height:1; }
 .header-title {
   font-size: 26px; font-weight: 900; letter-spacing: 3px;
   color: var(--accent);
   text-shadow: 0 0 16px rgba(245,158,11,0.5);
+  white-space: nowrap;
 }
-.header-subtitle { font-size:13px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; }
-
-/* Market indicator */
-.market-badge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 18px;
-  border-radius: 20px;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 1px;
-  background: rgba(245,158,11,0.12);
-  border: 1px solid rgba(245,158,11,0.35);
+.header-subtitle { font-size:13px; color:rgba(255,255,255,0.4); letter-spacing:2px; margin-top:2px; white-space:nowrap; }
+.header-right { display:flex; align-items:center; gap:18px; }
+.mkt-badge {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 14px; border-radius: 18px;
+  font-size: 15px; font-weight: 700; letter-spacing: 1px; white-space: nowrap;
+  background: rgba(245,158,11,0.10);
+  border: 1px solid rgba(245,158,11,0.3);
   color: var(--accent);
 }
 .badge-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: #22c55e;
-  box-shadow: 0 0 6px #22c55e;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #22c55e; box-shadow: 0 0 6px #22c55e;
   animation: pulse 1.5s ease-in-out infinite;
 }
-.badge-dot.closed { background: #64748b; box-shadow: none; animation: none; }
-@keyframes pulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:0.5; transform:scale(0.8); }
-}
-
-/* Manual override tabs */
-.market-tabs { display:flex; gap:8px; }
-.market-tab {
-  padding: 5px 16px;
-  border-radius: 16px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(255,255,255,0.04);
-  color: rgba(255,255,255,0.4);
-  transition: all 0.2s;
-}
-.market-tab.active { background:rgba(245,158,11,0.15); border-color:rgba(245,158,11,0.4); color:var(--accent); }
-.market-tab:hover:not(.active) { border-color:rgba(255,255,255,0.25); color:rgba(255,255,255,0.7); }
-.auto-label { font-size:11px; color:rgba(255,255,255,0.3); letter-spacing:1px; }
-
-.header-right { display:flex; align-items:center; gap:20px; }
+.badge-dot.closed { background:#64748b; box-shadow:none; animation:none; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+.date { font-size:16px; color:rgba(255,255,255,.55); letter-spacing:1px; white-space:nowrap; }
 .clock {
   font-size: 26px; font-weight: 900;
   font-variant-numeric: tabular-nums;
@@ -90,239 +65,577 @@ body {
   letter-spacing: 2px;
 }
 
-/* Widget panels */
-.widget-wrap { flex:1; position:relative; overflow:hidden; }
-.widget-panel {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
-  visibility: hidden;
-  pointer-events: none;
+/* ══ 左欄：直立公告（同 screen13，用 zoom 等比縮小） ══ */
+.ann-wrap { flex:1; min-height:0; position:relative; }
+/* 舞台內一律用 screen13 的像素單位（以 1920 寬設計），zoom 由 JS 依實際寬度算，
+   後台內容裡的行內字級也會一起縮，不會撐爆窄欄 */
+.ann-stage { position:absolute; inset:0; overflow:hidden; }
+.slides { position:absolute; inset:0; overflow:hidden; }
+.slide {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  padding: 60px 80px;
+  opacity: 0; z-index: 0;
+  background: radial-gradient(ellipse at center, rgba(0,40,80,.5) 0%, transparent 70%);
+  transition: opacity 0.7s ease;
 }
-.widget-panel.active { visibility:visible; pointer-events:auto; }
-.tradingview-widget-container,
-.tradingview-widget-container__widget {
-  width: 100% !important;
-  height: 100% !important;
+.slide.active { opacity:1; z-index:1; }
+.slide.slide-in { z-index:2; opacity:1; animation: annSlideUp 1.1s cubic-bezier(0.25,0.46,0.45,0.94) both; }
+@keyframes annSlideUp { from{transform:translateY(100%)} to{transform:translateY(0%)} }
+.slide-inner { max-width:1720px; text-align:left; width:100%; }
+.slide-with-img { display:flex; flex-direction:column; align-items:center; gap:60px; text-align:left; width:100%; max-width:1720px; }
+.slide-img-top { flex-shrink:0; width:100%; max-height:900px; display:flex; align-items:center; justify-content:center; }
+.slide-img-top img { max-width:100%; max-height:900px; border-radius:28px; object-fit:contain; box-shadow:0 16px 64px rgba(0,0,0,0.6); }
+.slide-text-block { width:100%; }
+.slide-fullimg { position:absolute; inset:0; z-index:5; display:flex; align-items:center; justify-content:center; background:#000; }
+.slide-fullimg img { width:100%; height:100%; object-fit:contain; }
+.slide-badge { display:inline-block; padding:16px 40px; border-radius:60px; font-size:44px; font-weight:700; letter-spacing:3px; margin-bottom:48px; border:1px solid; }
+.badge-general{ color:#f0a500; border-color:rgba(240,165,0,.4); background:rgba(240,165,0,.1); }
+.badge-urgent { color:#ff4d4d; border-color:rgba(255,77,77,.4);  background:rgba(255,77,77,.1); }
+.badge-event  { color:#2ecc71; border-color:rgba(46,204,113,.4); background:rgba(46,204,113,.1); }
+.badge-notice { color:var(--accent); border-color:rgba(0,212,255,.4); background:rgba(0,212,255,.1); }
+.slide-title { font-size:120px; font-weight:900; line-height:1.35; margin-bottom:48px; color:#fff; text-shadow:0 0 60px rgba(0,212,255,.3); }
+.slide-with-img .slide-title { font-size:96px; }
+.slide-body { font-size:72px; line-height:2.0; color:rgba(255,255,255,.8); }
+.slide-with-img .slide-body { font-size:60px; }
+.slide-date { margin-top:56px; font-size:40px; color:rgba(255,255,255,.35); }
+.ann-empty { color:rgba(255,255,255,.2); font-size:120px; text-align:center; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+
+.dots { flex-shrink:0; display:flex; justify-content:center; flex-wrap:wrap; gap:10px; padding:10px 12px; background:rgba(0,0,0,.3); min-height:30px; }
+.dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.2); transition:all .3s; }
+.dot.active { background:var(--accent); transform:scale(1.4); box-shadow:0 0 8px var(--accent); }
+.progress { height:4px; background:rgba(255,255,255,.1); flex-shrink:0; overflow:hidden; }
+.progress-bar { height:100%; background:linear-gradient(90deg, var(--accent), #00ff88); width:0%; }
+
+/* ══ 右欄：外匯＋全球股市＋財經新聞 ══ */
+.market-grid { flex:1; min-height:0; display:grid; grid-template-columns: 1fr 1fr; }
+.market-col { display:flex; flex-direction:column; min-height:0; overflow:hidden; border-right:1px solid rgba(245,158,11,.1); }
+.market-col:last-child { border-right:none; }
+.col-header {
+  flex-shrink:0; display:flex; align-items:center; gap:10px;
+  padding: 10px 20px;
+  background: rgba(10,9,7,.6);
+  border-bottom: 1px solid rgba(245,158,11,.12);
 }
-.tradingview-widget-container {
-  position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+.col-icon  { font-size:20px; }
+.col-title { font-size:18px; font-weight:800; letter-spacing:3px; color:rgba(255,255,255,.6); }
+.col-sub   { font-size:12px; letter-spacing:2px; color:rgba(255,255,255,.3); }
+.col-widget { flex:1; min-height:0; position:relative; }
+/* TradingView 元件字很小，整塊放大（同 screen3 的 zoom 作法；transform 會讓跨網域 iframe 糊掉） */
+.tv-zoom { position:absolute; inset:0; zoom:1.35; }
+.tv-zoom.tv-zoom-sm { zoom:1.12; }   /* 外匯清單下面還有 K 線圖，要塞 7 列 */
+.tv-zoom .tradingview-widget-container,
+.tv-zoom .tradingview-widget-container__widget { width:100% !important; height:100% !important; }
+
+/* 外匯 K 線輪播 */
+.fx-chart { flex-shrink:0; height:44%; display:flex; flex-direction:column; border-bottom:1px solid rgba(245,158,11,.12); }
+.fx-chart-bar { flex-shrink:0; display:flex; align-items:center; gap:10px; padding:8px 20px 4px; }
+.fx-chart-name { font-size:22px; font-weight:900; color:var(--accent); letter-spacing:1px; }
+.fx-chart-sub  { font-size:13px; color:rgba(255,255,255,.4); letter-spacing:2px; }
+.fx-dots { margin-left:auto; display:flex; gap:7px; }
+.fx-dot { width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.2); transition:all .3s; }
+.fx-dot.active { background:var(--accent); transform:scale(1.3); box-shadow:0 0 6px var(--accent); }
+.fx-panes { flex:1; min-height:0; position:relative; }
+/* 全部預先載入、用 visibility 切換：不會每 30 秒重載空白一下；display:none 會讓元件以 0 尺寸初始化 */
+.fx-pane { position:absolute; inset:0; visibility:hidden; opacity:0; transition:opacity .6s; }
+.fx-pane.active { visibility:visible; opacity:1; }
+.fx-pane .tradingview-widget-container,
+.fx-pane .tradingview-widget-container__widget { width:100% !important; height:100% !important; }
+.fx-progress { flex-shrink:0; height:3px; background:rgba(255,255,255,.08); }
+.fx-progress-bar { height:100%; width:0%; background:var(--accent); }
+
+/* 財經新聞跑馬燈 */
+.news-bar {
+  flex-shrink:0; height:84px;
+  display:flex; align-items:center;
+  background: linear-gradient(90deg,#04111f,#072340,#04111f);
+  border-top: 3px solid var(--accent);
+  overflow:hidden;
 }
+.news-label {
+  flex-shrink:0; height:100%;
+  display:flex; align-items:center; gap:10px;
+  padding: 0 22px;
+  font-size:22px; font-weight:900; letter-spacing:2px; color:var(--accent);
+  background: rgba(0,0,0,.35);
+  border-right: 1px solid rgba(245,158,11,.3);
+  white-space:nowrap; z-index:2;
+}
+.live-dot { width:9px; height:9px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444; animation:pulse 2s ease-in-out infinite; }
+.ticker-wrap { flex:1; height:100%; overflow:hidden; position:relative; display:flex; align-items:center; }
+.ticker-wrap::before, .ticker-wrap::after { content:''; position:absolute; top:0; bottom:0; width:60px; z-index:2; pointer-events:none; }
+.ticker-wrap::before { left:0;  background:linear-gradient(90deg,#04111f,transparent); }
+.ticker-wrap::after  { right:0; background:linear-gradient(270deg,#04111f,transparent); }
+.ticker-track { display:flex; align-items:center; white-space:nowrap; will-change:transform; }
+@keyframes tickerScroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+.ticker-item { font-size:38px; font-weight:700; color:rgba(255,255,255,.92); padding:0 18px; flex-shrink:0; }
+.ticker-sep  { font-size:24px; color:var(--accent); opacity:.6; padding:0 10px; flex-shrink:0; }
+.ticker-tag  {
+  flex-shrink:0; margin:0 10px 0 40px;
+  padding:4px 14px; border-radius:8px;
+  font-size:22px; font-weight:900; letter-spacing:1px; border:1px solid;
+}
+.tag-fin   { color:#10b981; border-color:rgba(16,185,129,.4); background:rgba(16,185,129,.12); }
+.tag-stock { color:#a855f7; border-color:rgba(168,85,247,.45); background:rgba(168,85,247,.14); }
+.ticker-loading { font-size:24px; color:rgba(255,255,255,.3); letter-spacing:4px; padding:0 30px; }
 </style>
 <script src="../../shared/kioskGuard.js"></script>
 </head>
 <body>
 
-<div class="header">
-  <div class="header-left">
-    <div class="header-icon">📊</div>
-    <div>
-      <div class="header-title" id="headerTitle">股市熱力圖</div>
-      <div class="header-subtitle">STOCK MARKET HEATMAP</div>
-    </div>
-    <div class="market-badge">
-      <div class="badge-dot" id="badgeDot"></div>
-      <span id="badgeText">載入中</span>
-    </div>
-    <div>
-      <div class="market-tabs">
-        <div class="market-tab" id="tab-tw" onclick="manualSwitch('tw')">台股</div>
-        <div class="market-tab" id="tab-us" onclick="manualSwitch('us')">美股</div>
+<!-- ══ 左 1/3：直立公告 ══ -->
+<div class="col col-ann">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">📢</div>
+      <div>
+        <div class="header-title">梯間公告</div>
+        <div class="header-subtitle">ANNOUNCEMENTS</div>
       </div>
-      <div class="auto-label" id="autoLabel" style="text-align:center;margin-top:3px">⏱ 自動切換</div>
     </div>
   </div>
-  <div class="header-right">
-    <div class="clock" id="clock">--:--:--</div>
+  <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+  <div class="ann-wrap">
+    <div class="ann-stage" id="annStage">
+      <div class="slides" id="slides"></div>
+    </div>
   </div>
+  <div class="dots" id="dots"></div>
 </div>
 
-<div class="widget-wrap">
+<!-- ══ 右 2/3：財經資訊 ══ -->
+<div class="col">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-icon">📈</div>
+      <div>
+        <div class="header-title">財經資訊</div>
+        <div class="header-subtitle">FX · GLOBAL MARKETS</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="mkt-badge"><div class="badge-dot" id="dotTW"></div><span id="txtTW">台股</span></div>
+      <div class="mkt-badge"><div class="badge-dot" id="dotUS"></div><span id="txtUS">美股</span></div>
+      <div class="date" id="date"></div>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </div>
 
-  <!-- ── 台股（Market Overview）── -->
-  <div class="widget-panel" id="panel-tw">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript"
-        src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-      {
-        "colorTheme": "dark",
-        "dateRange": "1D",
-        "showChart": true,
-        "locale": "zh_TW",
-        "isTransparent": true,
-        "showSymbolLogo": true,
-        "showFloatingTooltip": true,
-        "width": "100%",
-        "height": "100%",
-        "plotLineColorGrowing": "rgba(245,158,11,1)",
-        "plotLineColorFalling": "rgba(56,189,248,1)",
-        "gridLineColor": "rgba(255,255,255,0.05)",
-        "scaleFontColor": "rgba(255,255,255,0.5)",
-        "belowLineFillColorGrowing": "rgba(245,158,11,0.08)",
-        "belowLineFillColorFalling": "rgba(56,189,248,0.08)",
-        "belowLineFillColorGrowingBottom": "rgba(245,158,11,0)",
-        "belowLineFillColorFallingBottom": "rgba(56,189,248,0)",
-        "symbolActiveColor": "rgba(245,158,11,0.15)",
-        "tabs": [
+  <div class="market-grid">
+    <!-- 外匯：各幣別對台幣 -->
+    <div class="market-col">
+      <div class="col-header">
+        <span class="col-icon">💱</span>
+        <span class="col-title">外匯匯率</span>
+        <span class="col-sub">對新台幣</span>
+      </div>
+      <!-- K 線圖：每個幣別一個面板，JS 建立後輪流顯示 -->
+      <div class="fx-chart">
+        <div class="fx-chart-bar">
+          <span class="fx-chart-name" id="fxName"></span>
+          <span class="fx-chart-sub">日 K</span>
+          <div class="fx-dots" id="fxDots"></div>
+        </div>
+        <div class="fx-panes" id="fxPanes"></div>
+        <div class="fx-progress"><div class="fx-progress-bar" id="fxProgress"></div></div>
+      </div>
+      <div class="col-widget"><div class="tv-zoom tv-zoom-sm">
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
           {
-            "title": "大型權值股",
-            "symbols": [
-              { "s": "TWSE:2330", "d": "台積電" },
-              { "s": "TWSE:2454", "d": "聯發科" },
-              { "s": "TWSE:2317", "d": "鴻海" },
-              { "s": "TWSE:2382", "d": "廣達" },
-              { "s": "TWSE:2308", "d": "台達電" },
-              { "s": "TWSE:3711", "d": "日月光投控" },
-              { "s": "TWSE:2303", "d": "聯電" },
-              { "s": "TWSE:2412", "d": "中華電" },
-              { "s": "TWSE:2882", "d": "國泰金" },
-              { "s": "TWSE:2891", "d": "中信金" }
-            ],
-            "originalTitle": "大型權值股"
-          },
-          {
-            "title": "ETF",
-            "symbols": [
-              { "s": "TWSE:0050",  "d": "元大台灣50" },
-              { "s": "TWSE:0056",  "d": "元大高股息" },
-              { "s": "TWSE:00878", "d": "國泰永續高股息" },
-              { "s": "TWSE:00919", "d": "群益台灣精選高息" },
-              { "s": "TWSE:006208","d": "富邦台50" },
-              { "s": "TWSE:00881", "d": "國泰台灣5G+" }
-            ],
-            "originalTitle": "ETF"
-          },
-          {
-            "title": "半導體",
-            "symbols": [
-              { "s": "TWSE:2330", "d": "台積電" },
-              { "s": "TWSE:2303", "d": "聯電" },
-              { "s": "TWSE:2454", "d": "聯發科" },
-              { "s": "TWSE:3711", "d": "日月光投控" },
-              { "s": "TWSE:2379", "d": "瑞昱" },
-              { "s": "TWSE:2337", "d": "旺宏" },
-              { "s": "TWSE:3034", "d": "聯詠" },
-              { "s": "TWSE:2408", "d": "南亞科" }
-            ],
-            "originalTitle": "半導體"
+            "colorTheme": "dark",
+            "dateRange": "1D",
+            "showChart": false,
+            "locale": "zh_TW",
+            "isTransparent": true,
+            "showSymbolLogo": true,
+            "showFloatingTooltip": false,
+            "width": "100%",
+            "height": "100%",
+            "tabs": [{
+              "title": "對台幣",
+              "symbols": [
+                {"s": "FX_IDC:USDTWD", "d": "美元 USD"},
+                {"s": "FX_IDC:JPYTWD", "d": "日圓 JPY"},
+                {"s": "FX_IDC:EURTWD", "d": "歐元 EUR"},
+                {"s": "FX_IDC:CNYTWD", "d": "人民幣 CNY"},
+                {"s": "FX_IDC:HKDTWD", "d": "港幣 HKD"},
+                {"s": "FX_IDC:GBPTWD", "d": "英鎊 GBP"},
+                {"s": "FX_IDC:AUDTWD", "d": "澳幣 AUD"}
+              ]
+            }]
           }
-        ]
-      }
-      </script>
+          </script>
+        </div>
+      </div></div>
+    </div>
+
+    <!-- 全球股市 -->
+    <div class="market-col">
+      <div class="col-header">
+        <span class="col-icon">🌐</span>
+        <span class="col-title">全球股市</span>
+        <span class="col-sub">主要指數</span>
+      </div>
+      <div class="col-widget"><div class="tv-zoom">
+        <div class="tradingview-widget-container">
+          <div class="tradingview-widget-container__widget"></div>
+          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
+          {
+            "colorTheme": "dark",
+            "dateRange": "1D",
+            "showChart": false,
+            "locale": "zh_TW",
+            "isTransparent": true,
+            "showSymbolLogo": true,
+            "showFloatingTooltip": false,
+            "width": "100%",
+            "height": "100%",
+            "tabs": [{
+              "title": "全球指數",
+              "symbols": [
+                {"s": "INDEX:TWII",       "d": "台灣加權指數"},
+                {"s": "INDEX:NKY",        "d": "日經 225"},
+                {"s": "INDEX:HSI",        "d": "恆生指數"},
+                {"s": "SSE:000001",       "d": "上證綜指"},
+                {"s": "FOREXCOM:SPXUSD",  "d": "S&P 500"},
+                {"s": "FOREXCOM:NSXUSD",  "d": "NASDAQ 100"},
+                {"s": "PEPPERSTONE:US30", "d": "道瓊工業"},
+                {"s": "NASDAQ:SOXX",      "d": "費城半導體 SOXX"},
+                {"s": "INDEX:DAX",        "d": "德國 DAX"},
+                {"s": "FOREXCOM:UKXGBP",  "d": "英國 FTSE 100"}
+              ]
+            }]
+          }
+          </script>
+        </div>
+      </div></div>
     </div>
   </div>
 
-  <!-- ── 美股 S&P 500 ── -->
-  <div class="widget-panel" id="panel-us">
-    <div class="tradingview-widget-container">
-      <div class="tradingview-widget-container__widget"></div>
-      <script type="text/javascript"
-        src="https://s3.tradingview.com/external-embedding/embed-widget-stock-heatmap.js" async>
-      {
-        "exchanges": ["NYSE","NASDAQ","NYSE ARCA"],
-        "dataSource": "SPX500",
-        "grouping": "sector",
-        "blockColor": "change",
-        "locale": "zh_TW",
-        "colorTheme": "dark",
-        "hasTopBar": false,
-        "isDataSetEnabled": false,
-        "isZoomEnabled": true,
-        "hasSymbolTooltip": true,
-        "isMonoSize": false,
-        "width": "100%",
-        "height": "100%"
-      }
-      </script>
+  <div class="news-bar">
+    <div class="news-label"><span class="live-dot"></span>財經新聞</div>
+    <div class="ticker-wrap">
+      <div class="ticker-track" id="ticker"><span class="ticker-loading">連線中…</span></div>
     </div>
   </div>
-
 </div>
 
 <script src="../../shared/api.js"></script>
 <script>
-var manualOverride = null; // null = 自動模式
+'use strict';
 
-/* ── 判斷目前應顯示哪個市場 ── */
-function getAutoMarket() {
-  var n = new Date();
-  var day = n.getDay();          // 0=日, 6=六
-  var mins = n.getHours() * 60 + n.getMinutes();
+/* ══════════ 左欄：直立公告（邏輯同 screen13，資料 announcements_v） ══════════ */
+const TYPE_LABEL = { general:'一般公告', urgent:'緊急通知', event:'活動公告', notice:'重要通知' };
+const STAGE_DESIGN_W = 1600;   /* 舞台設計寬度（screen13 單位）；實際寬 / 此值 = zoom */
 
-  if (day === 0 || day === 6) return 'us'; // 週末固定美股（前日收盤資料）
+let data = { marquee:'', list:[] };
+let current = 0, timer = null, schedTimer = null;
+let activeList = [];
+let lastSig = null;
 
-  // 台股開盤：09:00–13:30
-  if (mins >= 540 && mins < 810) return 'tw';
-
-  // 美股開盤（台灣時間）：
-  // 夏令（EDT, 約 3月~11月）: 21:30–04:00 → mins >= 1290 || mins < 240
-  // 冬令（EST, 約 11月~3月）: 22:30–05:00 → mins >= 1350 || mins < 300
-  // 保守取聯集：21:30 開始，次日 05:00 結束
-  if (mins >= 1290 || mins < 300) return 'us';
-
-  // 非交易時段 → 台股收盤後傍晚顯示台股（有今日收盤資料）
-  // 美股開盤前夜晚顯示美股（有昨日收盤資料）
-  if (mins >= 810 && mins < 1290) {
-    // 13:30–21:30 → 台股剛收盤，顯示台股當日結果
-    return 'tw';
-  }
-  return 'us';
+function fitStage() {
+  const wrap = document.getElementById('annStage').parentNode;
+  document.getElementById('annStage').style.zoom = (wrap.clientWidth / STAGE_DESIGN_W).toFixed(4);
 }
 
-/* ── 切換 panel ── */
-function showPanel(market) {
-  ['tw','us'].forEach(function(m) {
-    document.getElementById('panel-' + m).classList.toggle('active', m === market);
-    document.getElementById('tab-' + m).classList.toggle('active', m === market);
+function getDuration(idx) {
+  const a = activeList[idx];
+  const sec = a && parseInt(a.duration) > 0 ? parseInt(a.duration) : 7;
+  return Math.max(3, sec) * 1000;
+}
+
+function startProgress(ms) {
+  const bar = document.getElementById('progressBar');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  requestAnimationFrame(() => {
+    bar.style.transition = `width ${ms}ms linear`;
+    bar.style.width = '100%';
+  });
+}
+
+function esc(s){ return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function rocToWestern(d){ var p=d.split('-'),y=+p[0]; return (y<1900?y+1911:y)+'-'+p[1]+'-'+p[2]; }
+function isAnnActive(a) {
+  if (a.alwaysValid !== false && !a.startDate) return true;
+  if (a.alwaysValid) return true;
+  const now = new Date().getTime();
+  const start = a.startDate ? new Date(rocToWestern(a.startDate) + 'T' + (a.startTime || '00:00')).getTime() : 0;
+  const end   = a.endDate   ? new Date(rocToWestern(a.endDate)   + 'T' + (a.endTime   || '23:59:59')).getTime() : Infinity;
+  return now >= start && now <= end;
+}
+
+function render() {
+  const active = (data.list||[]).filter(isAnnActive);
+  const slidesEl = document.getElementById('slides');
+  const dotsEl   = document.getElementById('dots');
+
+  // 內容完全相同就不重建 DOM、不重置輪播位置
+  const sig = JSON.stringify(active);
+  if (sig === lastSig) return;
+  lastSig = sig;
+
+  if (!active.length) {
+    slidesEl.innerHTML = '<div class="ann-empty">暫無公告</div>';
+    dotsEl.innerHTML = '';
+    activeList = [];
+    if (timer) clearTimeout(timer);
+    return;
+  }
+
+  activeList = active;
+
+  slidesEl.innerHTML = active.map((a,i) => {
+    const type    = a.type || 'general';
+    const hasImg  = !!a.imageUrl;
+    const hasText = !!(a.title || a.content);
+
+    const textBlock = `
+      <div class="slide-badge badge-${type}">${TYPE_LABEL[type]||'公告'}</div>
+      <div class="slide-title">${esc(a.title)}</div>
+      <div class="slide-body">${a.content||''}</div>
+      <div class="slide-date">${a.date||''}</div>`;
+
+    let inner;
+    if (hasImg && !hasText) {
+      inner = `<div class="slide-fullimg">
+        <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.style.display='none'">
+      </div>`;
+    } else if (hasImg) {
+      inner = `<div class="slide-inner slide-with-img">
+        <div class="slide-img-top">
+          <img src="${esc(a.imageUrl)}" alt="公告圖片" onerror="this.parentNode.style.display='none'">
+        </div>
+        <div class="slide-text-block">${textBlock}</div>
+      </div>`;
+    } else {
+      inner = `<div class="slide-inner">${textBlock}</div>`;
+    }
+    return `<div class="slide${i===0?' active':''}" data-i="${i}">${inner}</div>`;
+  }).join('');
+
+  dotsEl.innerHTML = active.map((_,i) => `<div class="dot${i===0?' active':''}"></div>`).join('');
+
+  current = 0;
+  startSlider();
+}
+
+function goTo(idx) {
+  const slides = document.querySelectorAll('.slide');
+  const dots   = document.querySelectorAll('.dot');
+  if (!slides.length) return;
+
+  slides[current].classList.remove('active');
+  dots[current].classList.remove('active');
+
+  current = ((idx % slides.length) + slides.length) % slides.length;
+
+  const newSlide = slides[current];
+  newSlide.classList.add('active', 'slide-in');
+  dots[current].classList.add('active');
+  setTimeout(() => newSlide.classList.remove('slide-in'), 1200);
+
+  const dur = getDuration(current);
+  startProgress(dur);
+  scheduleNext(dur);
+}
+
+function scheduleNext(dur) {
+  if (timer) clearTimeout(timer);
+  if (activeList.length <= 1) return;
+  timer = setTimeout(() => goTo(current + 1), dur);
+}
+
+function startSlider() {
+  if (timer) clearTimeout(timer);
+  const slides = document.querySelectorAll('.slide');
+  if (slides[0]) {
+    slides[0].classList.add('slide-in');
+    setTimeout(() => slides[0].classList.remove('slide-in'), 1200);
+  }
+  const dur = getDuration(0);
+  startProgress(dur);
+  scheduleNext(dur);
+}
+
+/* ══════════ 右欄：時鐘與開收盤 ══════════ */
+function tick() {
+  const n = new Date();
+  const p = v => String(v).padStart(2,'0');
+  document.getElementById('clock').textContent = [n.getHours(), n.getMinutes(), n.getSeconds()].map(p).join(':');
+  document.getElementById('date').textContent =
+    n.toLocaleDateString('zh-TW', { month:'2-digit', day:'2-digit', weekday:'short' });
+
+  const day = n.getDay(), mins = n.getHours() * 60 + n.getMinutes();
+  const weekday = day >= 1 && day <= 5;
+  const twOpen = weekday && mins >= 540 && mins < 810;              // 09:00–13:30
+  // 美股（台灣時間）夏令 21:30–04:00、冬令 22:30–05:00，取聯集；週一凌晨是週五的盤要排除、週六凌晨要算
+  const usOpen = (weekday && mins >= 1290) || (day >= 2 && day <= 6 && mins < 300);
+  document.getElementById('dotTW').className = 'badge-dot' + (twOpen ? '' : ' closed');
+  document.getElementById('txtTW').textContent = '台股 ' + (twOpen ? '盤中' : '收盤');
+  document.getElementById('dotUS').className = 'badge-dot' + (usOpen ? '' : ' closed');
+  document.getElementById('txtUS').textContent = '美股 ' + (usOpen ? '盤中' : '收盤');
+}
+
+/* ══════════ 右欄：外匯 K 線輪播 ══════════ */
+/* 下方報價清單（market-overview）的 symbols 要跟這裡同步 */
+const FX_LIST = [
+  { s:'FX_IDC:USDTWD', d:'美元 / 台幣' },
+  { s:'FX_IDC:JPYTWD', d:'日圓 / 台幣' },
+  { s:'FX_IDC:EURTWD', d:'歐元 / 台幣' },
+  { s:'FX_IDC:CNYTWD', d:'人民幣 / 台幣' },
+  { s:'FX_IDC:HKDTWD', d:'港幣 / 台幣' },
+  { s:'FX_IDC:GBPTWD', d:'英鎊 / 台幣' },
+  { s:'FX_IDC:AUDTWD', d:'澳幣 / 台幣' }
+];
+const FX_INTERVAL = 30 * 1000;
+let fxIdx = 0;
+
+function buildFxPanes() {
+  const panes = document.getElementById('fxPanes');
+  FX_LIST.forEach((fx, i) => {
+    const pane = document.createElement('div');
+    pane.className = 'fx-pane' + (i === 0 ? ' active' : '');
+    pane.innerHTML = '<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>';
+    const sc = document.createElement('script');
+    sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js';
+    sc.async = true;
+    sc.text = JSON.stringify({
+      symbols: [[fx.d, fx.s + '|3M']],
+      chartOnly: true,
+      width: '100%', height: '100%',
+      locale: 'zh_TW', colorTheme: 'dark', isTransparent: true,
+      autosize: true, showVolume: false, showMA: false,
+      hideDateRanges: true, hideMarketStatus: true, hideSymbolLogo: true,
+      scalePosition: 'right', scaleMode: 'Normal',
+      fontSize: '12', noTimeScale: false, valuesTracking: '1',
+      changeMode: 'price-and-percent',
+      chartType: 'candlesticks',
+      /* 台灣習慣：紅漲綠跌 */
+      upColor: '#ef4444', downColor: '#22c55e',
+      borderUpColor: '#ef4444', borderDownColor: '#22c55e',
+      wickUpColor: '#ef4444', wickDownColor: '#22c55e',
+      gridLineColor: 'rgba(255,255,255,0.05)',
+      dateRanges: ['3m|1D']
+    });
+    pane.firstChild.appendChild(sc);
+    panes.appendChild(pane);
+  });
+  document.getElementById('fxDots').innerHTML = FX_LIST.map((_, i) => `<div class="fx-dot${i===0?' active':''}"></div>`).join('');
+  showFx(0);
+}
+
+function showFx(idx) {
+  fxIdx = idx % FX_LIST.length;
+  document.querySelectorAll('.fx-pane').forEach((p, i) => p.classList.toggle('active', i === fxIdx));
+  document.querySelectorAll('.fx-dot').forEach((d, i) => d.classList.toggle('active', i === fxIdx));
+  document.getElementById('fxName').textContent = FX_LIST[fxIdx].d;
+  const bar = document.getElementById('fxProgress');
+  bar.style.transition = 'none'; bar.style.width = '0%';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    bar.style.transition = `width ${FX_INTERVAL}ms linear`;
+    bar.style.width = '100%';
+  }));
+}
+
+/* ══════════ 右欄：財經新聞跑馬燈 ══════════ */
+/* 自架新聞轉接（office 主機 bbs-news-proxy），與 screen7 共用；rows[1]=台灣財經、rows[4]=股市即時。
+   改來源要同步 screen7 的 FEEDS 與 office 的 feeds.json。 */
+const NEWS_API  = 'https://news.shoyubook.com/rows';
+const NEWS_ROWS = [ { i:1, tag:'台灣財經', cls:'tag-fin' }, { i:4, tag:'股市即時', cls:'tag-stock' } ];
+const NEWS_REFETCH = 5 * 60 * 1000;
+const PX_PER_S = 70;
+const MAX_PER_ROW = 15;   /* 每組最多幾則，避免一輪跑太久 */
+let lastNewsSig = null, newsRetry = null;
+
+async function fetchNews() {
+  clearTimeout(newsRetry);
+  const ctrl = new AbortController();
+  const abortTimer = setTimeout(() => ctrl.abort(), 10000);
+  try {
+    const res = await fetch(NEWS_API, { cache: 'no-store', signal: ctrl.signal });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const json = await res.json();
+    const groups = NEWS_ROWS.map(r => ({
+      tag: r.tag, cls: r.cls,
+      titles: ((json.rows && json.rows[r.i] && json.rows[r.i].titles) || []).slice(0, MAX_PER_ROW)
+    })).filter(g => g.titles.length);
+    if (!groups.length) throw new Error('no titles');
+    const sig = JSON.stringify(groups);
+    if (sig !== lastNewsSig) { lastNewsSig = sig; renderTicker(groups); }   /* 內容沒變不重畫，跑馬燈不會從頭開始 */
+  } catch (e) {
+    /* 失敗保留現有內容，1 分鐘後重試 */
+    newsRetry = setTimeout(fetchNews, 60000);
+  } finally {
+    clearTimeout(abortTimer);
+  }
+}
+
+function renderTicker(groups) {
+  const track = document.getElementById('ticker');
+  track.style.animation = 'none';
+  track.style.transform = 'translateX(0)';
+
+  const frag = document.createDocumentFragment();
+  groups.forEach(g => {
+    const tag = document.createElement('span');
+    tag.className = 'ticker-tag ' + g.cls;
+    tag.textContent = g.tag;
+    frag.appendChild(tag);
+    g.titles.forEach(t => {
+      const item = document.createElement('span');
+      item.className = 'ticker-item';
+      item.textContent = t;
+      frag.appendChild(item);
+      const sep = document.createElement('span');
+      sep.className = 'ticker-sep';
+      sep.textContent = '◆';
+      frag.appendChild(sep);
+    });
   });
 
-  var isTW = market === 'tw';
-  var n = new Date();
-  var day = n.getDay();
-  var mins = n.getHours() * 60 + n.getMinutes();
-  var twOpen = day >= 1 && day <= 5 && mins >= 540 && mins < 810;
-  var usOpen = day >= 1 && day <= 5 && (mins >= 1290 || mins < 300);
-  var isOpen = isTW ? twOpen : usOpen;
+  /* 內容×2 無縫銜接 */
+  track.innerHTML = '';
+  track.appendChild(frag.cloneNode(true));
+  track.appendChild(frag);
 
-  document.getElementById('badgeDot').className = 'badge-dot' + (isOpen ? '' : ' closed');
-  document.getElementById('badgeText').textContent = (isTW ? '台股' : '美股 S&P 500') + (isOpen ? '　盤中' : '　收盤');
-  document.getElementById('autoLabel').textContent = manualOverride ? '👆 手動切換' : '⏱ 自動切換';
-  document.getElementById('headerTitle').textContent = isTW ? '台股報價' : '美股熱力圖';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const halfW = track.scrollWidth / 2;
+    if (halfW < 10) return;
+    track.style.animation = `tickerScroll ${(halfW / PX_PER_S).toFixed(2)}s linear infinite`;
+  }));
 }
 
-/* ── 手動覆蓋 ── */
-function manualSwitch(market) {
-  manualOverride = market;
-  showPanel(market);
-  document.getElementById('autoLabel').textContent = '👆 手動切換';
-  // 60 秒後恢復自動
-  clearTimeout(manualSwitch._timer);
-  manualSwitch._timer = setTimeout(function() {
-    manualOverride = null;
-    autoUpdate();
-  }, 60000);
+/* ══════════ 初始化 ══════════ */
+async function init() {
+  if (window.ghBackup) await window.ghBackup.autoRestore();
+  data = await window.api.get('announcements_v');
+  render();
+  schedTimer = setInterval(render, 60000);   /* 依起訖時間上下架 */
 }
 
-/* ── 自動更新 ── */
-function autoUpdate() {
-  if (!manualOverride) showPanel(getAutoMarket());
-}
+window.api.on('announcements_v:updated', d => { data = d; render(); });
 
-/* ── 時鐘 ── */
-function tick() {
-  var n = new Date();
-  var h = n.getHours(), m = n.getMinutes(), s = n.getSeconds();
-  document.getElementById('clock').textContent =
-    [h,m,s].map(function(v){ return String(v).padStart(2,'0'); }).join(':');
-  // 分鐘數改變就檢查自動切換（不用 s === 0：主執行緒被卡住跳過 0 秒時會漏掉）
-  if (m !== lastMin) { lastMin = m; autoUpdate(); }
-}
-var lastMin = new Date().getMinutes();
-setInterval(tick, 1000); tick();
+fitStage();
+window.addEventListener('resize', fitStage);
+tick();
+const clockTimer = setInterval(tick, 1000);
+fetchNews();
+const newsTimer = setInterval(fetchNews, NEWS_REFETCH);
+buildFxPanes();
+const fxTimer = setInterval(() => showFx(fxIdx + 1), FX_INTERVAL);
 
-// 初始化
-autoUpdate();
+window.addEventListener('beforeunload', () => {
+  if (timer)      clearTimeout(timer);
+  if (schedTimer) clearInterval(schedTimer);
+  clearInterval(clockTimer);
+  clearInterval(newsTimer);
+  clearInterval(fxTimer);
+});
+
+init();
 </script>
 </body>
 </html>

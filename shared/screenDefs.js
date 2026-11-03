@@ -16,7 +16,7 @@
     { id:'screen9',  label:'YouTube 2',  w:1920, h:1080, color:'#6b21a8' },
     { id:'screen10', label:'樓層告示 A', w:1080, h:1920, color:'#374151' },
     { id:'screen11', label:'樓層告示 B', w:1080, h:1920, color:'#1f2937' },
-    { id:'screen12', label:'台股熱力圖', w:1920, h:1080, color:'#3f6212' },
+    { id:'screen12', label:'梯間公告', w:1920, h:1080, color:'#3f6212' },
     { id:'screen13', label:'公告欄（直立型）', w:1920, h:2160, color:'#7f1d1d' },
   ];
 

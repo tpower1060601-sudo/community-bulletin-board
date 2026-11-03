@@ -28,7 +28,7 @@
         { id: 'screen9',  title: 'YouTube 頻道 2',  enabled: true  },
         { id: 'screen10', title: '樓層告示牌 A',     enabled: true  },
         { id: 'screen11', title: '樓層告示牌 B',     enabled: true  },
-        { id: 'screen12', title: '台股熱力圖',        enabled: true  },
+        { id: 'screen12', title: '梯間公告',          enabled: true  },
         { id: 'screen13', title: '公告欄（直立型）',   enabled: true  },
       ],
     },

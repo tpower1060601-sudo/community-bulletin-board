@@ -86,7 +86,7 @@ C:\webpage\
     ├── screen9/   YouTube 頻道 2（全螢幕 iframe）
     ├── screen10/  樓層告示牌 A（1–14F，1080×1920 直立，ES5）
     ├── screen11/  樓層告示牌 B（15F 以上，1080×1920 直立，ES5）
-    ├── screen12/  台股/港股/美股熱力圖（TradingView）
+    ├── screen12/  梯間公告（左 1/3 直立公告、右 2/3 外匯對台幣＋全球股市＋財經新聞跑馬燈）
     ├── screen13/  公告欄直立型（1920×2160，跨上下兩面螢幕）
     ├── wall/      螢幕牆（單一視窗以 iframe 拼接，依後台螢幕排版）
     ├── floorboards/ screen10+11 合併版（未使用，見下方水牌章節）
@@ -151,7 +151,15 @@ FMP / Twelve Data 金鑰（`fmpKey1~3`、`tdKey1~3`、`twelveDataKey`）已不�
   - 亞太：台股加權、日經、恆生、上證、印度 SENSEX、韓國（EWY）、新加坡 STI、澳洲 XJO
   - 歐美：S&P 500、那斯達克 100、道瓊、費半 SOXX、DAX、FTSE、CAC 40、Euro Stoxx 50
   - 外匯商品：USD/TWD、USD/CNY、EUR/USD、USD/JPY、黃金、原油、BTC、ETH
-- screen12 熱力圖同樣是 TradingView 元件。
+- screen12 梯間公告的外匯、全球股市也是 TradingView 元件（股市符號沿用這裡）。
+
+---
+
+## screen12 梯間公告（2026-11-03 由台股熱力圖改版）
+- 兩欄式：左 1/3 輪播**直立公告**（`announcements_v`，與 screen13 同一份，不顯示其跑馬燈）；右 2/3 外匯對台幣（7 幣別 `FX_IDC:xxxTWD`）＋全球股市（10 指數）＋底部財經新聞跑馬燈。
+- 外匯欄上方是日 K 線圖（TradingView `symbol-overview`，近 3 個月，紅漲綠跌），**每 30 秒輪播下一個幣別**；7 個面板開頁時一次建好、用 visibility 切換（不要改 display:none，元件會以 0 尺寸初始化）。下方報價清單與 `FX_LIST` 要同步。
+- 左欄用 screen13 的像素單位撰寫，外層 CSS `zoom`（實際寬 ÷ 1600）等比縮小；TradingView 元件外層 `zoom:1.35`（別改用 transform，跨網域 iframe 會糊）。
+- 跑馬燈讀自架轉接 `news.shoyubook.com/rows` 的 `rows[1]`（台灣財經）＋`rows[4]`（股市即時）；**沒有**免費轉接站備援。改 office `feeds.json` 的列順序時要一併確認這兩個索引。
 
 ### 資料來源選型歷程
 Yahoo Finance → CORS 封鎖 → Stooq 反爬蟲 → Twelve Data / FMP 免費方案不含指數 → 改抓龍頭個股（Twelve Data）→ **改用 TradingView 嵌入元件**（可直接顯示指數，免金鑰、免配額）。
@@ -193,7 +201,7 @@ kioskGuard 每 30 分鐘先 XHR 確認自己的網址回 200 才 `location.reloa
 ## screen7 即時新聞注意事項
 - **主要資料來源是自架轉接 `https://news.shoyubook.com/rows`**（2026-10-21 起）：office 主機 docker `bbs-news-proxy`（port 8003，專案 `C:\projects\bbs-news-proxy`，Cloudflare Tunnel 子網域），每 5 分鐘在伺服器端抓好 5 列標題。CORS 只放行本站與 `localhost:8765`，只抓 `feeds.json` 的固定來源。
 - 起因：rss2json（403）、corsproxy.io（401 需付費）、allorigins（常逾時）三個免費轉接站 2026-10 全部失效，畫面長時間停在「連線中…」。三者仍留作自架服務失敗時的備援。
-- **改新聞來源時，screen7 的 `FEEDS` 與 office 上 `~/bbs-news-proxy/feeds.json` 要同步修改**（後者改完 `docker restart bbs-news-proxy`）。
+- **改新聞來源時，screen7 的 `FEEDS` 與 office 上 `~/bbs-news-proxy/feeds.json` 要同步修改**（後者改完 `docker restart bbs-news-proxy`）。screen12 梯間公告也讀同一個 `/rows`（第 2、5 列），調整列順序要一併改它的 `NEWS_ROWS`。
 - 標題內容沒變就不重畫，跑馬燈不會每 5 分鐘從頭開始。
 - rss2json proxy **不可加 count= 參數**（付費功能，免費會回傳 error）
 - 正確用法：`https://api.rss2json.com/v1/api.json?rss_url=...`

@@ -244,14 +244,14 @@ input:checked + .slider:before{transform:translateX(20px);}
         <button class="btn btn-primary" onclick="openAnnModal(0,'announcements_v')">＋ 新增公告</button>
       </div>
       <div class="card">
-        <div class="card-title">🎯 跑馬燈內容（直立螢幕）</div>
+        <div class="card-title">🎯 跑馬燈內容（直立螢幕；梯間公告不顯示此跑馬燈）</div>
         <div class="input-group">
           <input type="text" id="marqueeVInput" placeholder="輸入跑馬燈文字...">
           <button class="btn btn-warning" onclick="saveMarqueeV()">儲存</button>
         </div>
       </div>
       <div class="card">
-        <div class="card-title">📋 直立版公告列表</div>
+        <div class="card-title">📋 直立版公告列表<small style="color:var(--text2);font-size:12px;font-weight:400;margin-left:8px">同時顯示於 screen13 直立公告欄與 screen12 梯間公告左欄</small></div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>標題</th><th>類型</th><th>日期</th><th>狀態</th><th>操作</th></tr></thead>
