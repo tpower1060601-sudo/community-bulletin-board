@@ -123,7 +123,15 @@ body {
 .col-widget { flex:1; min-height:0; position:relative; }
 /* TradingView 元件字很小，整塊放大（同 screen3 的 zoom 作法；transform 會讓跨網域 iframe 糊掉） */
 .tv-zoom { position:absolute; inset:0; zoom:1.35; }
-.tv-zoom.tv-zoom-sm { zoom:1.12; }   /* 外匯清單下面還有 K 線圖，要塞 7 列 */
+/* 外匯清單：iframe 內無法捲動，改讓外框比可視區高、整塊自動上下來回捲動（只用 translate，不會糊） */
+#fxListWrap { overflow:hidden; }
+.fx-list-move { position:absolute; left:0; right:0; top:0; height:575px; }   /* 7 列在 zoom 1.35 下全部放得下的高度 */
+.fx-list-move.scrolling { animation: fxScroll var(--fx-dur, 16s) ease-in-out infinite; }
+@keyframes fxScroll {
+  0%, 20%   { transform: translateY(0); }
+  50%, 70%  { transform: translateY(var(--fx-shift, 0px)); }
+  100%      { transform: translateY(0); }
+}
 .tv-zoom .tradingview-widget-container,
 .tv-zoom .tradingview-widget-container__widget { width:100% !important; height:100% !important; }
 
@@ -239,7 +247,7 @@ body {
         <div class="fx-panes" id="fxPanes"></div>
         <div class="fx-progress"><div class="fx-progress-bar" id="fxProgress"></div></div>
       </div>
-      <div class="col-widget"><div class="tv-zoom tv-zoom-sm">
+      <div class="col-widget" id="fxListWrap"><div class="fx-list-move" id="fxListMove"><div class="tv-zoom">
         <div class="tradingview-widget-container">
           <div class="tradingview-widget-container__widget"></div>
           <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
@@ -268,7 +276,7 @@ body {
           }
           </script>
         </div>
-      </div></div>
+      </div></div></div>
     </div>
 
     <!-- 全球股市 -->
@@ -540,6 +548,22 @@ function showFx(idx) {
   }));
 }
 
+/* 外匯清單放不下時自動上下捲動；放得下就不動。視窗大小改變時重算 */
+const FX_SCROLL_PX_PER_S = 20;
+function fitFxList() {
+  const wrap = document.getElementById('fxListWrap');
+  const move = document.getElementById('fxListMove');
+  const shift = move.offsetHeight - wrap.clientHeight;
+  if (shift > 2) {
+    move.style.setProperty('--fx-shift', -shift + 'px');
+    /* 上、下各走 30% 的時間，其餘停在頂端與底端 */
+    move.style.setProperty('--fx-dur', Math.max(12, shift / FX_SCROLL_PX_PER_S / 0.3).toFixed(1) + 's');
+    move.classList.add('scrolling');
+  } else {
+    move.classList.remove('scrolling');
+  }
+}
+
 /* ══════════ 右欄：財經新聞跑馬燈 ══════════ */
 /* 自架新聞轉接（office 主機 bbs-news-proxy），與 screen7 共用；rows[1]=台灣財經、rows[4]=股市即時。
    改來源要同步 screen7 的 FEEDS 與 office 的 feeds.json。 */
@@ -619,7 +643,8 @@ async function init() {
 window.api.on('announcements_v:updated', d => { data = d; render(); });
 
 fitStage();
-window.addEventListener('resize', fitStage);
+fitFxList();
+window.addEventListener('resize', () => { fitStage(); fitFxList(); });
 tick();
 const clockTimer = setInterval(tick, 1000);
 fetchNews();
