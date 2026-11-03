@@ -123,15 +123,13 @@ body {
 .col-widget { flex:1; min-height:0; position:relative; }
 /* TradingView 元件字很小，整塊放大（同 screen3 的 zoom 作法；transform 會讓跨網域 iframe 糊掉） */
 .tv-zoom { position:absolute; inset:0; zoom:1.35; }
-/* 外匯清單：iframe 內無法捲動，改讓外框比可視區高、整塊自動上下來回捲動（只用 translate，不會糊） */
+/* 外匯清單：iframe 內無法捲動，改成兩份清單上下相接、整塊連續往上滾（只用 translate，不會糊）。
+   每份高 575px＝7 列在 zoom 1.35 下全部放得下的高度，增減幣別要一起改 */
 #fxListWrap { overflow:hidden; }
-.fx-list-move { position:absolute; left:0; right:0; top:0; height:575px; }   /* 7 列在 zoom 1.35 下全部放得下的高度 */
-.fx-list-move.scrolling { animation: fxScroll var(--fx-dur, 16s) ease-in-out infinite; }
-@keyframes fxScroll {
-  0%, 20%   { transform: translateY(0); }
-  50%, 70%  { transform: translateY(var(--fx-shift, 0px)); }
-  100%      { transform: translateY(0); }
-}
+.fx-list-move { position:absolute; left:0; right:0; top:0; }
+.fx-list-copy { position:relative; height:575px; }
+.fx-list-move.looping { animation: fxLoop var(--fx-dur, 25s) linear infinite; }
+@keyframes fxLoop { from { transform: translateY(0); } to { transform: translateY(-575px); } }
 .tv-zoom .tradingview-widget-container,
 .tv-zoom .tradingview-widget-container__widget { width:100% !important; height:100% !important; }
 
@@ -160,16 +158,6 @@ body {
   border-top: 3px solid var(--accent);
   overflow:hidden;
 }
-.news-label {
-  flex-shrink:0; height:100%;
-  display:flex; align-items:center; gap:10px;
-  padding: 0 22px;
-  font-size:22px; font-weight:900; letter-spacing:2px; color:var(--accent);
-  background: rgba(0,0,0,.35);
-  border-right: 1px solid rgba(245,158,11,.3);
-  white-space:nowrap; z-index:2;
-}
-.live-dot { width:9px; height:9px; border-radius:50%; background:#ef4444; box-shadow:0 0 8px #ef4444; animation:pulse 2s ease-in-out infinite; }
 .ticker-wrap { flex:1; height:100%; overflow:hidden; position:relative; display:flex; align-items:center; }
 .ticker-wrap::before, .ticker-wrap::after { content:''; position:absolute; top:0; bottom:0; width:60px; z-index:2; pointer-events:none; }
 .ticker-wrap::before { left:0;  background:linear-gradient(90deg,#04111f,transparent); }
@@ -247,36 +235,8 @@ body {
         <div class="fx-panes" id="fxPanes"></div>
         <div class="fx-progress"><div class="fx-progress-bar" id="fxProgress"></div></div>
       </div>
-      <div class="col-widget" id="fxListWrap"><div class="fx-list-move" id="fxListMove"><div class="tv-zoom">
-        <div class="tradingview-widget-container">
-          <div class="tradingview-widget-container__widget"></div>
-          <script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>
-          {
-            "colorTheme": "dark",
-            "dateRange": "1D",
-            "showChart": false,
-            "locale": "zh_TW",
-            "isTransparent": true,
-            "showSymbolLogo": true,
-            "showFloatingTooltip": false,
-            "width": "100%",
-            "height": "100%",
-            "tabs": [{
-              "title": "對台幣",
-              "symbols": [
-                {"s": "FX_IDC:USDTWD", "d": "美元 USD"},
-                {"s": "FX_IDC:JPYTWD", "d": "日圓 JPY"},
-                {"s": "FX_IDC:EURTWD", "d": "歐元 EUR"},
-                {"s": "FX_IDC:CNYTWD", "d": "人民幣 CNY"},
-                {"s": "FX_IDC:HKDTWD", "d": "港幣 HKD"},
-                {"s": "FX_IDC:GBPTWD", "d": "英鎊 GBP"},
-                {"s": "FX_IDC:AUDTWD", "d": "澳幣 AUD"}
-              ]
-            }]
-          }
-          </script>
-        </div>
-      </div></div></div>
+      <!-- 報價清單：JS 依 FX_LIST 建兩份上下相接，連續往上循環滾動 -->
+      <div class="col-widget" id="fxListWrap"><div class="fx-list-move" id="fxListMove"></div></div>
     </div>
 
     <!-- 全球股市 -->
@@ -323,7 +283,6 @@ body {
   </div>
 
   <div class="news-bar">
-    <div class="news-label"><span class="live-dot"></span>財經新聞</div>
     <div class="ticker-wrap">
       <div class="ticker-track" id="ticker"><span class="ticker-loading">連線中…</span></div>
     </div>
@@ -488,15 +447,15 @@ function tick() {
 }
 
 /* ══════════ 右欄：外匯 K 線輪播 ══════════ */
-/* 下方報價清單（market-overview）的 symbols 要跟這裡同步 */
+/* K 線輪播與下方報價清單共用；d＝K 線標題，n＝清單名稱。增減幣別要一起調整 FX_LIST_H */
 const FX_LIST = [
-  { s:'FX_IDC:USDTWD', d:'美元 / 台幣' },
-  { s:'FX_IDC:JPYTWD', d:'日圓 / 台幣' },
-  { s:'FX_IDC:EURTWD', d:'歐元 / 台幣' },
-  { s:'FX_IDC:CNYTWD', d:'人民幣 / 台幣' },
-  { s:'FX_IDC:HKDTWD', d:'港幣 / 台幣' },
-  { s:'FX_IDC:GBPTWD', d:'英鎊 / 台幣' },
-  { s:'FX_IDC:AUDTWD', d:'澳幣 / 台幣' }
+  { s:'FX_IDC:USDTWD', d:'美元 / 台幣',   n:'美元 USD' },
+  { s:'FX_IDC:JPYTWD', d:'日圓 / 台幣',   n:'日圓 JPY' },
+  { s:'FX_IDC:EURTWD', d:'歐元 / 台幣',   n:'歐元 EUR' },
+  { s:'FX_IDC:CNYTWD', d:'人民幣 / 台幣', n:'人民幣 CNY' },
+  { s:'FX_IDC:HKDTWD', d:'港幣 / 台幣',   n:'港幣 HKD' },
+  { s:'FX_IDC:GBPTWD', d:'英鎊 / 台幣',   n:'英鎊 GBP' },
+  { s:'FX_IDC:AUDTWD', d:'澳幣 / 台幣',   n:'澳幣 AUD' }
 ];
 const FX_INTERVAL = 30 * 1000;
 let fxIdx = 0;
@@ -548,20 +507,39 @@ function showFx(idx) {
   }));
 }
 
-/* 外匯清單放不下時自動上下捲動；放得下就不動。視窗大小改變時重算 */
-const FX_SCROLL_PX_PER_S = 20;
+/* 報價清單：兩份相同的 market-overview 上下相接，連續往上滾，接縫看不出來 */
+const FX_LIST_H = 575;
+const FX_SCROLL_PX_PER_S = 25;
+function buildFxList() {
+  const move = document.getElementById('fxListMove');
+  const config = JSON.stringify({
+    colorTheme: 'dark', dateRange: '1D', showChart: false,
+    locale: 'zh_TW', isTransparent: true, showSymbolLogo: true, showFloatingTooltip: false,
+    width: '100%', height: '100%',
+    tabs: [{ title: '對台幣', symbols: FX_LIST.map(fx => ({ s: fx.s, d: fx.n })) }]
+  });
+  for (let i = 0; i < 2; i++) {
+    const copy = document.createElement('div');
+    copy.className = 'fx-list-copy';
+    copy.innerHTML = '<div class="tv-zoom"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div></div>';
+    const sc = document.createElement('script');
+    sc.src = 'https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js';
+    sc.async = true;
+    sc.text = config;
+    copy.querySelector('.tradingview-widget-container').appendChild(sc);
+    move.appendChild(copy);
+  }
+  fitFxList();
+}
+
+/* 放得下整份清單就不滾、藏起第二份；放不下才循環滾動。視窗大小改變時重算 */
 function fitFxList() {
   const wrap = document.getElementById('fxListWrap');
   const move = document.getElementById('fxListMove');
-  const shift = move.offsetHeight - wrap.clientHeight;
-  if (shift > 2) {
-    move.style.setProperty('--fx-shift', -shift + 'px');
-    /* 上、下各走 30% 的時間，其餘停在頂端與底端 */
-    move.style.setProperty('--fx-dur', Math.max(12, shift / FX_SCROLL_PX_PER_S / 0.3).toFixed(1) + 's');
-    move.classList.add('scrolling');
-  } else {
-    move.classList.remove('scrolling');
-  }
+  const loop = wrap.clientHeight < FX_LIST_H - 2;
+  move.classList.toggle('looping', loop);
+  if (move.children[1]) move.children[1].style.visibility = loop ? 'visible' : 'hidden';
+  move.style.setProperty('--fx-dur', (FX_LIST_H / FX_SCROLL_PX_PER_S).toFixed(1) + 's');
 }
 
 /* ══════════ 右欄：財經新聞跑馬燈 ══════════ */
@@ -643,13 +621,13 @@ async function init() {
 window.api.on('announcements_v:updated', d => { data = d; render(); });
 
 fitStage();
-fitFxList();
 window.addEventListener('resize', () => { fitStage(); fitFxList(); });
 tick();
 const clockTimer = setInterval(tick, 1000);
 fetchNews();
 const newsTimer = setInterval(fetchNews, NEWS_REFETCH);
 buildFxPanes();
+buildFxList();
 const fxTimer = setInterval(() => showFx(fxIdx + 1), FX_INTERVAL);
 
 window.addEventListener('beforeunload', () => {

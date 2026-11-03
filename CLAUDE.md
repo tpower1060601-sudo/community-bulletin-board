@@ -157,7 +157,7 @@ FMP / Twelve Data 金鑰（`fmpKey1~3`、`tdKey1~3`、`twelveDataKey`）已不�
 
 ## screen12 梯間公告（2026-11-03 由台股熱力圖改版）
 - 兩欄式：左 1/3 輪播**直立公告**（`announcements_v`，與 screen13 同一份，不顯示其跑馬燈）；右 2/3 外匯對台幣（7 幣別 `FX_IDC:xxxTWD`）＋全球股市（10 指數）＋底部財經新聞跑馬燈。
-- 外匯欄上方是日 K 線圖（TradingView `symbol-overview`，近 3 個月，紅漲綠跌），**每 30 秒輪播下一個幣別**；7 個面板開頁時一次建好、用 visibility 切換（不要改 display:none，元件會以 0 尺寸初始化）。下方報價清單與 `FX_LIST` 要同步。報價清單在跨網域 iframe 裡無法捲動，改成外框固定 575px（7 列的高度）、放不下時整塊用 translate 自動上下來回捲（`fitFxList()`，視窗改大小會重算）；增減幣別要一併調整這個高度。
+- 外匯欄上方是日 K 線圖（TradingView `symbol-overview`，近 3 個月，紅漲綠跌），**每 30 秒輪播下一個幣別**；7 個面板開頁時一次建好、用 visibility 切換（不要改 display:none，元件會以 0 尺寸初始化）。下方報價清單也由 `FX_LIST` 產生（`n` 欄位為清單名稱）。清單在跨網域 iframe 裡無法捲動，改成 JS 建兩份相同清單（各 575px＝7 列高）上下相接，整塊用 translate 連續往上循環滾動（約 25px/秒）；可視區放得下整份時不滾、藏起第二份（`fitFxList()`，視窗改大小會重算）。增減幣別要一併調整 `FX_LIST_H` 與 CSS 的 575px。
 - 左欄用 screen13 的像素單位撰寫，外層 CSS `zoom`（實際寬 ÷ 1600）等比縮小；TradingView 元件外層 `zoom:1.35`（別改用 transform，跨網域 iframe 會糊）。
 - 跑馬燈讀自架轉接 `news.shoyubook.com/rows` 的 `rows[1]`（台灣財經）＋`rows[4]`（股市即時）；**沒有**免費轉接站備援。改 office `feeds.json` 的列順序時要一併確認這兩個索引。
 
